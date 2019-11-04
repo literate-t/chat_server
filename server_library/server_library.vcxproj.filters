@@ -1,11 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="Monitor.cpp" />
     <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="RingBuffer.cpp" />
+    <ClCompile Include="Lock.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Monitor.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="Singleton.h" />
+    <ClInclude Include="RingBuffer.h" />
+    <ClInclude Include="Definitions.h" />
+    <ClInclude Include="Lock.h" />
   </ItemGroup>
 </Project>

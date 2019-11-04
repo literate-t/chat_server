@@ -128,13 +128,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Monitor.cpp" />
+    <ClCompile Include="Lock.cpp" />
+    <ClCompile Include="RingBuffer.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Monitor.h" />
+    <ClInclude Include="Definitions.h" />
+    <ClInclude Include="Lock.h" />
+    <ClInclude Include="RingBuffer.h" />
+    <ClInclude Include="Singleton.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

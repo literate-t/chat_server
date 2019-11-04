@@ -21,3 +21,7 @@
 #include <math.h>
 #include <iostream>
 using namespace std;
+
+#include "Definitions.h"
+#include "Lock.h"
+#include "RingBuffer.h"
