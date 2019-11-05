@@ -1,8 +1,8 @@
 #pragma once
 
-class RingBuffer : public Lock
+class RingBuffer : public LockGuard
 {
-	using Locker = Lock::Owner;
+	using Locker = LockGuard::Owner;
 
 public:
 	RingBuffer();
@@ -23,11 +23,7 @@ public:
 	int GetUsedBufferSize()		{ return write_size_; }
 	int GetTotalUsedBufferSize(){ return total_data_size_; }
 	// 내부 버퍼 읽어서 반환(?)
-	char* GetBuffer(int read_size, int* pread_size);
-
-private:
-	RingBuffer(const RingBuffer&);
-	RingBuffer& operator=(const RingBuffer&);
+	char* GetBuffer(const int req_read_size, OUT int& res_read_size);
 
 private:
 	char*	buffer_;
@@ -41,5 +37,5 @@ private:
 	int		write_size_;	// 사용 중인 크기(nUsedBufferSize)
 	unsigned int total_data_size_;// 처리된 데이터 총량(AllUserBufSize)
 
-	Lock cs_;
+	LockGuard cs_;
 };

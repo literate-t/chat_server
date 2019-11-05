@@ -17,5 +17,5 @@ protected:
 	~Singleton() {};
 
 private:
-		static T instance_;
+	static T instance_;
 };
