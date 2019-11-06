@@ -15,7 +15,7 @@ public:
 	void SetChar(char ch);
 	void SetShort(short num);
 	void SetInteger(int num);
-	void SetString(char* buf);
+	void SetString(const char* buf);
 	void SetStream(char* buf, short len);
 
 	void SetBuffer(char* vbuf);

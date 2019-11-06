@@ -5,6 +5,8 @@
     <ClCompile Include="RingBuffer.cpp" />
     <ClCompile Include="LockGuard.cpp" />
     <ClCompile Include="VBuffer.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Queue.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -13,5 +15,6 @@
     <ClInclude Include="Definitions.h" />
     <ClInclude Include="LockGuard.h" />
     <ClInclude Include="VBuffer.h" />
+    <ClInclude Include="Queue.h" />
   </ItemGroup>
 </Project>

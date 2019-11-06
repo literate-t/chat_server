@@ -4,12 +4,9 @@ template <typename T>
 class Singleton
 {
 public:
-	Singleton(const Singleton&);
-	Singleton& operator=(const Singleton&);
-
-	static T& GetInstance()
+	static T* GetInstance()
 	{
-		return instance_;
+		return &instance_;
 	}
 
 protected:
@@ -19,3 +16,5 @@ protected:
 private:
 	static T instance_;
 };
+
+template <typename T> T Singleton<T>::instance_;

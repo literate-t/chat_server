@@ -31,7 +31,7 @@ void VBuffer::GetChar(OUT char& ch)
 
 void VBuffer::GetShort(OUT short& num)
 {
-	num = (unsigned char)cur_mark_[0] + (((unsigned char)cur_mark_[1]) << 8);
+	num = static_cast<unsigned char>(cur_mark_[0]) + (((unsigned char)cur_mark_[1]) << 8);
 	cur_mark_		+= 2;
 	cur_buf_size_	+= 2;
 }
@@ -39,9 +39,9 @@ void VBuffer::GetShort(OUT short& num)
 void VBuffer::GetInteger(OUT int& num)
 {
 	num = ((unsigned char)cur_mark_[0] +
-		(unsigned char)cur_mark_[1] << 8 +
-		(unsigned char)cur_mark_[2] << 16 +
-		(unsigned char)cur_mark_[3] << 24);
+		((unsigned char)cur_mark_[1] << 8) +
+		((unsigned char)cur_mark_[2] << 16) +
+		((unsigned char)cur_mark_[3] << 24));
 	cur_mark_		+= 4;
 	cur_buf_size_	+= 4;
 }
@@ -95,7 +95,7 @@ void VBuffer::SetInteger(int num)
 	cur_buf_size_ += 4;
 }
 
-void VBuffer::SetString(char* buf)
+void VBuffer::SetString(const char* buf)
 {
 	short len = strlen(buf);
 	if (len < 0 || len > MAX_PBUFSIZE)
@@ -124,6 +124,6 @@ bool VBuffer::CopyBuffer(char* dest_buffer)
 
 void VBuffer::SetBuffer(char* vbuf)
 {
-	cur_mark_ = vbuf;
-	cur_buf_size_ = 0;
+	cur_mark_ = vbuf + PACKET_LENGTH_BYTE;
+	cur_buf_size_ = PACKET_LENGTH_BYTE;
 }
