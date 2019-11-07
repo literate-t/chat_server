@@ -1,8 +1,8 @@
 #pragma once
 
-class RingBuffer : public LockGuard
+class RingBuffer : public Lock
 {
-	using Locker = LockGuard::Owner;
+	using LockGuard = Lock::LockGuard;
 
 public:
 	RingBuffer();
@@ -37,5 +37,5 @@ private:
 	int		write_size_;	// 사용 중인 크기(nUsedBufferSize)
 	unsigned int total_data_size_;// 처리된 데이터 총량(AllUserBufSize)
 
-	LockGuard cs_;
+	Lock cs_;
 };

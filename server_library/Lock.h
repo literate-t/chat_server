@@ -1,20 +1,20 @@
 #pragma once
 
-class LockGuard
+class Lock
 {
 public:
-	class Owner
+	class LockGuard
 	{
 	public:
-		Owner(LockGuard& object);
-		~Owner();
+		LockGuard(Lock& object);
+		~LockGuard();
 
 	private:
-		LockGuard& lock_;
+		Lock& lock_;
 	};
 
-	LockGuard();
-	~LockGuard();
+	Lock();
+	~Lock();
 
 	void Enter();
 	void Leave();

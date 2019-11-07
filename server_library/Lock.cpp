@@ -1,32 +1,32 @@
 #include "stdafx.h"
 #define SPIN_LOCK	100
 
-LockGuard::LockGuard()
+Lock::Lock()
 {
 	(void)InitializeCriticalSectionAndSpinCount(&cs_, SPIN_LOCK);
 }
 
-LockGuard::~LockGuard()
+Lock::~Lock()
 {
 	DeleteCriticalSection(&cs_);
 }
 
-void LockGuard::Enter()
+void Lock::Enter()
 {
 	EnterCriticalSection(&cs_);
 }
 
-void LockGuard::Leave()
+void Lock::Leave()
 {
 	LeaveCriticalSection(&cs_);
 }
 
-LockGuard::Owner::Owner(LockGuard& object):lock_(object)
+Lock::LockGuard::LockGuard(Lock& object):lock_(object)
 {
 	lock_.Enter();
 }
 
-LockGuard::Owner::~Owner()
+Lock::LockGuard::~LockGuard()
 {
 	lock_.Leave();
 }

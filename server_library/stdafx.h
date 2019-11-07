@@ -23,6 +23,7 @@
 using namespace std;
 
 #include "Definitions.h"
-#include "LockGuard.h"
+#include "Lock.h"
 #include "RingBuffer.h"
 #include "VBuffer.h"
+#include "Queue.h"

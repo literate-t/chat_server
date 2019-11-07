@@ -81,7 +81,7 @@ void VBuffer::SetChar(char ch)
 
 void VBuffer::SetShort(short num)
 {
-	*cur_mark_++ = num;
+	*cur_mark_++ = static_cast<char>(num);
 	*cur_mark_++ = num >> 8;
 	cur_buf_size_ += 2;
 }
@@ -97,7 +97,7 @@ void VBuffer::SetInteger(int num)
 
 void VBuffer::SetString(const char* buf)
 {
-	short len = strlen(buf);
+	short len = static_cast<char>(strlen(buf));
 	if (len < 0 || len > MAX_PBUFSIZE)
 	{
 		return;

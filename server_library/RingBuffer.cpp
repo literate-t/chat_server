@@ -23,7 +23,7 @@ RingBuffer::~RingBuffer()
 
 bool RingBuffer::Init()
 {
-	Locker lock(cs_);
+	LockGuard lock(cs_);
 	write_size_			= 0;
 	write_mark_			= begin_;
 	read_mark_			= begin_;
@@ -36,7 +36,7 @@ bool RingBuffer::Init()
 bool RingBuffer::Create(int buffer_size)
 {
 	{
-		Locker lock(cs_);
+		LockGuard lock(cs_);
 		if (nullptr != begin_)
 		{
 			delete[] begin_;
@@ -60,7 +60,7 @@ bool RingBuffer::Create(int buffer_size)
 // 송신
 char* RingBuffer::ForwardMark(const int forward_length)
 {
-	Locker lock(cs_);
+	LockGuard lock(cs_);
 	char* prev = nullptr;
 	if (write_size_ + forward_length > buffer_size_)
 	{
@@ -89,7 +89,7 @@ char* RingBuffer::ForwardMark(const int forward_length)
 // 수신									현재 받은 데이터, 다음에 받을 데이터 길이, 현재까지 받은 패킷의 길이
 char* RingBuffer::ForwardMark(const int forward_length, const int next_length, const DWORD sofar_length)
 {
-	Locker lock(cs_);
+	LockGuard lock(cs_);
 	if (write_size_ + forward_length + next_length > buffer_size_)
 	{
 		return nullptr;
@@ -119,14 +119,14 @@ char* RingBuffer::ForwardMark(const int forward_length, const int next_length, c
 
 void RingBuffer::ReleaseBuffer(int release_size)
 {
-	Locker lock(cs_);
+	LockGuard lock(cs_);
 	write_size_ -= release_size;
 }
 
 // 송신할 버퍼 읽어오기(수정 필요)
 char* RingBuffer::GetBuffer(const int req_read_size, OUT int& res_read_size)
 {
-	Locker lock(cs_);
+	LockGuard lock(cs_);
 
 	// last_mark_는 순회했다면 순회하기 전 위치이며 안 했다면 end_와 같다
 	if (last_mark_ == read_mark_)
