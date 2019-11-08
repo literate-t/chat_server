@@ -24,6 +24,9 @@ using namespace std;
 
 #include "Definitions.h"
 #include "Lock.h"
+#include "Singleton.h"
 #include "RingBuffer.h"
 #include "VBuffer.h"
 #include "Queue.h"
+#include "Logger.h"
+#include "Connection.h"

@@ -2,7 +2,7 @@
 
 int main()
 {
-	Queue<int> queue(100);
+	library::Queue<int> queue(100);
 	for (int i = 0; i < 100; ++i)
 	{
 		queue.Push(i);
@@ -12,6 +12,7 @@ int main()
 		printf("%d\n", queue.Front());
 		queue.Pop();
 	}
+	queue.Pop();
 	system("pause");
 	return 0;
 }

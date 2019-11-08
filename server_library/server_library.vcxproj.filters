@@ -6,6 +6,7 @@
     <ClCompile Include="VBuffer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Lock.cpp" />
+    <ClCompile Include="Connection.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -15,5 +16,8 @@
     <ClInclude Include="VBuffer.h" />
     <ClInclude Include="Queue.h" />
     <ClInclude Include="Lock.h" />
+    <ClInclude Include="conmanip.h" />
+    <ClInclude Include="Logger.h" />
+    <ClInclude Include="Connection.h" />
   </ItemGroup>
 </Project>

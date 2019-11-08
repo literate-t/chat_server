@@ -1,20 +1,23 @@
 #pragma once
 
-template <typename T>
-class Singleton
+namespace library
 {
-public:
-	static T* GetInstance()
+	template <typename T>
+	class Singleton
 	{
-		return &instance_;
-	}
+	public:
+		static T* GetInstance()
+		{
+			return &instance_;
+		}
 
-protected:
-	Singleton() {};
-	~Singleton() {};
+	protected:
+		Singleton() {};
+		~Singleton() {};
 
-private:
-	static T instance_;
-};
+	private:
+		static T instance_;
+	};
 
-template <typename T> T Singleton<T>::instance_;
+	template <typename T> T Singleton<T>::instance_;
+}

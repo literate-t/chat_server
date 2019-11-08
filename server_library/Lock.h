@@ -1,24 +1,27 @@
 #pragma once
 
-class Lock
+namespace library
 {
-public:
-	class LockGuard
+	class Lock
 	{
 	public:
-		LockGuard(Lock& object);
-		~LockGuard();
+		class LockGuard
+		{
+		public:
+			LockGuard(Lock& object);
+			~LockGuard();
+
+		private:
+			Lock& lock_;
+		};
+
+		Lock();
+		~Lock();
+
+		void Enter();
+		void Leave();
 
 	private:
-		Lock& lock_;
+		CRITICAL_SECTION cs_;
 	};
-
-	Lock();
-	~Lock();
-
-	void Enter();
-	void Leave();
-
-private:
-	CRITICAL_SECTION cs_;
-};
+}
