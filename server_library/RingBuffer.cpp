@@ -125,7 +125,7 @@ namespace library
 		write_size_ -= release_size;
 	}
 
-	// 송신할 버퍼 읽어오기(수정 필요)
+	
 	char* RingBuffer::GetBuffer(const int req_read_size, OUT int& res_read_size)
 	{
 		LockGuard lock(cs_);

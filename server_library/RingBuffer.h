@@ -24,7 +24,7 @@ namespace library
 		void ReleaseBuffer(int release_size);
 		int GetUsedBufferSize() { return write_size_; }
 		int GetTotalUsedBufferSize() { return total_data_size_; }
-		// 내부 버퍼 읽어서 반환(?)
+		// 송신할 버퍼 읽어오기(수정 필요)
 		char* GetBuffer(const int req_read_size, OUT int& res_read_size);
 
 	private:

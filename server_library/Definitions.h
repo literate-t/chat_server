@@ -13,27 +13,27 @@
 
 #define MAX_IP_LENGTH		20
 #define MAX_PROCESS_THREAD	1
-#define MAX_WORKER_THREAD	10
+#define MAX_WORKER_THREAD	17
 
 enum IoMode
 {
-	ACCEPT,
-	RECV,
-	SEND,
-	CLOSE,
-	PROCESS_PACKET,
-	SYSTEM
+	IO_ACCEPT,
+	IO_RECV,
+	IO_SEND,
+	IO_CLOSE,
+	IO_PROCESS_PACKET,
+	IO_SYSTEM
 };
 
 struct InitConfig
 {
 	int		index_ = -1;
-	SOCKET	sock_listener_ = INVALID_SOCKET;
+	SOCKET	sock_listener_ = INVALID_SOCKET;	
 	// ring buffer size = buf_cnt * buf_size
-	int		recv_buf_cnt_ = 0;
-	int		send_buf_cnt_ = 0;
-	int		recv_buf_size_ = 0;
-	int		send_buf_size_ = 0;
+	int		recv_buf_cnt_ = 0;	
+	int		send_buf_cnt_ = 0;	
+	int		recv_buf_size_ = 0;	
+	int		send_buf_size_ = 0;	
 
 	int		process_packet_cnt_ = 0;
 	int		server_port_ = 0;
@@ -50,9 +50,27 @@ struct OverlappedEx
 	char*			msg_;
 	IoMode			iomode_;
 	void*			connection_;
-	explicit OverlappedEx(void* conn)
+	OverlappedEx()
 	{
 		memset(this, 0, sizeof OverlappedEx);
+	}
+	void SetConnection(void* conn)
+	{
 		connection_ = conn;
+	}
+};
+
+struct PacketProcess
+{
+	IoMode iomode_;
+	WPARAM wparam_;
+	LPARAM lparam_;
+	PacketProcess()
+	{
+		Init();
+	}
+	void Init()
+	{
+		memset(this, 0, sizeof PacketProcess);
 	}
 };

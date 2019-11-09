@@ -12,7 +12,7 @@ namespace library
 	public:
 		void	Init();
 		bool	CreateConnection(InitConfig& config);
-		bool	CloseConnection(bool force = false);
+		bool	CloseConnection(bool is_forced = false);
 		bool	BindIocp(HANDLE iocp);
 		bool	BindAcceptEx();
 
@@ -51,14 +51,15 @@ namespace library
 		RingBuffer		send_ring_buffer_;
 
 		char	address_[1024];
-		bool	is_closed_;
-		bool	is_connected_;
+		BOOL	is_closed_;
+		BOOL	is_connected_;
 		// overlapped i/o 전송 작업 진행 여부
-		bool	is_sent_;
+		BOOL	is_sent_;
 
 	private:
 		SOCKET	socket_;
 		SOCKET	socket_listener_;
+		Logger  logger_;
 
 		int		recv_buf_size_;
 		int		send_buf_size_;
@@ -85,5 +86,3 @@ namespace library
 		Lock	cs_;
 	};
 }
-
-
