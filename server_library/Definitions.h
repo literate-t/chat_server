@@ -13,9 +13,8 @@
 
 #define MAX_IP_LENGTH		20
 #define MAX_PROCESS_THREAD	1
-#define MAX_WORKER_THREAD	17
 
-enum IoMode
+enum class IoMode : short
 {
 	IO_ACCEPT,
 	IO_RECV,

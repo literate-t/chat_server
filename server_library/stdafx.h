@@ -12,7 +12,7 @@
 #include <assert.h>
 #include <ws2spi.h>
 #include <winbase.h>
-#include <process.h>
+#include <thread>
 #include <vector>
 #include <unordered_map>
 #include <queue>

@@ -47,10 +47,11 @@ namespace library
 	private:
 		bool CreateProcessThreads();
 		bool CreateWorkerThreads();
-		void GetProperThreadCount();
-		bool CreateWorkerIocp();
-		bool CreateProcessIocp();
+		void SetProperThreadCount();
+		bool CreateIocp();
 		bool CreateListenSock();
+
+		void HandleWorkerThreadException(Connection* connection, const OverlappedEx* overlappedex);
 
 		IocpServer(const IocpServer&);
 		IocpServer& operator=(const IocpServer&);
@@ -59,8 +60,9 @@ namespace library
 		SOCKET	socket_listener_;
 		HANDLE	worker_iocp_;
 		HANDLE	process_iocp_;
-		HANDLE	array_worker_thread[MAX_WORKER_THREAD] = { 0 };
-		HANDLE	process_thread_;
+		
+		vector<unique_ptr<thread>>	worker_thread_;
+		vector<unique_ptr<thread>>  process_thread_;
 
 		unsigned short	port_;
 		char	ip_[MAX_IP_LENGTH] = { 0 };
@@ -72,8 +74,10 @@ namespace library
 		bool	worker_thread_flag_;
 		bool	process_thread_flag_;
 
-		PacketProcess process_packet_;
+		PacketProcess* process_packet_;
 		DWORD process_packet_cnt_;
+
+		Logger logger_;
 	};
 
 	IocpServer* IocpServer::iocp_server_ = nullptr; 

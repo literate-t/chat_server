@@ -53,7 +53,7 @@ namespace library
 		recv_overlappedex_.wsabuf_.buf	= address_;
 		recv_overlappedex_.wsabuf_.len	= recv_buf_size_;		
 		recv_overlappedex_.msg_			= address_;
-		recv_overlappedex_.iomode_		= IO_ACCEPT;
+		recv_overlappedex_.iomode_		= IoMode::IO_ACCEPT;
 		recv_overlappedex_.connection_	= this;
 		socket_ = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_IP,
 			nullptr, 0, WSA_FLAG_OVERLAPPED);
@@ -166,7 +166,7 @@ namespace library
 		DWORD	flag = 0;
 		DWORD	recv_bytes = 0;
 		assert(is_connected_ == true);
-		recv_overlappedex_.iomode_ = IO_RECV;
+		recv_overlappedex_.iomode_ = IoMode::IO_RECV;
 		recv_overlappedex_.still_ = still;
 
 		// fuck that shit. 여긴 server 쪽 가서 다시 봐야함
@@ -222,7 +222,7 @@ namespace library
 
 			// 이 설정값들 다 마음에 안 듦
 			send_overlappedex_.still_ = 0;
-			send_overlappedex_.iomode_ = IO_SEND;
+			send_overlappedex_.iomode_ = IoMode::IO_SEND;
 			send_overlappedex_.total_bytes_ = read_size;
 			memset(&send_overlappedex_.overlapped_, 0, sizeof WSAOVERLAPPED);
 			send_overlappedex_.wsabuf_.len = read_size;
