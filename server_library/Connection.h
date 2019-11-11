@@ -24,9 +24,9 @@ namespace library
 		char*	PrepareSendPacket(int len);
 		bool	ReleaseRecvPacket();
 		bool	ReleaseSendPacket(OverlappedEx* send_overlappedex = nullptr);
-		void	SetConnection(const char* ip);
-
-		char* GetIp()			{ return ip_; }
+		void	SetIp(const char* ip) { memcpy(ip_, ip, MAX_IP_LENGTH); }
+		
+		const char*	GetIp()		{ return ip_; }
 		int GetIndex()			{ return index_; }
 		int GetRecvBufSize()	{ return recv_buf_size_; }
 		int GetSendBufSize()	{ return send_buf_size_; }
@@ -39,9 +39,9 @@ namespace library
 		int IncrementSendIoCount()		{ return InterlockedIncrement(&send_io_cnt_); }
 		int IncrementAcceptIoCount()	{ return InterlockedIncrement(&accept_io_cnt_); }
 
-		int DecrementRecvIoCount();
-		int DecrementSendIoCount();
-		int DecrementAcceptIoCount();
+		void DecrementRecvIoCount();
+		void DecrementSendIoCount();
+		void DecrementAcceptIoCount();
 
 	public:
 		OverlappedEx	recv_overlappedex_;

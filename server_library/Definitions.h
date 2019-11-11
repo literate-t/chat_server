@@ -16,12 +16,12 @@
 
 enum class IoMode : short
 {
-	IO_ACCEPT,
-	IO_RECV,
-	IO_SEND,
-	IO_CLOSE,
-	IO_PROCESS_PACKET,
-	IO_SYSTEM
+	ACCEPT,
+	RECV,
+	SEND,
+	CLOSE,
+	PROCESS_PACKET,
+	SYSTEM
 };
 
 struct InitConfig

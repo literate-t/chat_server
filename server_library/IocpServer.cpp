@@ -222,10 +222,28 @@ namespace library
 				continue;
 			}
 
-			if (result == false || bytes == 0 && overlapped_ex->iomode_ != IoMode::IO_ACCEPT)
+			if (result == false || bytes == 0 && overlapped_ex->iomode_ != IoMode::ACCEPT)
 			{
 				HandleWorkerThreadException(connection, overlapped_ex);
 				continue;
+			}
+			switch (overlapped_ex->iomode_)
+			{
+				case IoMode::ACCEPT:
+				{
+					DoAccept(overlapped_ex);
+					break;
+				}
+				case IoMode::RECV:
+				{
+					DoRecv(overlapped_ex, bytes);
+					break;
+				}
+				case IoMode::SEND:
+				{
+					DoSend(overlapped_ex, bytes);
+					break;
+				}
 			}
 		}
 	}
@@ -234,23 +252,66 @@ namespace library
 	{
 		switch (overlappedex->iomode_)
 		{
-			case IoMode::IO_ACCEPT:
+			case IoMode::ACCEPT:
 			{
 				connection->DecrementAcceptIoCount();
 				break;
 			}
-			case IoMode::IO_RECV:
+			case IoMode::RECV:
 			{
 				connection->DecrementRecvIoCount();
 				break;
 			}
-			case IoMode::IO_SEND:
+			case IoMode::SEND:
 			{
 				connection->DecrementSendIoCount();
 				break;
 			}
 		}
 
-		if ()
+		CloseConnection(connection);
+	}
+
+	bool IocpServer::CloseConnection(Connection* connection)
+	{
+		if (connection->GetAceeptIoCount() != 0 ||
+			connection->GetRecvIoCount() != 0 ||
+			connection->GetSendIoCount() != 0)
+		{
+			shutdown(connection->GetSocket(), SD_BOTH);
+			closesocket(connection->GetSocket());
+			return true;
+		}
+	}
+
+	void IocpServer::DoAccept(OverlappedEx* overlappedex)
+	{
+		SOCKADDR* local_addr = nullptr;
+		SOCKADDR* remote_addr = nullptr;
+
+		int local_addr_len	= 0;
+		int remote_addr_len = 0;
+
+		Connection* connection = reinterpret_cast<Connection*>(overlappedex->connection_);
+		if (connection == nullptr)
+		{
+			return;
+		}
+		connection->DecrementAcceptIoCount();
+
+		GetAcceptExSockaddrs(connection->address_,
+			0,
+			sizeof SOCKADDR_IN + 16,
+			sizeof SOCKADDR_IN + 16,
+			&local_addr,
+			&local_addr_len,
+			&remote_addr,
+			&remote_addr_len
+		);
+
+		if (remote_addr_len != 0)
+		{
+			connection->SetIp();
+		}
 	}
 }
