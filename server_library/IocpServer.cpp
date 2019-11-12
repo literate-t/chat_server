@@ -13,13 +13,13 @@ namespace library
 		worker_thread_flag_ = false;
 		process_thread_flag_ = false;
 
-		process_packet_ = nullptr;
-		process_packet_cnt_ = 0;
+		//process_packet_ = nullptr;
+		//process_packet_cnt_ = 0;
 	}
 
 	IocpServer::~IocpServer()
 	{
-		delete[] process_packet_;
+		//delete[] process_packet_;
 		WSACleanup();
 	}
 
@@ -50,13 +50,34 @@ namespace library
 			return false;
 		}
 		config.sock_listener_ = socket_listener_;
-		if (process_packet_)
-		{
-			delete[] process_packet_;
-		}
-		process_packet_ = new PacketProcess[config.process_packet_cnt_];
-		process_packet_cnt_ = config.process_packet_cnt_;
+		//if (process_packet_)
+		//{
+		//	delete[] process_packet_;
+		//}
+		CreateProcessPacketPool(config.process_packet_cnt_);
 		return true;
+	}
+
+	void IocpServer::CreateProcessPacketPool(int count)
+	{
+		for (int i = 0; i < count; ++i)
+		{
+			PacketProcess packet;
+			packet.index_ = i;
+			process_packet_pool_.push_back(packet);
+			process_packet_index_pool_.push(i);
+		}
+	}
+
+	int IocpServer::AllocateProcessPacketIndex()
+	{
+		if (process_packet_index_pool_.empty())
+		{
+			return -1;
+		}
+		int index = process_packet_index_pool_.front();
+		process_packet_index_pool_.pop();
+		return index;
 	}
 
 	bool IocpServer::ShutServer()
@@ -272,8 +293,13 @@ namespace library
 		CloseConnection(connection);
 	}
 
-	bool IocpServer::CloseConnection(Connection* connection)
+	bool IocpServer::CloseConnection(Connection* connection)	
 	{
+		if (connection == nullptr)
+		{
+			return false;
+		}
+
 		if (connection->GetAceeptIoCount() != 0 ||
 			connection->GetRecvIoCount() != 0 ||
 			connection->GetSendIoCount() != 0)
@@ -282,16 +308,52 @@ namespace library
 			closesocket(connection->GetSocket());
 			return true;
 		}
+
+		if (InterlockedCompareExchange(reinterpret_cast<long*>(&connection->is_closed_), TRUE, FALSE) == FALSE)
+		{
+			auto process_packet = GetProcessPacket(IoMode::CLOSE, 0, 0);
+			if (process_packet == nullptr)
+			{
+				return false;
+			}
+
+			if (false == PostQueuedCompletionStatus(process_iocp_, 0, reinterpret_cast<ULONG_PTR>(connection), reinterpret_cast<OVERLAPPED*>(process_packet)))
+			{
+				ClearProcessPacket(process_packet->index_);
+				logger_.Write(LogType::L_ERROR, "System | Socket:%64u | %s | PostQueuedCompletionStatus() error[%d]", connection->GetSocket(),__FUNCTION__, WSAGetLastError());
+				connection->CloseConnection(true);
+			}
+		}
+		return true;
+	}
+
+	void IocpServer::ClearProcessPacket(int index)
+	{
+		process_packet_pool_[index].Init();
+		ReleaseProcessPacketIndex(index);
+	}
+
+	void IocpServer::ReleaseProcessPacketIndex(int index)
+	{
+		process_packet_index_pool_.push(index);
+	}
+
+	PacketProcess* IocpServer::GetProcessPacket(IoMode iomode, WPARAM wparam, LPARAM lparam)
+	{
+		auto index = AllocateProcessPacketIndex();
+		if (index == -1)
+		{
+			return nullptr;
+		}
+		auto process_packet = &process_packet_pool_[index];
+		process_packet->iomode_ = iomode;
+		process_packet->lparam_ = lparam;
+		process_packet->wparam_ = wparam;
+		return process_packet;
 	}
 
 	void IocpServer::DoAccept(OverlappedEx* overlappedex)
 	{
-		SOCKADDR* local_addr = nullptr;
-		SOCKADDR* remote_addr = nullptr;
-
-		int local_addr_len	= 0;
-		int remote_addr_len = 0;
-
 		Connection* connection = reinterpret_cast<Connection*>(overlappedex->connection_);
 		if (connection == nullptr)
 		{
@@ -299,19 +361,35 @@ namespace library
 		}
 		connection->DecrementAcceptIoCount();
 
-		GetAcceptExSockaddrs(connection->address_,
-			0,
-			sizeof SOCKADDR_IN + 16,
-			sizeof SOCKADDR_IN + 16,
-			&local_addr,
-			&local_addr_len,
-			&remote_addr,
-			&remote_addr_len
-		);
-
-		if (remote_addr_len != 0)
+		if (connection->SetAddressInfo() == false)
 		{
-			connection->SetIp();
+			logger_.Write(LogType::L_ERROR, "System | %s | SetAddressInfo() error[%d]", __FUNCTION__);
+			CloseConnection(connection);
+			return;
 		}
+
+		if (connection->BindIocp(worker_iocp_) == false)
+		{
+			CloseConnection(connection);
+			return;
+		}
+		connection->SetStateConnection();
+
+		if (false == connection->RecvPost(connection->recv_ring_buffer_.GetBegin(), 0))
+		{
+			CloseConnection(connection);
+			return;
+		}
+		OnAccept(connection);
+	}
+
+	void IocpServer::DoRecv(OverlappedEx* overlappedex, DWORD io_size)
+	{
+		auto connection = reinterpret_cast<Connection*>(overlappedex->connection_);
+		if (connection == nullptr)
+		{
+			return;
+		}
+		connection->DecrementRecvIoCount();
 	}
 }

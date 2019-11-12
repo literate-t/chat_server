@@ -14,7 +14,7 @@ namespace library
 		void WorkerThread();
 		void ProcessThread();
 		bool CloseConnection(Connection* conn);
-		bool ProcessPacket(Connection* conn, char current, DWORD current_size);
+		bool DoProcessPacket(Connection* conn, char current, DWORD current_size);
 
 		virtual bool	StartServer(InitConfig& config);
 		virtual bool	ShutServer();
@@ -22,11 +22,14 @@ namespace library
 		unsigned short	GetServerPort() { return port_; }
 		char*			GetServerIp() { return ip_; }
 		HANDLE			GetWorkerIocp() { return worker_iocp_; }
-		void DoAccept(OverlappedEx* overlappedex);
-		void DoRecv(OverlappedEx* overlappedex, DWORD io_size);
-		void DoSend(OverlappedEx* overlappedex, DWORD io_size);
-		PacketProcess* GetPacketProcess(IoMode iomode, WPARAM wparam, LPARAM lparam);
-		void ClearProcessPacket(PacketProcess* packet_process);
+		void			DoAccept(OverlappedEx* overlappedex);
+		void			DoRecv(OverlappedEx* overlappedex, DWORD io_size);
+		void			DoSend(OverlappedEx* overlappedex, DWORD io_size);
+		PacketProcess*	GetProcessPacket(IoMode iomode, WPARAM wparam, LPARAM lparam);
+		void			CreateProcessPacketPool(int count);
+		int				AllocateProcessPacketIndex();
+		void			ReleaseProcessPacketIndex(int index);
+		void			ClearProcessPacket(int index);
 
 		/////////순수 가상 함수////////////
 		// 클라이언트가 접속될 때
@@ -74,8 +77,10 @@ namespace library
 		bool	worker_thread_flag_;
 		bool	process_thread_flag_;
 
-		PacketProcess* process_packet_;
-		DWORD process_packet_cnt_;
+		std::vector<PacketProcess> process_packet_pool_;
+		std::queue<int> process_packet_index_pool_;
+		//PacketProcess* process_packet_;
+		//DWORD process_packet_cnt_;
 
 		Logger logger_;
 	};

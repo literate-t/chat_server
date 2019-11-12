@@ -24,8 +24,19 @@ namespace library
 		char*	PrepareSendPacket(int len);
 		bool	ReleaseRecvPacket();
 		bool	ReleaseSendPacket(OverlappedEx* send_overlappedex = nullptr);
+		bool	SetAddressInfo();
 		void	SetIp(const char* ip) { memcpy(ip_, ip, MAX_IP_LENGTH); }
-		
+
+		void	SetStateConnection()
+		{
+			InterlockedExchange(reinterpret_cast<long*>(&is_connected_), TRUE);
+		}
+
+		void	SetStateDisconnection()
+		{
+			InterlockedExchange(reinterpret_cast<long*>(&is_connected_), FALSE);
+		}
+
 		const char*	GetIp()		{ return ip_; }
 		int GetIndex()			{ return index_; }
 		int GetRecvBufSize()	{ return recv_buf_size_; }

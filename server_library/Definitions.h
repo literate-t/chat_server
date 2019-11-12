@@ -64,6 +64,7 @@ struct PacketProcess
 	IoMode iomode_;
 	WPARAM wparam_;
 	LPARAM lparam_;
+	int	   index_;
 	PacketProcess()
 	{
 		Init();

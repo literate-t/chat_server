@@ -127,6 +127,38 @@ namespace library
 		return true;
 	}
 
+	bool Connection::SetAddressInfo()
+	{
+		SOCKADDR* local_addr = nullptr;
+		SOCKADDR* remote_addr = nullptr;
+
+		int local_addr_len = 0;
+		int remote_addr_len = 0;
+		GetAcceptExSockaddrs(address_,
+			0,
+			sizeof SOCKADDR_IN + 16,
+			sizeof SOCKADDR_IN + 16,
+			&local_addr,
+			&local_addr_len,
+			&remote_addr,
+			&remote_addr_len
+		);
+
+		if (remote_addr_len != 0)
+		{
+			SOCKADDR_IN* remote_add_in = reinterpret_cast<SOCKADDR_IN*>(remote_addr);
+			if (remote_add_in != nullptr)
+			{
+				char ip[MAX_IP_LENGTH] = { 0 };
+				inet_ntop(AF_INET, &remote_add_in->sin_addr, ip, MAX_IP_LENGTH);
+				SetIp(ip);
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	char* Connection::PrepareSendPacket(int len)
 	{
 		if (is_connected_ == false)
