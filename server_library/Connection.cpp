@@ -2,302 +2,206 @@
 
 namespace library
 {
-	Connection::Connection()
+	void Connection::Init(const SOCKET listenSocket, const int index, const ConnectionConfig& config)
 	{
-		socket_listener_	= INVALID_SOCKET;
-		recv_buf_size_		= 0;
-		send_buf_size_		= 0;
 		Init();
+
+		ListenSocket = listenSocket;
+		Index = index;
+		RecvBufSize = config.MaxRecvBufferSize;
+		SendBufSize = config.MaxSendBufferSize;
+
+		RecvOverlappedEx = new OverlappedEx(Index);
+		SendOverlappedEx = new OverlappedEx(Index);
+		RingRecvBuffer.Create(RecvBufSize);
+		RingSendBuffer.Create(SendBufSize);
+
+		ConnectionMsg.Type = MessageType::CONNECTION;
+		ConnectionMsg.Contents = nullptr;
+		CloseMsg.Type = MessageType::CLOSE;
+		CloseMsg.Contents = nullptr;
+
+		BindAcceptExSocket();
 	}
 
 	void Connection::Init()
 	{
-		memset(ip_, 0, MAX_IP_LENGTH);
-		socket_			= INVALID_SOCKET;
-		is_closed_		= false;
-		is_connected_	= false;
-		is_sent_		= true;
-		recv_io_cnt_	= 0;
-		send_io_cnt_	= 0;
-		accept_io_cnt_	= 0;
+		memset(Ip, 0, kMaxIpLength);
 
-		recv_ring_buffer_.Init();
-		send_ring_buffer_.Init();
+		RingRecvBuffer.Init();
+		RingSendBuffer.Init();
+
+		Connected = FALSE;
+		Closed = FALSE;
+		Sendable = TRUE;
+
+		AcceptIoCount = 0;
+		RecvIoCount = 0;
+		SendIoCount = 0;
 	}
 
-	Connection::~Connection()
+	bool Connection::BindAcceptExSocket()
 	{
-		socket_			 = INVALID_SOCKET;
-		socket_listener_ = INVALID_SOCKET;
-	}
+		memset(&RecvOverlappedEx->Overlapped, 0, sizeof OVERLAPPED);
 
-	bool Connection::CreateConnection(InitConfig& config)
-	{
-		index_			 = config.index_;
-		socket_listener_ = config.sock_listener_;
-		//recv_overlappedex_.SetConnection(this);
-		//send_overlappedex_.SetConnection(this);
-		recv_ring_buffer_.Create(config.recv_buf_size_ * config.recv_buf_cnt_);
-		send_ring_buffer_.Create(config.send_buf_size_ * config.send_buf_cnt_);
+		RecvOverlappedEx->Wsabuf.buf = AddrBuf;
+		RecvOverlappedEx->SocketMsg = AddrBuf;
+		RecvOverlappedEx->Wsabuf.len = RecvBufSize;
+		RecvOverlappedEx->Mode = IoMode::ACCEPT;
+		RecvOverlappedEx->ConnectionIndex = Index;
 
-		recv_buf_size_ = config.recv_buf_size_;
-		send_buf_size_ = config.send_buf_size_;
-
-		return BindAcceptEx();
-	}
-
-	bool Connection::BindAcceptEx()
-	{
-		DWORD bytes;
-		memset(&recv_overlappedex_.overlapped_, 0, sizeof WSAOVERLAPPED);
-		recv_overlappedex_.wsabuf_.buf	= address_;
-		recv_overlappedex_.wsabuf_.len	= recv_buf_size_;		
-		recv_overlappedex_.msg_			= address_;
-		recv_overlappedex_.iomode_		= IoMode::ACCEPT;
-		recv_overlappedex_.connection_	= this;
-		socket_ = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_IP,
-			nullptr, 0, WSA_FLAG_OVERLAPPED);
-		if (socket_ == INVALID_SOCKET)
+		ClientSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_IP, nullptr, 0, WSA_FLAG_OVERLAPPED);
+		if (ClientSocket == INVALID_SOCKET)
 		{
-			logger_.Write(LogType::L_ERROR, "System | %s | WSASocket() failed : Error[%d]", __FUNCTION__, WSAGetLastError());
+			Log.Write(LogType::L_ERROR, "%s | WSASocket() failure:error[%d]", __FUNCTION__, WSAGetLastError());
 			return false;
 		}
-
 		IncrementAcceptIoCount();
-		bool result = AcceptEx(socket_listener_,
-			socket_, 
-			recv_overlappedex_.wsabuf_.buf,
-			0, 
-			sizeof SOCKADDR_IN + 16,
-			sizeof SOCKADDR_IN + 16,
-			&bytes,
-			&recv_overlappedex_.overlapped_);
-		if (result == false && WSAGetLastError() != WSA_IO_PENDING)
-		{
-			DecrementAcceptIoCount();
-			logger_.Write(LogType::L_ERROR, "System | %s | AcceptEx() failed : Error[%d]", __FUNCTION__, WSAGetLastError());
-			return false;
-		}
-		return true;
-	}
-	
-	bool Connection::BindIocp(HANDLE iocp)
-	{
-		LockGurad lock(cs_);
-		if (iocp == nullptr)
-		{
-			return false;
-		}
-		HANDLE result_handle = CreateIoCompletionPort((HANDLE)socket_, iocp, reinterpret_cast<ULONG_PTR>(this), 0);
-		if (iocp == nullptr || iocp != result_handle)
-		{
-			logger_.Write(LogType::L_ERROR, "System | Socket:%d | %s | CreateIoCompletionPort() failed : Error[%d]", socket_, __FUNCTION__, WSAGetLastError());
-			return false;
-		}
-		iocp_ = iocp;
-		return true;
-	}
-
-	bool Connection::CloseConnection(bool is_forced)
-	{
-		LockGuard lock(cs_);
-		linger li = { 0, 0 };
-		if (is_forced == true)
-		{
-			li.l_onoff = 1;
-		}
-		// 상호 참조는 안 하는 편이 좋다
-		// IocpServer 쪽에서 Connection 끊는 루틴 강구
-		//if (IocpServer() != nullptr && m_bIsConnect)
-		//	IocpServer()->OnClose(this);
-
-		shutdown(socket_, SD_BOTH);
-		setsockopt(socket_, SOL_SOCKET, SO_LINGER, reinterpret_cast<char*>(&li), sizeof li);
-		closesocket(socket_);
-		socket_ = INVALID_SOCKET;
-
-		recv_overlappedex_.still_ = 0;
-		recv_overlappedex_.total_bytes_ = 0;
-
-		send_overlappedex_.still_ = 0;
-		send_overlappedex_.total_bytes_ = 0;
-
-		Init();
-		BindAcceptEx();
-		return true;
-	}
-
-	bool Connection::SetAddressInfo()
-	{
-		SOCKADDR* local_addr = nullptr;
-		SOCKADDR* remote_addr = nullptr;
-
-		int local_addr_len = 0;
-		int remote_addr_len = 0;
-		GetAcceptExSockaddrs(address_,
+		DWORD bytes = 0;
+		auto result = AcceptEx(
+			ListenSocket,
+			ClientSocket,
+			RecvOverlappedEx->Wsabuf.buf,
 			0,
 			sizeof SOCKADDR_IN + 16,
 			sizeof SOCKADDR_IN + 16,
-			&local_addr,
-			&local_addr_len,
-			&remote_addr,
-			&remote_addr_len
+			&bytes,
+			reinterpret_cast<OVERLAPPED*>(&RecvOverlappedEx)
 		);
 
-		if (remote_addr_len != 0)
+		if (!result && WSAGetLastError() != WSA_IO_PENDING)
 		{
-			SOCKADDR_IN* remote_add_in = reinterpret_cast<SOCKADDR_IN*>(remote_addr);
-			if (remote_add_in != nullptr)
-			{
-				char ip[MAX_IP_LENGTH] = { 0 };
-				inet_ntop(AF_INET, &remote_add_in->sin_addr, ip, MAX_IP_LENGTH);
-				SetIp(ip);
-				return true;
-			}
+			DecrementAcceptIoCount();
+			Log.Write(LogType::L_ERROR, "%s | AcceptEx() failure:error[%d]", __FUNCTION__, WSAGetLastError());
+			return false;
+		}
+		return true;
+	}
+
+	bool Connection::CloseCompletely()
+	{
+		// 소켓만 종료한 채로 전부 처리될 때까지 대기?
+		if (Connected && (AcceptIoCount != 0 || RecvIoCount != 0 || SendIoCount != 0))
+		{
+			Disconnect();
+			return false;
+		}
+
+		// 한 버만 접속 종료 처리 하기 위함
+		if (InterlockedCompareExchange(reinterpret_cast<long*>(&Closed), TRUE, FALSE) == static_cast<long>(FALSE))
+		{
+			return true;
 		}
 
 		return false;
 	}
 
-	char* Connection::PrepareSendPacket(int len)
+	void Connection::Disconnect(bool forced)
 	{
-		if (is_connected_ == false)
+		SetStateDisconnected();
+		LockGuard lock(Cs);
+		if (ClientSocket != INVALID_SOCKET)
 		{
-			return nullptr;
+			if (forced == true)
+			{
+				LINGER linger = { 0 };
+				linger.l_onoff = 1;
+				setsockopt(ClientSocket, SOL_SOCKET, SO_LINGER, reinterpret_cast<char*>(&linger), sizeof LINGER);
+			}
+			closesocket(ClientSocket);
+			ClientSocket = INVALID_SOCKET;
 		}
-		char* buf = send_ring_buffer_.ForwardMark(len);
-		if (buf == nullptr)
-		{
-			// 오버플로우인데 일반적인 상황이라면
-			// 보내지 않을 바이트 수이므로 연결을 끊는다
-			// IocpServer()->CloseConnection(this);
-			CloseConnection();
-			logger_.Write(LogType::L_ERROR, "System | Socket:%d | %s | Send Ring buffer ForwardMark() failed : Error[%d]", socket_, __FUNCTION__,WSAGetLastError());
-			return nullptr;
-		}
-		memset(buf, 0, len);
-		memcpy(buf, &len, PACKET_LENGTH_BYTE);
-		return buf;
 	}
 
-	bool Connection::ReleaseSendPacket(OverlappedEx* send_overlappedex)
+	bool Connection::ResetConnection()
 	{
-		if (send_overlappedex == nullptr)
+		LockGuard lock(Cs);
+
+		RecvOverlappedEx->Remain = 0;
+		RecvOverlappedEx->TotalBytes = 0;
+		SendOverlappedEx->Remain = 0;
+		SendOverlappedEx->TotalBytes = 0;
+		Init();
+		return BindAcceptExSocket();
+	}
+
+	bool Connection::BindIocp(const HANDLE WorkerIocp)
+	{
+		LockGuard lock(Cs);
+		auto iocp = CreateIoCompletionPort(
+			reinterpret_cast<HANDLE>(ClientSocket),
+			WorkerIocp,
+			reinterpret_cast<ULONG_PTR>(this),
+			0
+		);
+		if (iocp == INVALID_HANDLE_VALUE || iocp != WorkerIocp)
 		{
+			Log.Write(LogType::L_ERROR, "%s | CreateIoCompletionPort() failure:error[%d]", __FUNCTION__, WSAGetLastError());
 			return false;
 		}
-
-		send_ring_buffer_.ReleaseBuffer(send_overlappedex_.wsabuf_.len);
 		return true;
 	}
 
-	// 여기의 remain은 더 수신해야할 남아 있는 바이트가 아니라
-	// 현재까지 수신한 바이트 수일 확률이 높음. 그럴 경우 still로 변경
-	bool Connection::RecvPost(char* next, DWORD still)
+	bool Connection::PostRecv(const char* nextBuf, const DWORD remain)
 	{
-		DWORD	flag = 0;
-		DWORD	recv_bytes = 0;
-		assert(is_connected_ == true);
-		recv_overlappedex_.iomode_ = IoMode::RECV;
-		recv_overlappedex_.still_ = still;
+		assert(Connected == TRUE && RecvOverlappedEx != nullptr);
 
-		// fuck that shit. 여긴 server 쪽 가서 다시 봐야함
-		// 무슨 말이야 이게 대체 미친 강정중 새끼야
-		int move = still - (recv_ring_buffer_.GetWriteMark() - next);
-		recv_overlappedex_.wsabuf_.buf =
-			recv_ring_buffer_.ForwardMark(move, recv_buf_size_, still);
+		RecvOverlappedEx->Mode = IoMode::RECV;
+		RecvOverlappedEx->Remain = remain;
 
-		if (recv_overlappedex_.wsabuf_.buf == nullptr)
-		{
-			CloseConnection();
-			logger_.Write(LogType::L_ERROR, "System | Socket:%d | %s | Recv Ring buffer ForwardMark() failed", socket_, __FUNCTION__);
-			return false;
-		}
-		// 이 코드는 또 뭘까
-		//recv_overlappedex_.msg_ = recv_overlappedex_.wsabuf_.buf - still;
-		memset(&recv_overlappedex_.overlapped_, 0, sizeof WSAOVERLAPPED);
+		// 난 진짜 씨발 링 버퍼 사용하는 부분을 의도를 모르겠다 씨발 새끼들아
+		auto move = static_cast<int>(remain - (RingRecvBuffer.GetWriteMark() - nextBuf));
+		RecvOverlappedEx->Wsabuf.len = RecvBufSize;
+		RecvOverlappedEx->Wsabuf.buf = RingRecvBuffer.ForwardMark(move, RecvBufSize, remain);
+		assert(RecvOverlappedEx->Wsabuf.buf != nullptr);
+
+		RecvOverlappedEx->SocketMsg = RecvOverlappedEx->Wsabuf.buf - remain; // 얘는 왜 또 빼냐
+		memset(&RecvOverlappedEx->Overlapped, 0, sizeof WSAOVERLAPPED);
 		IncrementRecvIoCount();
+
+		DWORD flag = 0;
+		DWORD recvBytes = 0;
 		auto result = WSARecv(
-			socket_,
-			&recv_overlappedex_.wsabuf_,
+			ClientSocket,
+			&RecvOverlappedEx->Wsabuf,
 			1,
-			&recv_bytes,
+			&recvBytes,
 			&flag,
-			&recv_overlappedex_.overlapped_,
+			&RecvOverlappedEx->Overlapped,
 			nullptr
 		);
 
 		if (result == SOCKET_ERROR && WSAGetLastError() != WSA_IO_PENDING)
 		{
 			DecrementRecvIoCount();
-			// IocpServer()->CloseConnection(this);
-			CloseConnection();
-			logger_.Write(LogType::L_ERROR, "System | Socket:%d | %s | WSARecv() failed: Error[%u]", 
-				socket_, __FUNCTION__, WSAGetLastError());
+			Log.Write(LogType::L_ERROR, "%s | WSARecv() failure:error[%d]", __FUNCTION__, WSAGetLastError());
 			return false;
 		}
 		return true;
 	}
 
-	bool Connection::SendPost()
+	bool Connection::PostSend(const int size)
 	{
-		DWORD bytes = 0;
-		if (InterlockedCompareExchange(reinterpret_cast<long*>(&is_sent_), FALSE, TRUE))
+		// 남은 패킷이 있는가
+		//if (size > 0)
+		//{
+		//	  RingSendBuffer.SetUsedBufferSize(sendSize);
+		//}
+
+		if (InterlockedCompareExchange(reinterpret_cast<long*>(&Sendable), FALSE, TRUE))
 		{
-			int read_size = 0;
-			char* buf = send_ring_buffer_.GetBuffer(send_buf_size_, read_size);
+			auto size = 0;
+			// 분명 문제 생긴다\
+			첫 사용이라면 size가 0이 될 테니까
+			auto buf = RingSendBuffer.GetBuffer(SendBufSize, size); 
 			if (buf == nullptr)
 			{
-				InterlockedExchange(reinterpret_cast<long*>(&is_sent_), TRUE);
+				InterlockedExchange(reinterpret_cast<long*>(&Sendable), TRUE);
+				Log.Write(LogType::L_ERROR, "%s | RingSendBuffer.GetBuffer() failure", __FUNCTION__);
 				return false;
 			}
 
-			// 이 설정값들 다 마음에 안 듦
-			send_overlappedex_.still_ = 0;
-			send_overlappedex_.iomode_ = IoMode::SEND;
-			send_overlappedex_.total_bytes_ = read_size;
-			memset(&send_overlappedex_.overlapped_, 0, sizeof WSAOVERLAPPED);
-			send_overlappedex_.wsabuf_.len = read_size;
-			send_overlappedex_.wsabuf_.buf = buf;
-			send_overlappedex_.connection_ = this;
-
-			IncrementSendIoCount();
-			auto result = WSASend(
-				socket_,
-				&send_overlappedex_.wsabuf_,
-				1,
-				&bytes,
-				0,
-				&send_overlappedex_.overlapped_,
-				nullptr
-			);
-			if (result == SOCKET_ERROR && WSAGetLastError() != WSA_IO_PENDING)
-			{
-				DecrementSendIoCount();
-				// IocpServer()->CloseConnection(this);
-				CloseConnection();
-				logger_.Write(LogType::L_ERROR, "System | Socket:%d | %s | WSASend() failed: Error[%u]",
-					socket_, __FUNCTION__, WSAGetLastError());
-				InterlockedExchange(reinterpret_cast<long*>(&is_sent_), FALSE);
-				return false;
-			}
+			memset(&SendOverlappedEx->Overlapped, 0, sizeof WSAOVERLAPPED);
 		}
-		return true;
-	}
-
-	void Connection::DecrementRecvIoCount()
-	{
-		LockGurad lock(cs_);
-		recv_io_cnt_ ? InterlockedDecrement(&recv_io_cnt_) : 0;
-	}
-	void Connection::DecrementSendIoCount()
-	{
-		LockGurad lock(cs_);
-		send_io_cnt_ ? InterlockedDecrement(&send_io_cnt_) : 0;
-	}
-	void Connection::DecrementAcceptIoCount()
-	{
-		LockGurad lock(cs_);
-		accept_io_cnt_ ? InterlockedDecrement(&accept_io_cnt_) : 0;
 	}
 }

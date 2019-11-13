@@ -3,23 +3,21 @@
   <ItemGroup>
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="RingBuffer.cpp" />
-    <ClCompile Include="VBuffer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Lock.cpp" />
     <ClCompile Include="Connection.cpp" />
     <ClCompile Include="IocpServer.cpp" />
+    <ClCompile Include="MessagePool.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="Singleton.h" />
     <ClInclude Include="RingBuffer.h" />
     <ClInclude Include="Definitions.h" />
-    <ClInclude Include="VBuffer.h" />
-    <ClInclude Include="Queue.h" />
     <ClInclude Include="Lock.h" />
     <ClInclude Include="conmanip.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="Connection.h" />
     <ClInclude Include="IocpServer.h" />
+    <ClInclude Include="MessagePool.h" />
   </ItemGroup>
 </Project>

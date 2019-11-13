@@ -23,6 +23,7 @@
     <ProjectGuid>{1CFDCA38-0B93-4367-A9F2-A929E0E1B471}</ProjectGuid>
     <RootNamespace>serverlibrary</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>server_library</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -132,11 +133,11 @@
     <ClCompile Include="IocpServer.cpp" />
     <ClCompile Include="Lock.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MessagePool.cpp" />
     <ClCompile Include="RingBuffer.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="VBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="conmanip.h" />
@@ -145,11 +146,9 @@
     <ClInclude Include="IocpServer.h" />
     <ClInclude Include="Lock.h" />
     <ClInclude Include="Logger.h" />
-    <ClInclude Include="Queue.h" />
+    <ClInclude Include="MessagePool.h" />
     <ClInclude Include="RingBuffer.h" />
-    <ClInclude Include="Singleton.h" />
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="VBuffer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

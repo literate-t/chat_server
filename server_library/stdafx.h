@@ -16,6 +16,7 @@
 #include <vector>
 #include <unordered_map>
 #include <queue>
+#include <concurrent_queue.h>
 #include <list>
 #include <fstream>
 #include <math.h>
@@ -24,10 +25,8 @@ using namespace std;
 
 #include "Definitions.h"
 #include "Lock.h"
-#include "Singleton.h"
 #include "RingBuffer.h"
-#include "VBuffer.h"
-#include "Queue.h"
 #include "Logger.h"
 #include "Connection.h"
 #include "IocpServer.h"
+#include "MessagePool.h"
