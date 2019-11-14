@@ -7,8 +7,8 @@ namespace library
 		using LockGurad = Lock::LockGuard;
 
 	public:
-		Connection();
-		~Connection();
+		Connection() = default;
+		~Connection() {}
 
 		Message* GetConnectionMsg() { return &ConnectionMsg; }
 		Message* GetCloseMsg() { return &CloseMsg; }

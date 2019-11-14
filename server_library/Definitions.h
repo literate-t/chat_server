@@ -41,7 +41,7 @@ namespace library
 		int MaxSendOverlappedBufferSize		= -1;
 	};
 
-	enum class IoMode : short
+	enum class IoMode : char
 	{
 		NONE = 0,
 		ACCEPT,
@@ -49,7 +49,7 @@ namespace library
 		SEND
 	};
 
-	enum class MessageType : short
+	enum class MessageType : char
 	{
 		NONE = 0,
 		CONNECTION,

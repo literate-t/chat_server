@@ -8,6 +8,7 @@
     <ClCompile Include="Connection.cpp" />
     <ClCompile Include="IocpServer.cpp" />
     <ClCompile Include="MessagePool.cpp" />
+    <ClCompile Include="Performance.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -19,5 +20,6 @@
     <ClInclude Include="Connection.h" />
     <ClInclude Include="IocpServer.h" />
     <ClInclude Include="MessagePool.h" />
+    <ClInclude Include="Performance.h" />
   </ItemGroup>
 </Project>

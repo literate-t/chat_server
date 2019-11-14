@@ -202,6 +202,83 @@ namespace library
 			}
 
 			memset(&SendOverlappedEx->Overlapped, 0, sizeof WSAOVERLAPPED);
+
+			SendOverlappedEx->Wsabuf.buf = buf;
+			SendOverlappedEx->Wsabuf.len = size;
+			SendOverlappedEx->ConnectionIndex = Index;
+
+			SendOverlappedEx->Remain = 0;
+			SendOverlappedEx->TotalBytes = size;
+			SendOverlappedEx->Mode = IoMode::SEND;
+
+			IncrementSendIoCount();
+
+			DWORD sendBytes = 0;
+			auto result = WSASend(
+				ClientSocket,
+				&SendOverlappedEx->Wsabuf,
+				1,
+				&sendBytes,
+				0,
+				&SendOverlappedEx->Overlapped,
+				nullptr
+			);
+
+			if (result = SOCKET_ERROR && WSAGetLastError() != WSA_IO_PENDING)
+			{
+				DecrementSendIoCount();
+				Log.Write(LogType::L_ERROR, "%s | WSASend() failure[%d]", __FUNCTION__, WSAGetLastError());
+				return false;
+			}
 		}
+		return true;
+	}
+
+	bool Connection::ReserveSendPacketBuffer(OUT char** buf, const int size)
+	{
+		//assert(Connected);
+		if (!Connected)
+		{
+			*buf = nullptr;
+			Log.Write(LogType::L_ERROR, "%s | Not connected failure", __FUNCTION__);
+			return false;
+		}
+
+		*buf = RingSendBuffer.ForwardMark(size);
+		if (*buf == nullptr)
+		{
+			Log.Write(LogType::L_ERROR, "%s | RingSendBuffer.ForwardMark() failure", __FUNCTION__);
+			return false;
+		}
+		return true;
+	}
+
+	bool Connection::SetAddressInf()
+	{
+		SOCKADDR* localAddr		= nullptr;
+		SOCKADDR* remoteAddr	= nullptr;
+		int localAddrLen = 0;
+		int remoteAddrLen = 0;
+
+		GetAcceptExSockaddrs(
+			AddrBuf, 0,
+			sizeof SOCKADDR_IN + 16,
+			sizeof SOCKADDR_IN + 16,
+			&localAddr, &localAddrLen,
+			&remoteAddr, &remoteAddrLen
+		);
+
+		if (remoteAddrLen != 0)
+		{
+			SOCKADDR_IN* remoteAddrIn = reinterpret_cast<SOCKADDR_IN*>(remoteAddr);
+			if (remoteAddrIn != nullptr)
+			{
+				char ip[kMaxIpLength] = { 0 };
+				inet_ntop(AF_INET, &remoteAddrIn->sin_addr, ip, kMaxIpLength);
+				SetIp(ip);
+			}
+			return true;
+		}
+		return false;
 	}
 }
