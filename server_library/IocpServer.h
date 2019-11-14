@@ -11,7 +11,7 @@ namespace library
 	public:
 		bool Start(Config& config);
 		void End();
-		bool ProcessIocpMessage(OUT short& ioType, OUT int& connectionIndex);
+		bool ProcessIocpMessage(OUT char& ioType, OUT int& connectionIndex, char* buf, OUT short& copySize, int waitMilliseconds);
 		void SendPacket(const int connectionIndex, const void* packet, const short packetSize);
 
 		int GetMaxPacketSize()		{ return InitConfig.MaxPacketSize; }
@@ -36,7 +36,7 @@ namespace library
 		void DoSend(OverlappedEx* overlappedEx, const DWORD size);
 		void ForwardPacket(Connection* connection, DWORD& remain, char* buffer);
 
-		void DoPostConnection(Connection* connection, const Message* msg, OUT char& ioMode, OUT int connectionIndex);
+		void DoPostConnection(Connection* connection, const Message* msg, OUT char& ioMode, OUT int& connectionIndex);
 		void DoPostClose(Connection* connection, const Message* msg, OUT char& ioMode, OUT int& connectionIndex);
 		void DoPostRecvPacket(Connection* connection, const Message* msg, OUT char& ioMode, OUT int& connectionIndex, char* buf, OUT short& copySize, const DWORD ioSize);
 
@@ -45,13 +45,15 @@ namespace library
 		SOCKET ListenSocket = INVALID_SOCKET;
 
 		vector<Connection*> VectorConnection;
-		HANDLE WorkerIocp = nullptr;
-		HANDLE LogicIocp = nullptr;
+		HANDLE WorkerIocp = INVALID_HANDLE_VALUE;
+		HANDLE LogicIocp = INVALID_HANDLE_VALUE;
 
 		bool IsWorkerThreadRunnig = true;
 		vector<unique_ptr<thread>> VectorWorkerThread;
 
 		unique_ptr<MessagePool> UniqueMessagePool;
 		unique_ptr<Performance> UniquePerformance;
+
+		Logger Log;
 	};
 }
