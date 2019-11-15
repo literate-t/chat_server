@@ -21,7 +21,7 @@ namespace library
 		CloseMsg.Type = MessageType::CLOSE;
 		CloseMsg.Contents = nullptr;
 
-		BindAcceptExSocket();
+		AcceptExSocket();
 	}
 
 	void Connection::Init()
@@ -40,7 +40,7 @@ namespace library
 		SendIoCount = 0;
 	}
 
-	bool Connection::BindAcceptExSocket()
+	Result Connection::AcceptExSocket()
 	{
 		memset(&RecvOverlappedEx->Overlapped, 0, sizeof OVERLAPPED);
 
@@ -54,7 +54,7 @@ namespace library
 		if (ClientSocket == INVALID_SOCKET)
 		{
 			Log.Write(LogType::L_ERROR, "%s | WSASocket() failure:error[%d]", __FUNCTION__, WSAGetLastError());
-			return false;
+			return Result::FAIL_WSASOCKET;
 		}
 		IncrementAcceptIoCount();
 		DWORD bytes = 0;
@@ -73,9 +73,9 @@ namespace library
 		{
 			DecrementAcceptIoCount();
 			Log.Write(LogType::L_ERROR, "%s | AcceptEx() failure:error[%d]", __FUNCTION__, WSAGetLastError());
-			return false;
+			return Result::FAIL_ACCEPTEX;
 		}
-		return true;
+		return Result::SUCCESS;
 	}
 
 	bool Connection::CloseCompletely()
@@ -84,16 +84,16 @@ namespace library
 		if (Connected && (AcceptIoCount != 0 || RecvIoCount != 0 || SendIoCount != 0))
 		{
 			Disconnect();
-			return false;
+			return true;
 		}
 
 		// 한 버만 접속 종료 처리 하기 위함
 		if (InterlockedCompareExchange(reinterpret_cast<long*>(&Closed), TRUE, FALSE) == static_cast<long>(FALSE))
 		{
-			return true;
+			return false;
 		}
 
-		return false;
+		return true;
 	}
 
 	void Connection::Disconnect(bool forced)
@@ -113,7 +113,7 @@ namespace library
 		}
 	}
 
-	bool Connection::ResetConnection()
+	Result Connection::ResetConnection()
 	{
 		LockGuard lock(Cs);
 
@@ -122,7 +122,7 @@ namespace library
 		SendOverlappedEx->Remain = 0;
 		SendOverlappedEx->TotalBytes = 0;
 		Init();
-		return BindAcceptExSocket();
+		return AcceptExSocket();
 	}
 
 	bool Connection::BindIocp(const HANDLE WorkerIocp)
@@ -142,20 +142,20 @@ namespace library
 		return true;
 	}
 
-	bool Connection::PostRecv(const char* nextBuf, const DWORD remain)
+	Result Connection::PostRecv(const char* nextBuf, const DWORD remain)
 	{
 		assert(Connected == TRUE && RecvOverlappedEx != nullptr);
 
 		RecvOverlappedEx->Mode = IoMode::RECV;
-		RecvOverlappedEx->Remain = remain;
+		RecvOverlappedEx->Remain = remain; // 20
 
-		// 난 진짜 씨발 링 버퍼 사용하는 부분을 의도를 모르겠다 씨발 새끼들아
+		// 난 진짜 씨발 링 버퍼 사용하는 부분을 의도를 모르겠다 씨발 새끼들아				
 		auto move = static_cast<int>(remain - (RingRecvBuffer.GetWriteMark() - nextBuf));
 		RecvOverlappedEx->Wsabuf.len = RecvBufSize;
 		RecvOverlappedEx->Wsabuf.buf = RingRecvBuffer.ForwardMark(move, RecvBufSize, remain);
 		assert(RecvOverlappedEx->Wsabuf.buf != nullptr);
 
-		RecvOverlappedEx->SocketMsg = RecvOverlappedEx->Wsabuf.buf - remain; // 얘는 왜 또 빼냐
+		RecvOverlappedEx->SocketMsg = RecvOverlappedEx->Wsabuf.buf;// -remain; // 얘는 왜 또 빼냐
 		memset(&RecvOverlappedEx->Overlapped, 0, sizeof WSAOVERLAPPED);
 		IncrementRecvIoCount();
 
@@ -175,15 +175,15 @@ namespace library
 		{
 			DecrementRecvIoCount();
 			Log.Write(LogType::L_ERROR, "%s | WSARecv() failure:error[%d]", __FUNCTION__, WSAGetLastError());
-			return false;
+			return Result::POSTRECV_NULL_SOCKET_ERROR;
 		}
-		return true;
+		return Result::SUCCESS;
 	}
 
-	bool Connection::PostSend(const int size)
+	bool Connection::PostSend(const int sendSize)
 	{
 		// 남은 패킷이 있는가
-		//if (size > 0)
+		//if (sendSize > 0)
 		//{
 		//	  RingSendBuffer.SetUsedBufferSize(sendSize);
 		//}
@@ -234,26 +234,24 @@ namespace library
 		return true;
 	}
 
-	bool Connection::ReserveSendPacketBuffer(OUT char** buf, const int size)
+	Result Connection::ReserveSendPacketBuffer(OUT char** buf, const int size)
 	{
 		//assert(Connected);
 		if (!Connected)
 		{
-			*buf = nullptr;
-			Log.Write(LogType::L_ERROR, "%s | Not connected failure", __FUNCTION__);
-			return false;
+			*buf = nullptr;			
+			return Result::RESERVED_BUFFER_NOT_CONNECTED;
 		}
 
 		*buf = RingSendBuffer.ForwardMark(size);
 		if (*buf == nullptr)
-		{
-			Log.Write(LogType::L_ERROR, "%s | RingSendBuffer.ForwardMark() failure", __FUNCTION__);
-			return false;
+		{			
+			return Result::RESERVED_BUFFER_EMPTY;
 		}
-		return true;
+		return Result::SUCCESS;
 	}
 
-	bool Connection::SetAddressInf()
+	bool Connection::SetAddressInfo()
 	{
 		SOCKADDR* localAddr		= nullptr;
 		SOCKADDR* remoteAddr	= nullptr;

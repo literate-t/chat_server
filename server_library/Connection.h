@@ -17,11 +17,11 @@ namespace library
 
 		bool CloseCompletely();
 		void Disconnect(bool forced = false);
-		bool ResetConnection();
+		Result ResetConnection();
 		bool BindIocp(const HANDLE WorkerIocp);
-		bool PostRecv(const char* nextBuf, const DWORD remainByte);
+		Result PostRecv(const char* nextBuf, const DWORD remainByte);
 		bool PostSend(const int sendSize);
-		bool ReserveSendPacketBuffer(OUT char** buf, const int sendSize);
+		Result ReserveSendPacketBuffer(OUT char** buf, const int sendSize);
 
 		SOCKET GetClientSocket() { return ClientSocket; }
 		void SetIp(const char* ip) { memcpy(Ip, ip, kMaxIpLength); }
@@ -42,14 +42,13 @@ namespace library
 		char* GetRecvBufferBegin() { return RingRecvBuffer.GetBegin();}
 		void ReleaseRecvBuffer(const int size) { RingRecvBuffer.ReleaseBuffer(size); }
 
-		bool SetAddressInf();
+		bool SetAddressInfo();
 		void ReleaseSendBuffer(const int size) { RingSendBuffer.ReleaseBuffer(size); }
 		void SetSendAvaliable() { InterlockedExchange(reinterpret_cast<long*>(&Sendable), TRUE); }
 
-
 	private:
 		void Init();
-		bool BindAcceptExSocket();
+		Result AcceptExSocket();
 
 	private:
 		int Index = -1;

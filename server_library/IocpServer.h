@@ -11,34 +11,35 @@ namespace library
 	public:
 		bool Start(Config& config);
 		void End();
-		bool ProcessIocpMessage(OUT char& ioType, OUT int& connectionIndex, char* buf, OUT short& copySize, int waitMilliseconds);
+		bool ProcessIocpMessage(OUT char& msgType, OUT int& connectionIndex, char* buf, OUT short& copySize, int waitMilliseconds);
 		void SendPacket(const int connectionIndex, const void* packet, const short packetSize);
 
 		int GetMaxPacketSize()		{ return InitConfig.MaxPacketSize; }
 		int GetMaxConnectinoCount() { return InitConfig.MaxConnectionCount; }
 
 	private:
-		bool CreateListenSocket();
-		bool CreateIocp();
+		Result CreateListenSocket();
+		Result CreateIocp();
 		bool CreateMessagePool();
 		bool BindListenSocketIocp();
 		bool CreateConnections();
-		bool DestroyConnections();
+		void DestroyConnections();
 		Connection* GetConnection(const int connectionIndex);
 		bool CreatePerformance();
 		bool CreateWorkerThread();
-		bool WorkerThread();
-		bool PostMessageToQueue(Connection* connection, Message* msg, const DWORD packetSize = 0);
+		void WorkerThread();
+		Result PostMessageToQueue(Connection* connection, Message* msg, const DWORD packetSize = 0);
 		void HandleWorkerThreadException(Connection* connection, const OverlappedEx* overlappedEx);
-		void HandleCloseConnectionException(Connection* connection, const OverlappedEx* overlappedEx);
+		void HandleConnectionCloseException(Connection* connection);
+
 		void DoAccept(const OverlappedEx* overlappedEx);
 		void DoRecv(OverlappedEx* overlappedEx, const DWORD size);
 		void DoSend(OverlappedEx* overlappedEx, const DWORD size);
 		void ForwardPacket(Connection* connection, DWORD& remain, char* buffer);
 
-		void DoPostConnection(Connection* connection, const Message* msg, OUT char& ioMode, OUT int& connectionIndex);
-		void DoPostClose(Connection* connection, const Message* msg, OUT char& ioMode, OUT int& connectionIndex);
-		void DoPostRecvPacket(Connection* connection, const Message* msg, OUT char& ioMode, OUT int& connectionIndex, char* buf, OUT short& copySize, const DWORD ioSize);
+		void DoPostConnection(Connection* connection, const Message* msg, OUT char& msgType, OUT int& connectionIndex);
+		void DoPostClose(Connection* connection, const Message* msg, OUT char& msgType, OUT int& connectionIndex);
+		void DoPostRecvPacket(Connection* connection, const Message* msg, OUT char& msgType, OUT int& connectionIndex, char* buf, OUT short& copySize, const DWORD ioSize);
 
 	private:
 		Config InitConfig;

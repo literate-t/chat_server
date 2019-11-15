@@ -18,10 +18,13 @@
 
 namespace library
 {
+	const int kMaxIpLength = 20;
+	const int kMaxAddrLength = 64;
+
 	struct Config
 	{
 		unsigned short PortNumber			=  0;
-		int WorkThreadCount					= -1;
+		int WorkerThreadCount					= -1;
 		int MaxRecvOverlappedBufferSize		= -1; // 한번에 받을 수 있는 최대 크기
 		int MaxSendOverlappedBufferSize		= -1; // 한번에 보낼 수 있는 최대 크기
 		int ConnectionMaxRecvBufferSize		= -1; // 받기용 버퍼의 최대 크기(데이터를 받으면 여기에 저장되고, 데이터의 위치가 애플리케이션에 전달되므로 넉넉하게 커야 한다)
@@ -93,8 +96,55 @@ namespace library
 		}
 	};
 
-	const int kMaxIpLength		= 20;
-	const int kMaxAddrLength	= 64;
+	enum class Result : short
+	{
+		SUCCESS = 0,
+
+		FAIL_MAKE_DIRECTORY_LOG,
+		FAIL_MAKE_DIRECTORY_DUMP,
+		FAIL_WORKTHREAD_INFO,
+
+		FAIL_SERVER_INFO_PORT,
+		FAIL_SERVER_INFO_MAX_RECVBUF_SIZE,
+		FAIL_SERVER_INFO_MAX_SENDBUF_SIZE,
+		FAIL_SERVER_INFO_MAX_RECV_CONNECTIONBUF_SIZE,
+		FAIL_SERVER_INFO_MAX_SEND_CONNECTIONBUF_SIZE,
+		FAIL_SERVER_INFO_MAX_PACKET_SIZE,
+		FAIL_SERVER_INFO_MAX_CONNECTION_COUNT,
+		FAIL_SERVER_INFO_MAX_MESSAGEPOOL_COUNT,
+		FAIL_SERVER_INFO_EXTRA_MESSAGEPOOL_COUNT,
+		FAIL_SERVER_INFO_PERFORMANCE_PACKET_MILLISECONDS_TIME,
+		FAIL_SERVER_INFO_POSTMESSAGES_THREAD_COUNT,
+
+		FAIL_WSASTARTUP,
+		FAIL_CREATE_LISTENSOCKET,
+		FAIL_BIND_LISTENSOCKET,		
+		FAIL_LISTEN_LISTENSOCKET,
+
+		FAIL_CREATE_WORKER_IOCP,
+		FAIL_CREATE_LOGIC_IOCP,
+
+		FAIL_CREATE_MESSAGE_MANAGER,
+		FAIL_BIND_IOCP,
+
+		FAIL_CREATE_CONNECTION,
+		FAIL_CREATE_PERFORMANCE,
+		FAIL_CREATE_WORKERTHREAD,
+		
+		FAIL_WSASOCKET,
+		FAIL_ACCEPTEX,
+		FAIL_MESSAGE_NULL,
+		FAIL_PQCS,
+
+		POSTRECV_NULL_OBJ,
+		POSTRECV_NULL_WSABUF,
+		POSTRECV_NULL_SOCKET_ERROR,
+
+		RESERVED_BUFFER_NOT_CONNECTED,
+		RESERVED_BUFFER_EMPTY,
+
+		FUNCTION_RESULT_END
+	};
 }
 
 
