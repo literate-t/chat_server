@@ -1,15 +1,15 @@
 #include "stdafx.h"
 
-namespace library
+namespace ServerLibrary
 {
-	void Connection::Init(const SOCKET listenSocket, const int index, const ConnectionConfig& config)
+	void Connection::Init(const SOCKET listenSocket, const int index, const ConnectionConfig* config, ILog* log)
 	{
 		Init();
-
+		Log = log;
 		ListenSocket = listenSocket;
 		Index = index;
-		RecvBufSize = config.MaxRecvBufferSize;
-		SendBufSize = config.MaxSendBufferSize;
+		RecvBufSize = config->MaxRecvBufferSize;
+		SendBufSize = config->MaxSendBufferSize;
 
 		RecvOverlappedEx = new OverlappedEx(Index);
 		SendOverlappedEx = new OverlappedEx(Index);
@@ -40,6 +40,11 @@ namespace library
 		SendIoCount = 0;
 	}
 
+	void Connection::SetLog(ILog* log)
+	{
+		Log = log;
+	}
+
 	Result Connection::AcceptExSocket()
 	{
 		memset(&RecvOverlappedEx->Overlapped, 0, sizeof OVERLAPPED);
@@ -53,7 +58,7 @@ namespace library
 		ClientSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_IP, nullptr, 0, WSA_FLAG_OVERLAPPED);
 		if (ClientSocket == INVALID_SOCKET)
 		{
-			Log.Write(LogType::L_ERROR, "%s | WSASocket() failure:error[%d]", __FUNCTION__, WSAGetLastError());
+			Log->Write(LogType::L_ERROR, "%s | WSASocket() failure:error[%d]", __FUNCTION__, WSAGetLastError());
 			return Result::FAIL_WSASOCKET;
 		}
 		IncrementAcceptIoCount();
@@ -72,7 +77,7 @@ namespace library
 		if (!result && WSAGetLastError() != WSA_IO_PENDING)
 		{
 			DecrementAcceptIoCount();
-			Log.Write(LogType::L_ERROR, "%s | AcceptEx() failure:error[%d]", __FUNCTION__, WSAGetLastError());
+			Log->Write(LogType::L_ERROR, "%s | AcceptEx() failure:error[%d]", __FUNCTION__, WSAGetLastError());
 			return Result::FAIL_ACCEPTEX;
 		}
 		return Result::SUCCESS;
@@ -136,7 +141,7 @@ namespace library
 		);
 		if (iocp == INVALID_HANDLE_VALUE || iocp != WorkerIocp)
 		{
-			Log.Write(LogType::L_ERROR, "%s | CreateIoCompletionPort() failure:error[%d]", __FUNCTION__, WSAGetLastError());
+			Log->Write(LogType::L_ERROR, "%s | CreateIoCompletionPort() failure:error[%d]", __FUNCTION__, WSAGetLastError());
 			return false;
 		}
 		return true;
@@ -174,7 +179,7 @@ namespace library
 		if (result == SOCKET_ERROR && WSAGetLastError() != WSA_IO_PENDING)
 		{
 			DecrementRecvIoCount();
-			Log.Write(LogType::L_ERROR, "%s | WSARecv() failure:error[%d]", __FUNCTION__, WSAGetLastError());
+			Log->Write(LogType::L_ERROR, "%s | WSARecv() failure:error[%d]", __FUNCTION__, WSAGetLastError());
 			return Result::POSTRECV_NULL_SOCKET_ERROR;
 		}
 		return Result::SUCCESS;
@@ -191,13 +196,13 @@ namespace library
 		if (InterlockedCompareExchange(reinterpret_cast<long*>(&Sendable), FALSE, TRUE))
 		{
 			auto size = 0;
-			// 분명 문제 생긴다\
-			첫 사용이라면 size가 0이 될 테니까
+			// 분명 문제 생긴다
+			// 첫 사용이라면 size가 0이 될 테니까
 			auto buf = RingSendBuffer.GetBuffer(SendBufSize, size); 
 			if (buf == nullptr)
 			{
 				InterlockedExchange(reinterpret_cast<long*>(&Sendable), TRUE);
-				Log.Write(LogType::L_ERROR, "%s | RingSendBuffer.GetBuffer() failure", __FUNCTION__);
+				Log->Write(LogType::L_ERROR, "%s | RingSendBuffer.GetBuffer() failure", __FUNCTION__);
 				return false;
 			}
 
@@ -227,7 +232,7 @@ namespace library
 			if (result = SOCKET_ERROR && WSAGetLastError() != WSA_IO_PENDING)
 			{
 				DecrementSendIoCount();
-				Log.Write(LogType::L_ERROR, "%s | WSASend() failure[%d]", __FUNCTION__, WSAGetLastError());
+				Log->Write(LogType::L_ERROR, "%s | WSASend() failure[%d]", __FUNCTION__, WSAGetLastError());
 				return false;
 			}
 		}

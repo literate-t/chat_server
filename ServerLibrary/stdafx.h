@@ -25,9 +25,9 @@ using namespace std;
 
 #include "Definitions.h"
 #include "Lock.h"
+#include "ILog.h"
 #include "RingBuffer.h"
-#include "Logger.h"
 #include "Connection.h"
-#include "IocpServer.h"
 #include "MessagePool.h"
 #include "Performance.h"
+#include "IocpServer.h"

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace library
+namespace ServerLibrary
 {
 	class Lock
 	{
@@ -12,7 +12,7 @@ namespace library
 			~LockGuard();
 
 		private:
-			Lock& lock_;
+			Lock& Locker;
 		};
 
 		Lock();
@@ -22,6 +22,6 @@ namespace library
 		void Leave();
 
 	private:
-		CRITICAL_SECTION cs_;
+		CRITICAL_SECTION Cs;
 	};
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace library
+namespace ServerLibrary
 {
 	class Performance
 	{
@@ -12,6 +12,7 @@ namespace library
 		void Start(int millisecond = 0);
 		void CheckPerformanceThread();
 		int IncrementPacketProcessCount() { return IsPerformanceChecked ? ++PacketProcessCount : 0; }
+		void SetLog(ILog* log);
 
 	private:
 		void SetCheckPerformance(bool performanceChecked) { IsPerformanceChecked = performanceChecked; }
@@ -23,6 +24,6 @@ namespace library
 		atomic<bool>	IsPerformanceChecked = false;
 		int				Milliseconds = 0;
 
-		Logger Log;
+		ILog* Log = nullptr;
 	};
 }

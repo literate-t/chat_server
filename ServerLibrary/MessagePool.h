@@ -1,6 +1,6 @@
 #pragma once
 
-namespace library
+namespace ServerLibrary
 {
 	class MessagePool
 	{
@@ -12,15 +12,16 @@ namespace library
 		bool CheckCounts();
 		Message* AllocateMsg();
 		bool DeallocateMsg(Message* msg);
+		void SetLog(ILog* log);
 
 	private:
 		bool CreateMsgPool();
-		void DestroyMsgPool();
+		void DestroyMsgPool();		
 
 	private:
 		concurrency::concurrent_queue<Message*> MessageQueue;
 		int MaxMsgQueueCount = -1;
 		int ExtraMsgQueueCount = -1;
-		Logger Log;
+		ILog* Log;
 	};
 }

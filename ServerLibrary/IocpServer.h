@@ -1,21 +1,23 @@
 #pragma once
+#include "stdafx.h"
 
-namespace library
+namespace ServerLibrary
 {
-	class IocpServer// : public Lock
+	class IocpServer
 	{
 	public:
 		IocpServer() = default;
-		~IocpServer() {}
+		~IocpServer() = default;
 
 	public:
-		bool Start(Config& config);
+		bool Start();
 		void End();
+		void Init(ServerConfig* config, ILog* log);
 		bool ProcessIocpMessage(OUT char& msgType, OUT int& connectionIndex, char* buf, OUT short& copySize, int waitMilliseconds);
 		void SendPacket(const int connectionIndex, const void* packet, const short packetSize);
 
-		int GetMaxPacketSize()		{ return InitConfig.MaxPacketSize; }
-		int GetMaxConnectinoCount() { return InitConfig.MaxConnectionCount; }
+		int GetMaxPacketSize()		{ return ServerInitConfig->MaxPacketSize; }
+		int GetMaxConnectinoCount() { return ServerInitConfig->MaxConnectionCount; }
 
 	private:
 		Result CreateListenSocket();
@@ -39,10 +41,12 @@ namespace library
 
 		void DoPostConnection(Connection* connection, const Message* msg, OUT char& msgType, OUT int& connectionIndex);
 		void DoPostClose(Connection* connection, const Message* msg, OUT char& msgType, OUT int& connectionIndex);
-		void DoPostRecvPacket(Connection* connection, const Message* msg, OUT char& msgType, OUT int& connectionIndex, char* buf, OUT short& copySize, const DWORD ioSize);
+		void DoPostRecvPacket(Connection* connection, const Message* msg, OUT char& msgType, OUT int& connectionIndex, char* buf, OUT short& copySize, const DWORD ioSize);		
 
 	private:
-		Config InitConfig;
+		ServerConfig* ServerInitConfig = nullptr;
+		ILog* Log = nullptr;
+
 		SOCKET ListenSocket = INVALID_SOCKET;
 
 		vector<Connection*> VectorConnection;
@@ -50,11 +54,9 @@ namespace library
 		HANDLE LogicIocp = INVALID_HANDLE_VALUE;
 
 		bool IsWorkerThreadRunnig = true;
-		vector<unique_ptr<thread>> VectorWorkerThread;
+		vector<unique_ptr<thread>> WorkerThreadVector;
 
 		unique_ptr<MessagePool> UniqueMessagePool;
 		unique_ptr<Performance> UniquePerformance;
-
-		Logger Log;
 	};
 }

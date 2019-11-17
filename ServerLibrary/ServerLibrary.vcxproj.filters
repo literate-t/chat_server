@@ -3,7 +3,6 @@
   <ItemGroup>
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="RingBuffer.cpp" />
-    <ClCompile Include="main.cpp" />
     <ClCompile Include="Lock.cpp" />
     <ClCompile Include="Connection.cpp" />
     <ClCompile Include="IocpServer.cpp" />
@@ -21,5 +20,6 @@
     <ClInclude Include="IocpServer.h" />
     <ClInclude Include="MessagePool.h" />
     <ClInclude Include="Performance.h" />
+    <ClInclude Include="ILog.h" />
   </ItemGroup>
 </Project>

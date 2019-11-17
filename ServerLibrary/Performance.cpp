@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-namespace library
+namespace ServerLibrary
 {
 	Performance::~Performance()
 	{
@@ -9,6 +9,11 @@ namespace library
 			SetCheckPerformance(false);
 			PerformanceThread.join();
 		}
+	}
+
+	void Performance::SetLog(ILog* log)
+	{
+		Log = log;
 	}
 
 	void Performance::Start(int milliseconds)
@@ -32,8 +37,7 @@ namespace library
 			}
 
 			char logMsg[64] = { 0 };
-			sprintf_s(logMsg, "Process packet count:%d, Millsecond:%d",PacketProcessCount, Milliseconds);
-			Log.Write(LogType::L_INFO, "%s | %s", __FUNCTION__, logMsg);
+			Log->Write(LogType::L_INFO, "%s | Process packet count:%d, Millsecond:%d", __FUNCTION__, PacketProcessCount.load(), Milliseconds);
 			ResetPacketProcessCount();
 		}
 	}

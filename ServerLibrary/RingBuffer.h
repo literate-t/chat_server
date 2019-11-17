@@ -1,6 +1,6 @@
 #pragma once
 
-namespace library
+namespace ServerLibrary
 {
 	class RingBuffer : public Lock
 	{

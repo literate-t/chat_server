@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-namespace library
+namespace ServerLibrary
 {
 	RingBuffer::~RingBuffer()
 	{

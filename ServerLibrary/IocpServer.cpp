@@ -1,10 +1,15 @@
 #include "stdafx.h"
 
-namespace library
+namespace ServerLibrary
 {
-	bool IocpServer::Start(Config& config)
+	void IocpServer::Init(ServerConfig* config, ILog* log)
 	{
-		InitConfig = config;
+		ServerInitConfig = config;
+		Log = log;
+	}
+
+	bool IocpServer::Start()
+	{
 		auto result = CreateListenSocket();
 		assert(result == Result::SUCCESS);
 
@@ -26,7 +31,7 @@ namespace library
 		bresult = CreateWorkerThread();
 		assert(bresult == false);
 
-		Log.Write(LogType::L_INFO, "Server started");
+		Log->Write(LogType::L_INFO, "Server started");
 		return true;
 	}
 
@@ -37,18 +42,18 @@ namespace library
 			IsWorkerThreadRunnig = false;
 			CloseHandle(WorkerIocp);
 
-			for (int i = 0; i < VectorWorkerThread.size(); ++i)
+			for (int i = 0; i < WorkerThreadVector.size(); ++i)
 			{
-				if (VectorWorkerThread[i].get()->joinable())
+				if (WorkerThreadVector[i].get()->joinable())
 				{
-					VectorWorkerThread[i].get()->join();
+					WorkerThreadVector[i].get()->join();
 				}
 			}
 		}
 
 		if (LogicIocp != INVALID_HANDLE_VALUE)
 		{
-			CloseHandle(WorkerIocp);
+			CloseHandle(LogicIocp);
 		}
 
 		if (ListenSocket != INVALID_SOCKET)
@@ -59,7 +64,7 @@ namespace library
 		WSACleanup();
 		DestroyConnections();
 
-		Log.Write(LogType::L_INFO, "Server ended");
+		Log->Write(LogType::L_INFO, "Server ended");
 	}
 
 	bool IocpServer::ProcessIocpMessage(OUT char& msgType, OUT int& connectionIndex, char* buf, OUT short& copySize, int waitMilliseconds)
@@ -81,7 +86,7 @@ namespace library
 		// assert(result == true);
 		if (result == false)
 		{
-			Log.Write(LogType::L_ERROR, "%s | GetQueuedCompletionStatus() failure[%d]", __FUNCTION__, WSAGetLastError());
+			Log->Write(LogType::L_ERROR, "%s | GetQueuedCompletionStatus() failure[%d]", __FUNCTION__, WSAGetLastError());
 			return false;
 		}
 
@@ -113,7 +118,7 @@ namespace library
 		auto connection = GetConnection(connectionIndex);
 		if (connection == nullptr)
 		{
-			Log.Write(LogType::L_ERROR, "%s | GetConnection() failure", __FUNCTION__);
+			Log->Write(LogType::L_ERROR, "%s | GetConnection() failure", __FUNCTION__);
 			return;
 		}
 
@@ -121,7 +126,7 @@ namespace library
 		auto result = connection->ReserveSendPacketBuffer(&sendBufReserved, packetSize);
 		if (result == Result::RESERVED_BUFFER_NOT_CONNECTED)
 		{
-			Log.Write(LogType::L_ERROR, "%s | Not connected failure", __FUNCTION__);
+			Log->Write(LogType::L_ERROR, "%s | Not connected failure", __FUNCTION__);
 			return;
 		}
 		else if (result == Result::RESERVED_BUFFER_EMPTY)
@@ -131,7 +136,7 @@ namespace library
 				HandleConnectionCloseException(connection);
 			}
 
-			Log.Write(LogType::L_ERROR, "%s | RingSendBuffer.ForwardMark() failure", __FUNCTION__);
+			Log->Write(LogType::L_ERROR, "%s | RingSendBuffer.ForwardMark() failure", __FUNCTION__);
 			return;
 		}
 
@@ -151,32 +156,32 @@ namespace library
 		WSADATA wsadata;
 		if (WSAStartup(MAKEWORD(2, 2), &wsadata) != 0)
 		{
-			Log.Write(LogType::L_ERROR, "%s | WSAStartup() failure[%d]", __FUNCTION__, WSAGetLastError());
+			Log->Write(LogType::L_ERROR, "%s | WSAStartup() failure[%d]", __FUNCTION__, WSAGetLastError());
 			return Result::FAIL_WSASTARTUP;
 		}
 
 		ListenSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_IP, nullptr, 0, WSA_FLAG_OVERLAPPED);
 		if (ListenSocket == INVALID_SOCKET)
 		{
-			Log.Write(LogType::L_ERROR, "%s | WSASocket() failure[%d]", __FUNCTION__, WSAGetLastError());
+			Log->Write(LogType::L_ERROR, "%s | WSASocket() failure[%d]", __FUNCTION__, WSAGetLastError());
 			return Result::FAIL_CREATE_LISTENSOCKET;
 		}
 
 		SOCKADDR_IN addrIn;
 		memset(&addrIn, 0, sizeof SOCKADDR_IN);
 		addrIn.sin_family = AF_INET;
-		addrIn.sin_port = htons(InitConfig.PortNumber);
+		addrIn.sin_port = htons(ServerInitConfig->Port);
 		addrIn.sin_addr.s_addr = htonl(INADDR_ANY);
 
 		if (bind(ListenSocket, (sockaddr*)&addrIn, sizeof addrIn) == SOCKET_ERROR)
 		{
-			Log.Write(LogType::L_ERROR, "%s | bind() failure[%d]", __FUNCTION__, GetLastError());
+			Log->Write(LogType::L_ERROR, "%s | bind() failure[%d]", __FUNCTION__, GetLastError());
 			return Result::FAIL_BIND_LISTENSOCKET;
 		}
 
-		if (listen(ListenSocket, 100) == SOCKET_ERROR)
+		if (listen(ListenSocket, ServerInitConfig->BackLogCount) == SOCKET_ERROR)
 		{
-			Log.Write(LogType::L_ERROR, "%s | listen() failure[%d]", __FUNCTION__, GetLastError());
+			Log->Write(LogType::L_ERROR, "%s | listen() failure[%d]", __FUNCTION__, GetLastError());
 			return Result::FAIL_LISTEN_LISTENSOCKET;
 		}
 		return Result::SUCCESS;
@@ -187,14 +192,14 @@ namespace library
 		WorkerIocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, nullptr, 0, 0);
 		if (WorkerIocp == INVALID_HANDLE_VALUE)
 		{
-			Log.Write(LogType::L_ERROR, "%s | CreateIoCompletionPort() failure[%d]", __FUNCTION__, WSAGetLastError());
+			Log->Write(LogType::L_ERROR, "%s | CreateIoCompletionPort() failure[%d]", __FUNCTION__, WSAGetLastError());
 			return Result::FAIL_CREATE_WORKER_IOCP;
 		}
 
 		LogicIocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, nullptr, 0, 1);
 		if (LogicIocp == INVALID_HANDLE_VALUE)
 		{
-			Log.Write(LogType::L_ERROR, "%s | CreateIoCompletionPort() failure[%d]", __FUNCTION__, WSAGetLastError());
+			Log->Write(LogType::L_ERROR, "%s | CreateIoCompletionPort() failure[%d]", __FUNCTION__, WSAGetLastError());
 			return Result::FAIL_CREATE_LOGIC_IOCP;
 		}
 		return Result::SUCCESS;
@@ -202,7 +207,8 @@ namespace library
 
 	bool IocpServer::CreateMessagePool()
 	{
-		UniqueMessagePool = make_unique<MessagePool>(InitConfig.MaxMessagePoolCount, InitConfig.ExtraMessagePoolCount);
+		UniqueMessagePool = make_unique<MessagePool>(ServerInitConfig->MaxMessagePoolCount, ServerInitConfig->ExtraMessagePoolCount);
+		UniqueMessagePool->SetLog(Log);
 		if (!UniqueMessagePool->CheckCounts())
 		{
 			return false;
@@ -215,7 +221,7 @@ namespace library
 		auto iocp = CreateIoCompletionPort(reinterpret_cast<HANDLE>(ListenSocket), WorkerIocp, 0, 0);
 		if (iocp == INVALID_HANDLE_VALUE || iocp != WorkerIocp)
 		{
-			Log.Write(LogType::L_ERROR, "%s | CreateIoCompletionPort() failure[%d]", __FUNCTION__, WSAGetLastError());
+			Log->Write(LogType::L_ERROR, "%s | CreateIoCompletionPort() failure[%d]", __FUNCTION__, WSAGetLastError());
 			return false;
 		}
 		return true;
@@ -224,15 +230,15 @@ namespace library
 	bool IocpServer::CreateConnections()
 	{
 		ConnectionConfig config;
-		config.MaxRecvBufferSize = InitConfig.ConnectionMaxRecvBufferSize;
-		config.MaxSendBufferSize = InitConfig.ConnectionMaxSendBufferSize;
-		config.MaxRecvOverlappedBufferSize = InitConfig.MaxRecvOverlappedBufferSize;
-		config.MaxSendOverlappedBufferSize = InitConfig.MaxSendOverlappedBufferSize;
+		config.MaxRecvBufferSize = ServerInitConfig->ConnectionMaxRecvBufferSize;
+		config.MaxSendBufferSize = ServerInitConfig->ConnectionMaxSendBufferSize;
+		config.MaxRecvOverlappedBufferSize = ServerInitConfig->MaxRecvOverlappedBufferSize;
+		config.MaxSendOverlappedBufferSize = ServerInitConfig->MaxSendOverlappedBufferSize;
 
-		for (int i = 0; i < InitConfig.MaxConnectionCount; ++i)
+		for (int i = 0; i < ServerInitConfig->MaxConnectionCount; ++i)
 		{
 			auto connection = new Connection();
-			connection->Init(ListenSocket, i, config);
+			connection->Init(ListenSocket, i, &config, Log);
 			VectorConnection.push_back(connection);
 		}
 		return true;
@@ -240,7 +246,7 @@ namespace library
 
 	void IocpServer::DestroyConnections()
 	{
-		for (int i = 0; i < InitConfig.MaxConnectionCount; ++i)
+		for (int i = 0; i < ServerInitConfig->MaxConnectionCount; ++i)
 		{
 			delete VectorConnection[i];
 		}
@@ -248,7 +254,7 @@ namespace library
 
 	Connection* IocpServer::GetConnection(const int connectionIndex)
 	{
-		if (connectionIndex < 0 || connectionIndex >= InitConfig.MaxConnectionCount)
+		if (connectionIndex < 0 || connectionIndex >= ServerInitConfig->MaxConnectionCount)
 		{
 			return nullptr;
 		}
@@ -257,25 +263,26 @@ namespace library
 
 	bool IocpServer::CreatePerformance()
 	{
-		if (InitConfig.PerformancePacketMillisecondsTime == -1)
+		if (ServerInitConfig->PerformancePacketMillisecondsTime == -1)
 		{
 			return false;
 		}
 		UniquePerformance = make_unique<Performance>();
-		UniquePerformance->Start(InitConfig.PerformancePacketMillisecondsTime);
+		UniquePerformance->SetLog(Log);
+		UniquePerformance->Start(ServerInitConfig->PerformancePacketMillisecondsTime);
 		return true;
 	}
 
 	bool IocpServer::CreateWorkerThread()
 	{
-		if (InitConfig.WorkerThreadCount == -1)
+		if (ServerInitConfig->WorkerThreadCount == -1)
 		{
 			return false;
 		}
 
-		for (int i = 0; i < InitConfig.WorkerThreadCount; ++i)
+		for (int i = 0; i < ServerInitConfig->WorkerThreadCount; ++i)
 		{
-			VectorWorkerThread.push_back(make_unique<thread>([&]() {WorkerThread(); }));
+			WorkerThreadVector.push_back(make_unique<thread>([&]() {WorkerThread(); }));
 		}
 		return true;
 	}
@@ -305,10 +312,10 @@ namespace library
 			{
 				if (WSAGetLastError() != WSA_IO_PENDING)
 				{
-					Log.Write(LogType::L_ERROR, "%s | GetQueuedCompletionStatus() failure[%d]", __FUNCTION__, WSAGetLastError());
+					Log->Write(LogType::L_ERROR, "%s | GetQueuedCompletionStatus() failure[%d]", __FUNCTION__, WSAGetLastError());
 					continue;
 				}
-				Log.Write(LogType::L_ERROR, "%s | overlappedEx is nullptr[%d]", __FUNCTION__, WSAGetLastError());
+				Log->Write(LogType::L_ERROR, "%s | overlappedEx is nullptr[%d]", __FUNCTION__, WSAGetLastError());
 				continue;
 			}
 
@@ -337,7 +344,7 @@ namespace library
 	{
 		if (LogicIocp == INVALID_HANDLE_VALUE || msg == nullptr)
 		{
-			Log.Write(LogType::L_ERROR, "%s | PostMessageToQueue() failure", __FUNCTION__);
+			Log->Write(LogType::L_ERROR, "%s | PostMessageToQueue() failure", __FUNCTION__);
 			return Result::FAIL_MESSAGE_NULL;
 		}
 
@@ -349,7 +356,7 @@ namespace library
 
 		if (!result)
 		{
-			Log.Write(LogType::L_ERROR, "%s | PostQueuedCompletionStatus() failure[%d]", __FUNCTION__, WSAGetLastError());
+			Log->Write(LogType::L_ERROR, "%s | PostQueuedCompletionStatus() failure[%d]", __FUNCTION__, WSAGetLastError());
 			return Result::FAIL_PQCS;
 		}
 		return Result::SUCCESS;
@@ -359,7 +366,7 @@ namespace library
 	{
 		if (overlappedEx == nullptr)
 		{
-			Log.Write(LogType::L_ERROR, "%s | overlappedEx is nullptr", __FUNCTION__);
+			Log->Write(LogType::L_ERROR, "%s | overlappedEx is nullptr", __FUNCTION__);
 			return;
 		}
 
@@ -393,7 +400,7 @@ namespace library
 	{
 		if (connection == nullptr)
 		{
-			Log.Write(LogType::L_ERROR, "%s | connection is nullptr", __FUNCTION__);
+			Log->Write(LogType::L_ERROR, "%s | connection is nullptr", __FUNCTION__);
 			return;
 		}
 
@@ -411,14 +418,14 @@ namespace library
 		auto connection = GetConnection(overlappedEx->ConnectionIndex);
 		if (connection == nullptr)
 		{
-			Log.Write(LogType::L_ERROR, "%s | connection is nullptr", __FUNCTION__);
+			Log->Write(LogType::L_ERROR, "%s | connection is nullptr", __FUNCTION__);
 			return;
 		}
 		connection->DecrementAcceptIoCount();
 
 		if (connection->SetAddressInfo() == false)
 		{
-			Log.Write(LogType::L_ERROR, "%s | GetAcceptExSockaddrs() failure[%d]", __FUNCTION__, WSAGetLastError());
+			Log->Write(LogType::L_ERROR, "%s | GetAcceptExSockaddrs() failure[%d]", __FUNCTION__, WSAGetLastError());
 			if (!connection->CloseCompletely())
 			{
 				HandleConnectionCloseException(connection);
@@ -439,12 +446,11 @@ namespace library
 		auto result = connection->PostRecv(connection->GetRecvBufferBegin(), 0);
 		if (result != Result::SUCCESS)
 		{
-			Log.Write(LogType::L_ERROR, "%s | PostRecv() failure[%d]", __FUNCTION__, WSAGetLastError());
+			Log->Write(LogType::L_ERROR, "%s | PostRecv() failure[%d]", __FUNCTION__, WSAGetLastError());
 			HandleConnectionCloseException(connection);
 			return;
 		}
 
-		// ?
 		if (PostMessageToQueue(connection, connection->GetConnectionMsg()) != Result::SUCCESS)
 		{
 			connection->Disconnect();
@@ -458,7 +464,7 @@ namespace library
 		Connection* connection = GetConnection(overlappedEx->ConnectionIndex);
 		if (connection == nullptr)
 		{
-			Log.Write(LogType::L_ERROR, "%s | connection is nullptr", __FUNCTION__);
+			Log->Write(LogType::L_ERROR, "%s | connection is nullptr", __FUNCTION__);
 			return;
 		}
 
@@ -497,7 +503,7 @@ namespace library
 
 			if (currentSize <= 0 || currentSize > connection->GetRecvBufferSize())
 			{
-				Log.Write(LogType::L_ERROR, "%s | Wrong packet is received", __FUNCTION__);
+				Log->Write(LogType::L_ERROR, "%s | Wrong packet is received", __FUNCTION__);
 				if (!connection->CloseCompletely())
 				{
 					HandleConnectionCloseException(connection);
@@ -510,7 +516,7 @@ namespace library
 				auto msg = UniqueMessagePool->AllocateMsg();
 				if (msg == nullptr)
 				{
-					Log.Write(LogType::L_ERROR, "%s | Message is empty", __FUNCTION__);
+					Log->Write(LogType::L_ERROR, "%s | Message is empty", __FUNCTION__);
 					return;
 				}
 
@@ -535,7 +541,7 @@ namespace library
 		Connection* connection = GetConnection(overlappedEx->ConnectionIndex);
 		if (connection == nullptr)
 		{
-			Log.Write(LogType::L_ERROR, "%s | connection is nullptr", __FUNCTION__);
+			Log->Write(LogType::L_ERROR, "%s | connection is nullptr", __FUNCTION__);
 			return;
 		}
 
@@ -561,7 +567,7 @@ namespace library
 			if (result == SOCKET_ERROR && WSAGetLastError() != WSA_IO_PENDING)
 			{
 				connection->DecrementSendIoCount();
-				Log.Write(LogType::L_ERROR, "%s | WSASend() failure[%d]", __FUNCTION__, WSAGetLastError());
+				Log->Write(LogType::L_ERROR, "%s | WSASend() failure[%d]", __FUNCTION__, WSAGetLastError());
 				if (!connection->CloseCompletely())
 				{
 					HandleConnectionCloseException(connection);
@@ -588,20 +594,20 @@ namespace library
 	{
 		if (connection->IsConnected() == false)
 		{
-			Log.Write(LogType::L_ERROR, "%s | Not connected", __FUNCTION__);
+			Log->Write(LogType::L_ERROR, "%s | Not connected", __FUNCTION__);
 			return;
 		}
 
 		msgType = static_cast<char>(msg->Type);
 		connectionIndex = connection->GetIndex();
-		Log.Write(LogType::L_ERROR, "%s | Connection index:%d", __FUNCTION__, connectionIndex);
+		Log->Write(LogType::L_ERROR, "%s | Connection index:%d", __FUNCTION__, connectionIndex);
 	}
 
 	void IocpServer::DoPostClose(Connection* connection, const Message* msg, OUT char& msgType, OUT int& connectionIndex)
 	{
 		if (connection->IsConnected() == false)
 		{
-			Log.Write(LogType::L_ERROR, "%s | Not connected", __FUNCTION__);
+			Log->Write(LogType::L_ERROR, "%s | Not connected", __FUNCTION__);
 			return;
 		}
 
@@ -610,12 +616,12 @@ namespace library
 		auto result = connection->ResetConnection();
 		if (result == Result::SUCCESS)
 		{
-			Log.Write(LogType::L_ERROR, "%s | Disconnection index:%d", __FUNCTION__, connectionIndex);
+			Log->Write(LogType::L_ERROR, "%s | Disconnection index:%d", __FUNCTION__, connectionIndex);
 			return;
 		}
 		else
 		{
-			Log.Write(LogType::L_ERROR, "%s | ResetConnection() failure", __FUNCTION__);
+			Log->Write(LogType::L_ERROR, "%s | ResetConnection() failure", __FUNCTION__);
 			return;
 		}
 	}
@@ -624,16 +630,15 @@ namespace library
 	{
 		if (msg->Contents == nullptr)
 		{
-			Log.Write(LogType::L_ERROR, "%s | Message contents is nullptre", __FUNCTION__);
+			Log->Write(LogType::L_ERROR, "%s | Message contents is nullptre", __FUNCTION__);
 			return;
 		}
 
 		msgType = static_cast<char>(msg->Type);
 		connectionIndex = connection->GetIndex();
-		// buf 사용 안 함. 매개변수 더블 포인터일 수도
 		memcpy(buf, msg->Contents, size);
 		copySize = static_cast<short>(size);
-		connection->ReleaseRecvBuffer(size);
+		connection->ReleaseRecvBuffer(size); // ?
 		UniquePerformance.get()->IncrementPacketProcessCount();
 	}
 }

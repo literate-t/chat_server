@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-namespace library
+namespace ServerLibrary
 {
 	MessagePool::MessagePool(const int maxMsgPoolCount, const int extraMsgPoolCount)
 	{
@@ -14,17 +14,22 @@ namespace library
 		DestroyMsgPool();
 	}
 
+	void MessagePool::SetLog(ILog* log)
+	{
+		Log = log;
+	}
+
 	bool MessagePool::CheckCounts()
 	{
 		if (MaxMsgQueueCount == -1)
 		{
-			Log.Write(LogType::L_ERROR, "%s | MaxMsgQueueCount failure", __FUNCTION__);
+			Log->Write(LogType::L_ERROR, "%s | MaxMsgQueueCount failure", __FUNCTION__);
 			return false;
 		}
 
 		if (ExtraMsgQueueCount == -1)
 		{
-			Log.Write(LogType::L_ERROR, "%s | ExtraMsgQueueCount failure", __FUNCTION__);
+			Log->Write(LogType::L_ERROR, "%s | ExtraMsgQueueCount failure", __FUNCTION__);
 			return false;
 		}
 

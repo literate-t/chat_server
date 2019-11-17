@@ -1,6 +1,7 @@
 #pragma once
+#include "stdafx.h"
 
-namespace library
+namespace ServerLibrary
 {
 	class Connection : public Lock
 	{
@@ -13,7 +14,8 @@ namespace library
 		Message* GetConnectionMsg() { return &ConnectionMsg; }
 		Message* GetCloseMsg() { return &CloseMsg; }
 
-		void Init(const SOCKET listenSocket, const int index, const ConnectionConfig& config);
+		void Init(const SOCKET listenSocket, const int index, const ConnectionConfig* config, ILog* log);
+		void SetLog(ILog* log);
 
 		bool CloseCompletely();
 		void Disconnect(bool forced = false);
@@ -45,10 +47,11 @@ namespace library
 		bool SetAddressInfo();
 		void ReleaseSendBuffer(const int size) { RingSendBuffer.ReleaseBuffer(size); }
 		void SetSendAvaliable() { InterlockedExchange(reinterpret_cast<long*>(&Sendable), TRUE); }
+		
 
 	private:
 		void Init();
-		Result AcceptExSocket();
+		Result AcceptExSocket();		
 
 	private:
 		int Index = -1;
@@ -79,7 +82,7 @@ namespace library
 		Message ConnectionMsg;
 		Message CloseMsg;
 
-		Logger Log;
+		ILog* Log;
 
 		Lock	Cs;
 	};
