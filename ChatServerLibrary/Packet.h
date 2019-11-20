@@ -6,8 +6,8 @@ namespace Common
 #pragma pack(push, 1)
 	struct PacketHeader
 	{
-		short TotalSize;
-		short Id;
+		unsigned short TotalSize;
+		unsigned short Id;
 	};
 
 	// 로그인 요청
@@ -21,9 +21,9 @@ namespace Common
 	};
 	const size_t kLoginReqPacketSize = sizeof PacketLoginReq;
 
-	struct PacketBasicRes
+	struct PacketBasicRes : public PacketHeader
 	{
-		short ErrorCode = 0;
+		unsigned short ErrorCode = 0;
 	};
 
 	// 입장 알림

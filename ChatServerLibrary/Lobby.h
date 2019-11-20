@@ -34,9 +34,9 @@ namespace ChatServerLibrary
 		Lobby();
 		~Lobby();
 
-		void Init(const short lobbyIndex, const short maxLobbyUserCount, const short maxRoomCount, const short maxRoomUserCount);
+		void Init(const short lobbyIndex, const short maxLobbyUserCount, const short maxRoomCount, const short maxRoomUserCount, ILog* log);
 		void Release();
-		void Set(IocpServer* server, ILog* logger);
+		//void Set(IocpServer* server, ILog* logger);
 		short& GetIndex();
 		
 		ErrorCode EnterLobby(User* user);
@@ -51,6 +51,8 @@ namespace ChatServerLibrary
 
 		short& GetMaxUserCount();
 		size_t GetMaxRoomCount();
+
+		function<void(int, void*, short)> SendPacketFunc;
 
 	private:
 		void SendToAllUsers(const short packetId, const short dataSize, const char* msg, const int exceptionIndex = -1);

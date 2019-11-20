@@ -1,7 +1,9 @@
 #pragma once
+//#include "Definitions.h"
 
 namespace ServerLibrary
 {
+	class ILog;
 	class MessagePool
 	{
 	public:

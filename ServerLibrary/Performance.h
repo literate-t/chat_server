@@ -2,6 +2,7 @@
 
 namespace ServerLibrary
 {
+	class ILog;
 	class Performance
 	{
 	public:

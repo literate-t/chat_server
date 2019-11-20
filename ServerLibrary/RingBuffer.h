@@ -1,4 +1,5 @@
 #pragma once
+//#include "Lock.h"
 
 namespace ServerLibrary
 {
@@ -19,7 +20,7 @@ namespace ServerLibrary
 		inline char* GetEndMark() { return End; }
 
 		char* ForwardMark(const int forward_length);
-		char* ForwardMark(const int forward_length, const int next_length, const DWORD remain_length);
+		char* ForwardMark(const int forward_length/*, const int next_length*/, const DWORD remain_length);
 
 		void ReleaseBuffer(int release_size);
 		int GetUsedBufferSize() { return WriteSize; }

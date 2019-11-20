@@ -1,4 +1,5 @@
 #include "stdafx.h"
+//#include "RingBuffer.h"
 
 namespace ServerLibrary
 {
@@ -10,6 +11,7 @@ namespace ServerLibrary
 	bool RingBuffer::Init()
 	{
 		LockGuard lock(cs_);
+		memset(Begin, 0, BufferSize);
 		WriteSize = 0;
 		WritePos = Begin;
 		ReadPos = Begin;
@@ -73,19 +75,19 @@ namespace ServerLibrary
 	}
 
 	// 수신									현재 받은 데이터, 다음에 받을 데이터 길이, 현재까지 받은 패킷의 길이
-	char* RingBuffer::ForwardMark(const int forwardLength, const int nextLength, const DWORD remain)
+	char* RingBuffer::ForwardMark(const int forwardLength/*, const int nextLength*/, const DWORD remain)
 	{
 		LockGuard lock(cs_);
-		if (WriteSize + forwardLength + nextLength > BufferSize)
+		if (WriteSize + forwardLength /*+ nextLength*/ > BufferSize)
 		{
 			return nullptr;
 		}
 
-		if (static_cast<int>(End - WritePos) > forwardLength + nextLength)
+		if (static_cast<int>(End - WritePos) > forwardLength/* + nextLength*/)
 		{
 			WritePos		+= forwardLength;
-			WriteSize		+= forwardLength;
-			TotalDataSize	+= forwardLength;
+			//WriteSize		+= forwardLength;
+			//TotalDataSize	+= forwardLength;
 		}
 
 		else
@@ -99,8 +101,8 @@ namespace ServerLibrary
 			//write_mark_ = begin_ + forward_length;
 			memcpy(Begin, WritePos - (remain - forwardLength), remain);
 			WritePos		= Begin + remain;
-			WriteSize		+= remain;
-			TotalDataSize	+= remain;
+			//WriteSize		+= remain;
+			//TotalDataSize	+= remain;
 		}
 
 		return WritePos;
@@ -118,7 +120,7 @@ namespace ServerLibrary
 		LockGuard lock(cs_);
 		char* buffer = nullptr;
 
-		// LastPos는 순회했다면 순회하기 전 위치이며 안 했다면 end_와 같다
+		// LastPos는 순회했다면 순회하기 전 위치이며 안 했다면 End와 같다
 		if (LastPos == ReadPos)
 		{
 			ReadPos = Begin;

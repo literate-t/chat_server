@@ -12,10 +12,11 @@ namespace ChatServerLibrary
 	Lobby::Lobby() {}
 	Lobby::~Lobby() {}
 
-	void Lobby::Init(const short lobbyIndex, const short max_lobbyUserCount, const short max_roomCount, const short max_roomUserCount)
+	void Lobby::Init(const short lobbyIndex, const short max_lobbyUserCount, const short max_roomCount, const short max_roomUserCount, ILog* log)
 	{
 		LobbyIndex = lobbyIndex;
 		MaxUserCount = max_lobbyUserCount;
+		Log = log;
 
 		for (int i = 0; i < MaxUserCount; ++i) {
 			LobbyUser lobbyUser;
@@ -25,7 +26,8 @@ namespace ChatServerLibrary
 
 		for (int i = 0; i < max_roomCount; ++i) {
 			RoomList.emplace_back(new Room());
-			RoomList[i]->Init((short)i, max_roomUserCount);
+			RoomList[i]->Init((short)i, max_roomUserCount, Log);
+			RoomList[i]->SendPacketFunc = SendPacketFunc;
 		}
 	}
 
@@ -38,15 +40,15 @@ namespace ChatServerLibrary
 		RoomList.clear();
 	}
 
-	void Lobby::Set(IocpServer* server, ILog* log)
-	{
-		Server = server;
-		Log = log;
+	//void Lobby::Set(IocpServer* server, ILog* log)
+	//{
+	//	Server = server;
+	//	Log = log;
 
-		for (auto& room : RoomList) {
-			room->Set(Server, Log);
-		}
-	}
+	//	for (auto& room : RoomList) {
+	//		room->Set(Server, Log);
+	//	}
+	//}
 
 	ErrorCode Lobby::AddUser(User* user)
 	{

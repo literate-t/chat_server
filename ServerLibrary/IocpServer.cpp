@@ -1,4 +1,6 @@
 #include "stdafx.h"
+//#include "IocpServer.h"
+//#include "ILog.h"
 
 namespace ServerLibrary
 {
@@ -17,19 +19,16 @@ namespace ServerLibrary
 		assert(result == Result::SUCCESS);
 
 		auto bresult = CreateMessagePool();
-		assert(bresult == false);
+		assert(bresult == true);
 
 		bresult = BindListenSocketIocp();
-		assert(bresult == false);
+		assert(bresult == true);
 
 		bresult = CreateConnections();
-		assert(bresult == false);
-
-		bresult = CreatePerformance();
-		assert(bresult == false);
+		assert(bresult == true);
 
 		bresult = CreateWorkerThread();
-		assert(bresult == false);
+		assert(bresult == true);
 
 		Log->Write(LogType::L_INFO, "Server started");
 		return true;
@@ -86,7 +85,7 @@ namespace ServerLibrary
 		// assert(result == true);
 		if (result == false)
 		{
-			Log->Write(LogType::L_ERROR, "%s | GetQueuedCompletionStatus() failure[%d]", __FUNCTION__, WSAGetLastError());
+			//Log->Write(LogType::L_ERROR, "%s | GetQueuedCompletionStatus() from LogicIocp failure[%d]", __FUNCTION__, WSAGetLastError());
 			return false;
 		}
 
@@ -139,9 +138,8 @@ namespace ServerLibrary
 			Log->Write(LogType::L_ERROR, "%s | RingSendBuffer.ForwardMark() failure", __FUNCTION__);
 			return;
 		}
-
-		// 이상함. 복사하고 사용을 안 하네
 		memcpy(sendBufReserved, packet, packetSize);
+
 		if (connection->PostSend(packetSize) == false)
 		{
 			if (!connection->CloseCompletely())
@@ -156,14 +154,14 @@ namespace ServerLibrary
 		WSADATA wsadata;
 		if (WSAStartup(MAKEWORD(2, 2), &wsadata) != 0)
 		{
-			Log->Write(LogType::L_ERROR, "%s | WSAStartup() failure[%d]", __FUNCTION__, WSAGetLastError());
+			Log->Write(LogType::L_ERROR, "%s | WSAStartup() failure: error[%d]", __FUNCTION__, WSAGetLastError());
 			return Result::FAIL_WSASTARTUP;
 		}
 
 		ListenSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_IP, nullptr, 0, WSA_FLAG_OVERLAPPED);
 		if (ListenSocket == INVALID_SOCKET)
 		{
-			Log->Write(LogType::L_ERROR, "%s | WSASocket() failure[%d]", __FUNCTION__, WSAGetLastError());
+			Log->Write(LogType::L_ERROR, "%s | WSASocket() failure: error[%d]", __FUNCTION__, WSAGetLastError());
 			return Result::FAIL_CREATE_LISTENSOCKET;
 		}
 
@@ -221,7 +219,7 @@ namespace ServerLibrary
 		auto iocp = CreateIoCompletionPort(reinterpret_cast<HANDLE>(ListenSocket), WorkerIocp, 0, 0);
 		if (iocp == INVALID_HANDLE_VALUE || iocp != WorkerIocp)
 		{
-			Log->Write(LogType::L_ERROR, "%s | CreateIoCompletionPort() failure[%d]", __FUNCTION__, WSAGetLastError());
+			Log->Write(LogType::L_ERROR, "%s | CreateIoCompletionPort() failure: error[%d]", __FUNCTION__, WSAGetLastError());
 			return false;
 		}
 		return true;
@@ -259,18 +257,6 @@ namespace ServerLibrary
 			return nullptr;
 		}
 		return VectorConnection[connectionIndex];
-	}
-
-	bool IocpServer::CreatePerformance()
-	{
-		if (ServerInitConfig->PerformancePacketMillisecondsTime == -1)
-		{
-			return false;
-		}
-		UniquePerformance = make_unique<Performance>();
-		UniquePerformance->SetLog(Log);
-		UniquePerformance->Start(ServerInitConfig->PerformancePacketMillisecondsTime);
-		return true;
 	}
 
 	bool IocpServer::CreateWorkerThread()
@@ -469,7 +455,7 @@ namespace ServerLibrary
 		}
 
 		connection->DecrementRecvIoCount();
-		overlappedEx->Wsabuf.buf = overlappedEx->SocketMsg;
+		//overlappedEx->Wsabuf.buf = overlappedEx->SocketMsg;
 		overlappedEx->Remain += size; 
 
 		auto remain = overlappedEx->Remain; 
@@ -487,9 +473,6 @@ namespace ServerLibrary
 
 	void IocpServer::ForwardPacket(Connection* connection, DWORD& remain, char* buf)
 	{
-		const int kPacketHeaderLength = 4;
-		const int kPacketSizeLength = 2;
-		const int kPacketTypeLength = 2;
 		short packetSize = 0;
 
 		while (true)
@@ -575,18 +558,19 @@ namespace ServerLibrary
 				return;
 			}
 		}
+		// 모든 메시지 전송
 		else
 		{
 			// ??
 			connection->ReleaseSendBuffer(overlappedEx->TotalBytes);
 			connection->SetSendAvaliable();
-			if (connection->PostSend(0) == false)
-			{
-				if (!connection->CloseCompletely())
-				{
-					HandleConnectionCloseException(connection);
-				}
-			}
+			//if (connection->PostSend(0) == false)
+			//{
+			//	if (!connection->CloseCompletely())
+			//	{
+			//		HandleConnectionCloseException(connection);
+			//	}
+			//}
 		}
 	}
 
@@ -600,7 +584,7 @@ namespace ServerLibrary
 
 		msgType = static_cast<char>(msg->Type);
 		connectionIndex = connection->GetIndex();
-		Log->Write(LogType::L_ERROR, "%s | Connection index:%d", __FUNCTION__, connectionIndex);
+		Log->Write(LogType::L_INFO, "%s | Connection index:%d", __FUNCTION__, connectionIndex);
 	}
 
 	void IocpServer::DoPostClose(Connection* connection, const Message* msg, OUT char& msgType, OUT int& connectionIndex)
@@ -636,9 +620,8 @@ namespace ServerLibrary
 
 		msgType = static_cast<char>(msg->Type);
 		connectionIndex = connection->GetIndex();
-		memcpy(buf, msg->Contents, size);
-		copySize = static_cast<short>(size);
-		connection->ReleaseRecvBuffer(size); // ?
-		UniquePerformance.get()->IncrementPacketProcessCount();
+		copySize = static_cast<short>(size);// -kPacketHeaderLength;
+		memcpy(buf, msg->Contents/*[kPacketHeaderLength]*/, copySize);
+		//connection->ReleaseRecvBuffer(size); // ?
 	}
 }

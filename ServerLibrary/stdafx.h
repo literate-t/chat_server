@@ -29,5 +29,4 @@ using namespace std;
 #include "RingBuffer.h"
 #include "Connection.h"
 #include "MessagePool.h"
-#include "Performance.h"
 #include "IocpServer.h"

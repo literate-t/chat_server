@@ -1,20 +1,24 @@
 #include "stdafx.h"
+//#include "Connection.h"
+//#include "Definitions.h"
+//#include "ILog.h"
 
 namespace ServerLibrary
 {
 	void Connection::Init(const SOCKET listenSocket, const int index, const ConnectionConfig* config, ILog* log)
 	{
-		Init();
 		Log = log;
 		ListenSocket = listenSocket;
 		Index = index;
 		RecvBufSize = config->MaxRecvBufferSize;
 		SendBufSize = config->MaxSendBufferSize;
 
-		RecvOverlappedEx = new OverlappedEx(Index);
-		SendOverlappedEx = new OverlappedEx(Index);
 		RingRecvBuffer.Create(RecvBufSize);
 		RingSendBuffer.Create(SendBufSize);
+		Init();
+
+		RecvOverlappedEx = new OverlappedEx(Index);
+		SendOverlappedEx = new OverlappedEx(Index);
 
 		ConnectionMsg.Type = MessageType::CONNECTION;
 		ConnectionMsg.Contents = nullptr;
@@ -58,7 +62,7 @@ namespace ServerLibrary
 		ClientSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_IP, nullptr, 0, WSA_FLAG_OVERLAPPED);
 		if (ClientSocket == INVALID_SOCKET)
 		{
-			Log->Write(LogType::L_ERROR, "%s | WSASocket() failure:error[%d]", __FUNCTION__, WSAGetLastError());
+			Log->Write(LogType::L_ERROR, "%s | WSASocket() failure: error[%d]", __FUNCTION__, WSAGetLastError());
 			return Result::FAIL_WSASOCKET;
 		}
 		IncrementAcceptIoCount();
@@ -71,13 +75,13 @@ namespace ServerLibrary
 			sizeof SOCKADDR_IN + 16,
 			sizeof SOCKADDR_IN + 16,
 			&bytes,
-			reinterpret_cast<OVERLAPPED*>(&RecvOverlappedEx)
+			reinterpret_cast<OVERLAPPED*>(RecvOverlappedEx)
 		);
 
 		if (!result && WSAGetLastError() != WSA_IO_PENDING)
 		{
 			DecrementAcceptIoCount();
-			Log->Write(LogType::L_ERROR, "%s | AcceptEx() failure:error[%d]", __FUNCTION__, WSAGetLastError());
+			Log->Write(LogType::L_ERROR, "%s | AcceptEx() failure: error[%d]", __FUNCTION__, WSAGetLastError());
 			return Result::FAIL_ACCEPTEX;
 		}
 		return Result::SUCCESS;
@@ -141,7 +145,7 @@ namespace ServerLibrary
 		);
 		if (iocp == INVALID_HANDLE_VALUE || iocp != WorkerIocp)
 		{
-			Log->Write(LogType::L_ERROR, "%s | CreateIoCompletionPort() failure:error[%d]", __FUNCTION__, WSAGetLastError());
+			Log->Write(LogType::L_ERROR, "%s | CreateIoCompletionPort() failure: error[%d]", __FUNCTION__, WSAGetLastError());
 			return false;
 		}
 		return true;
@@ -152,12 +156,12 @@ namespace ServerLibrary
 		assert(Connected == TRUE && RecvOverlappedEx != nullptr);
 
 		RecvOverlappedEx->Mode = IoMode::RECV;
-		RecvOverlappedEx->Remain = remain; // 20
+		RecvOverlappedEx->Remain = remain;
 
-		// 난 진짜 씨발 링 버퍼 사용하는 부분을 의도를 모르겠다 씨발 새끼들아				
+		// 링 수신 버퍼 사용하는 부분을 의도를 모르겠다 개씨발 새끼들아				
 		auto move = static_cast<int>(remain - (RingRecvBuffer.GetWriteMark() - nextBuf));
 		RecvOverlappedEx->Wsabuf.len = RecvBufSize;
-		RecvOverlappedEx->Wsabuf.buf = RingRecvBuffer.ForwardMark(move, RecvBufSize, remain);
+		RecvOverlappedEx->Wsabuf.buf = RingRecvBuffer.ForwardMark(move/*, RecvBufSize*/, remain);
 		assert(RecvOverlappedEx->Wsabuf.buf != nullptr);
 
 		RecvOverlappedEx->SocketMsg = RecvOverlappedEx->Wsabuf.buf;// -remain; // 얘는 왜 또 빼냐
@@ -179,7 +183,7 @@ namespace ServerLibrary
 		if (result == SOCKET_ERROR && WSAGetLastError() != WSA_IO_PENDING)
 		{
 			DecrementRecvIoCount();
-			Log->Write(LogType::L_ERROR, "%s | WSARecv() failure:error[%d]", __FUNCTION__, WSAGetLastError());
+			Log->Write(LogType::L_ERROR, "%s | WSARecv() failure: error[%d]", __FUNCTION__, WSAGetLastError());
 			return Result::POSTRECV_NULL_SOCKET_ERROR;
 		}
 		return Result::SUCCESS;
@@ -198,7 +202,8 @@ namespace ServerLibrary
 			auto size = 0;
 			// 분명 문제 생긴다
 			// 첫 사용이라면 size가 0이 될 테니까
-			auto buf = RingSendBuffer.GetBuffer(SendBufSize, size); 
+			//auto buf = RingSendBuffer.GetBuffer(SendBufSize, size);
+			auto buf = RingSendBuffer.GetBuffer(sendSize, size);
 			if (buf == nullptr)
 			{
 				InterlockedExchange(reinterpret_cast<long*>(&Sendable), TRUE);
@@ -229,7 +234,7 @@ namespace ServerLibrary
 				nullptr
 			);
 
-			if (result = SOCKET_ERROR && WSAGetLastError() != WSA_IO_PENDING)
+			if (result == SOCKET_ERROR && WSAGetLastError() != WSA_IO_PENDING)
 			{
 				DecrementSendIoCount();
 				Log->Write(LogType::L_ERROR, "%s | WSASend() failure[%d]", __FUNCTION__, WSAGetLastError());

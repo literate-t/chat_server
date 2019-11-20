@@ -17,6 +17,7 @@ namespace ChatServerLibrary
 		void Init(UserManager* userManager, LobbyManager* lobbyManager, ServerLibrary::ILog* log);
 		void ProcessPacket(int connectionIndex, char* buf, short copySize);
 		void ProcessLogin(int connectionIndex, char* buf, short copySize);
+		void ProcessLogoff(int connectionIndex, char* buf, short copySize);
 
 
 		function<void(int, void*, short)> SendPacketFunc;
@@ -25,8 +26,8 @@ namespace ChatServerLibrary
 		using PacketFunc = void(PacketManager::*)(int, char*, short);
 		std::unordered_map<short, PacketFunc> PacketFuncDictionary;
 
-		UserManager* UserMgr;
-		LobbyManager* LobbyMgr;
-		ServerLibrary::ILog* Log;
+		UserManager* UserMgr = nullptr;
+		LobbyManager* LobbyMgr = nullptr;
+		ServerLibrary::ILog* Log = nullptr;
 	};
 }

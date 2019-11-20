@@ -10,17 +10,18 @@ namespace ChatServerLibrary
 	Room::Room() {}
 	Room::~Room() {}
 
-	void Room::Init(const short index, const short maxUserCount)
+	void Room::Init(const short index, const short maxUserCount, ILog* log)
 	{
+		Log = log;
 		Index = index;
 		MaxUserCount = maxUserCount;
 	}
 
-	void Room::Set(IocpServer* server, ILog* logger)
-	{
-		Server = server;
-		Log = logger;
-	}
+	//void Room::Set(IocpServer* server, ILog* logger)
+	//{
+	//	Server = server;
+	//	Log = logger;
+	//}
 
 	void Room::Clear()
 	{

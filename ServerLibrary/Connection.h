@@ -1,5 +1,9 @@
 #pragma once
 #include "stdafx.h"
+//#include "ILog.h"
+//#include "Lock.h"
+//#include "RingBuffer.h"
+//#include "Definitions.h"
 
 namespace ServerLibrary
 {

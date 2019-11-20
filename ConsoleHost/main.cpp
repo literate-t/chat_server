@@ -13,6 +13,6 @@ int main()
 	{
 		ChatThread.join();
 	}
-
+	system("pause");
 	return 0;
 }

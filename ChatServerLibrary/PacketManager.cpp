@@ -8,7 +8,9 @@ namespace ChatServerLibrary
 {
 	void PacketManager::Init(UserManager* userManager, LobbyManager* lobbyManager, ServerLibrary::ILog* log)
 	{
-		PacketFuncDictionary[(short)PacketId::LOGIN_REQ] = &PacketManager::ProcessLogin;
+		PacketFuncDictionary[static_cast<unsigned short>(PacketId::LOGIN_REQ)] = &PacketManager::ProcessLogin;
+		PacketFuncDictionary[static_cast<unsigned short>(PacketId::LOGOFF_REQ)] = &PacketManager::ProcessLogoff;
+
 
 
 		UserMgr = userManager;
@@ -28,13 +30,50 @@ namespace ChatServerLibrary
 
 	void PacketManager::ProcessLogin(const int connectionIndex, char* buf, short copySize)
 	{
-		if (copySize != kLoginReqPacketSize)
+		if (copySize - static_cast<short>(kPacketHeaderLength) != static_cast<short>(kLoginReqPacketSize))
 		{
 			return;
 		}
 
 		auto loginReq = reinterpret_cast<PacketLoginReq*>(buf);
-		auto userId = loginReq->Id;
+		auto userId = &loginReq->Id[kPacketHeaderLength];
 		Log->Write(ServerLibrary::LogType::L_INFO, "Id:%s\n", userId);
+
+		PacketBasicRes packetRes;
+		packetRes.TotalSize = sizeof PacketBasicRes;
+		packetRes.Id		= static_cast<unsigned short>(PacketId::LOGIN_RES);
+		auto result = UserMgr->AddUser(connectionIndex, userId);
+		if (result != ErrorCode::NONE)
+		{
+			packetRes.ErrorCode = static_cast<unsigned short>(result);
+			SendPacketFunc(connectionIndex, &packetRes, sizeof packetRes);
+			//server_->SetSendingData(connectionIndex, (short)PacketId::LOGIN_RES, sizeof packetRes, (char*)&packetRes);
+			return;
+		}
+
+		packetRes.ErrorCode = static_cast<unsigned short>(ErrorCode::NONE);
+		SendPacketFunc(connectionIndex, &packetRes, sizeof PacketBasicRes);
+	}
+
+	void PacketManager::ProcessLogoff(const int connectionIndex, char* buf, short copySize)
+	{
+		if (copySize - static_cast<short>(kPacketHeaderLength) != static_cast<short>(kLoginReqPacketSize))
+		{
+			return;
+		}
+
+		PacketBasicRes packetRes;
+		packetRes.TotalSize = sizeof PacketBasicRes;
+		packetRes.Id = static_cast<unsigned short>(PacketId::LOGOFF_RES);
+		auto result = UserMgr->RemoveUser(connectionIndex);
+		if (result != ErrorCode::NONE)
+		{
+			packetRes.ErrorCode = static_cast<unsigned short>(result);
+			SendPacketFunc(connectionIndex, &packetRes, sizeof PacketBasicRes);
+			return;
+		}	
+
+		packetRes.ErrorCode = static_cast<unsigned short>(ErrorCode::NONE);
+		SendPacketFunc(connectionIndex, &packetRes, sizeof packetRes);
 	}
 }

@@ -3,6 +3,10 @@
 
 namespace ChatServerLibrary
 {
+	const int kPacketHeaderLength = 4;
+	const int kPacketSizeLength = 2;
+	const int kPacketTypeLength = 2;
+
 	struct ChatConfig : ServerLibrary::ServerConfig
 	{
 		int PostMessageThreadsCount = 1;

@@ -26,8 +26,8 @@ namespace ChatServerLibrary
 		Room();
 		~Room();
 
-		void Init(const short index, const short maxUserCount);
-		void Set(IocpServer* server, ILog* log);
+		void Init(const short index, const short maxUserCount, ILog* log);
+		//void Set(IocpServer* server, ILog* log);
 		void Clear();
 		short& GetIndex();
 		bool IsCreated();
@@ -48,9 +48,11 @@ namespace ChatServerLibrary
 		void SendChat(const char* userId, const short roomIndex, const char* msg);
 		void ChatToAllUsers(const short packetId, const short roomIndex, const short dataSize, const char* data);
 
+		function<void(int, void*, short)> SendPacketFunc;
+
 	private:
 		ILog* Log = nullptr;
-		IocpServer* Server = nullptr;
+		//IocpServer* Server = nullptr;
 
 		short Index = -1;
 		short LobbyIndex = -1;

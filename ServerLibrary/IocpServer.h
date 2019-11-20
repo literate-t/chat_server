@@ -1,8 +1,17 @@
 #pragma once
 #include "stdafx.h"
+//#include "Definitions.h"
+//#include "Connection.h"
+//#include "MessagePool.h"
+//#include "Performance.h"
 
 namespace ServerLibrary
 {
+	const int kPacketHeaderLength = 4;
+	const int kPacketSizeLength = 2;
+	const int kPacketTypeLength = 2;
+
+	class ILog;
 	class IocpServer
 	{
 	public:
@@ -27,7 +36,6 @@ namespace ServerLibrary
 		bool CreateConnections();
 		void DestroyConnections();
 		Connection* GetConnection(const int connectionIndex);
-		bool CreatePerformance();
 		bool CreateWorkerThread();
 		void WorkerThread();
 		Result PostMessageToQueue(Connection* connection, Message* msg, const DWORD packetSize = 0);
@@ -57,6 +65,5 @@ namespace ServerLibrary
 		vector<unique_ptr<thread>> WorkerThreadVector;
 
 		unique_ptr<MessagePool> UniqueMessagePool;
-		unique_ptr<Performance> UniquePerformance;
 	};
 }

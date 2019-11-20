@@ -84,7 +84,6 @@ namespace ChatServerLibrary
 			}
 
 		}
-
 		delete[] buf;
 	}
 

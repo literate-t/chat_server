@@ -78,9 +78,11 @@
       <ConformanceMode>true</ConformanceMode>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -127,6 +129,9 @@
   <ItemGroup>
     <ProjectReference Include="..\ChatServerLibrary\ChatServerLibrary.vcxproj">
       <Project>{0f5886e5-2409-4eef-8c4f-405fdd99a638}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\ServerLibrary\ServerLibrary.vcxproj">
+      <Project>{1cfdca38-0b93-4367-a9f2-a929e0e1b471}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

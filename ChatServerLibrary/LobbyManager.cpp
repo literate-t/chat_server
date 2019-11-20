@@ -9,15 +9,16 @@ namespace ChatServerLibrary
 	LobbyManager::LobbyManager()  {}
 	LobbyManager::~LobbyManager() {}
 
-	void LobbyManager::Init(LobbyManagerConfig* config, IocpServer* server, ILog* logger)
+	void LobbyManager::Init(LobbyManagerConfig* config, IocpServer* server, ILog* log)
 	{
-		Log = logger;
+		Log = log;
 		Server = server;
 
 		for (int i = 0; i < config->MaxLobbyCount; ++i) {
 			Lobby lobby;
-			lobby.Init((short)i, (short)config->MaxLobbyCount, (short)config->MaxRoomCount, (short)config->MaxRoomUserCount);
-			lobby.Set(Server, Log);
+			lobby.Init((short)i, (short)config->MaxLobbyCount, (short)config->MaxRoomCount, (short)config->MaxRoomUserCount, Log);
+			lobby.SendPacketFunc = SendPacketFunc;
+			//lobby.Set(Server, Log);
 			LobbyList.push_back(lobby);
 		}
 	}

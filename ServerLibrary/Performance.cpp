@@ -1,4 +1,6 @@
 #include "stdafx.h"
+//#include "Performance.h"
+//#include "ILog.h"
 
 namespace ServerLibrary
 {
