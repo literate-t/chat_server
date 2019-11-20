@@ -7,25 +7,25 @@
 
 namespace ServerLibrary
 {
-	class Connection : public Lock
+	class Session : public Lock
 	{
 		using LockGurad = Lock::LockGuard;
 
 	public:
-		Connection() = default;
-		~Connection() {}
+		Session() = default;
+		~Session() {}
 
 		Message* GetConnectionMsg() { return &ConnectionMsg; }
 		Message* GetCloseMsg() { return &CloseMsg; }
 
-		void Init(const SOCKET listenSocket, const int index, const ConnectionConfig* config, ILog* log);
+		void Init(const SOCKET listenSocket, const int index, const SessionConfig* config, ILog* log);
 		void SetLog(ILog* log);
 
 		bool CloseCompletely();
 		void Disconnect(bool forced = false);
-		Result ResetConnection();
+		Result ResetSession();
 		bool BindIocp(const HANDLE WorkerIocp);
-		Result PostRecv(const char* nextBuf, const DWORD remainByte);
+		Result PostRecv(const int forwardLength, const DWORD remainByte);
 		bool PostSend(const int sendSize);
 		Result ReserveSendPacketBuffer(OUT char** buf, const int sendSize);
 

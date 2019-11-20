@@ -13,7 +13,9 @@ namespace Common
 	// 로그인 요청
 	const int kMaxUserIdLength = 20;
 	const int kMaxUserPwLength = 20;
-	const int KPacketHeaderSize = 4;
+	const int kPacketHeaderLength = 4;
+	const int kPacketSizeLength = 2;
+	const int kPacketTypeLength = 2;
 	struct PacketLoginReq
 	{
 		char Id[kMaxUserIdLength + 1] = { 0 };

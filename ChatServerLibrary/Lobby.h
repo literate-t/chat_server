@@ -55,7 +55,7 @@ namespace ChatServerLibrary
 		function<void(int, void*, short)> SendPacketFunc;
 
 	private:
-		void SendToAllUsers(const short packetId, const short dataSize, const char* msg, const int exceptionIndex = -1);
+		void SendToAllUsers(void* packet, const short packetSize, const int exceptionIndex = -1);
 		User* FindUser(const int userIndex);
 		ErrorCode AddUser(User* user);
 		void RemoveUser(const int userIndex);

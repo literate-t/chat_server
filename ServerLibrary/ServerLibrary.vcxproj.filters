@@ -4,9 +4,9 @@
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="RingBuffer.cpp" />
     <ClCompile Include="Lock.cpp" />
-    <ClCompile Include="Connection.cpp" />
     <ClCompile Include="IocpServer.cpp" />
     <ClCompile Include="MessagePool.cpp" />
+    <ClCompile Include="Session.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -15,9 +15,9 @@
     <ClInclude Include="Lock.h" />
     <ClInclude Include="conmanip.h" />
     <ClInclude Include="Logger.h" />
-    <ClInclude Include="Connection.h" />
     <ClInclude Include="IocpServer.h" />
     <ClInclude Include="MessagePool.h" />
     <ClInclude Include="ILog.h" />
+    <ClInclude Include="Session.h" />
   </ItemGroup>
 </Project>

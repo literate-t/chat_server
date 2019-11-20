@@ -24,7 +24,7 @@ namespace ServerLibrary
 		bresult = BindListenSocketIocp();
 		assert(bresult == true);
 
-		bresult = CreateConnections();
+		bresult = CreateSessions();
 		assert(bresult == true);
 
 		bresult = CreateWorkerThread();
@@ -61,68 +61,22 @@ namespace ServerLibrary
 			ListenSocket = INVALID_SOCKET;
 		}
 		WSACleanup();
-		DestroyConnections();
+		DestroySessions();
 
 		Log->Write(LogType::L_INFO, "Server ended");
-	}
+	}	
 
-	bool IocpServer::ProcessIocpMessage(OUT char& msgType, OUT int& connectionIndex, char* buf, OUT short& copySize, int waitMilliseconds)
+	void IocpServer::SendPacket(const int sessionIndex, const void* packet, const short packetSize)
 	{
-		Message* msg = nullptr;
-		Connection* connection = nullptr;
-		DWORD bytes = 0;
-		if (waitMilliseconds == 0)
+		auto session = GetSession(sessionIndex);
+		if (session == nullptr)
 		{
-			waitMilliseconds = INFINITE;
-		}
-
-		auto result = GetQueuedCompletionStatus(
-			LogicIocp, &bytes,
-			reinterpret_cast<PULONG_PTR>(&connection),
-			reinterpret_cast<OVERLAPPED**>(&msg),
-			waitMilliseconds
-		);
-		// assert(result == true);
-		if (result == false)
-		{
-			//Log->Write(LogType::L_ERROR, "%s | GetQueuedCompletionStatus() from LogicIocp failure[%d]", __FUNCTION__, WSAGetLastError());
-			return false;
-		}
-
-		switch (msg->Type)
-		{
-			case MessageType::CONNECTION:
-			{
-				DoPostConnection(connection, msg, msgType, connectionIndex);
-				break;
-			}
-			// 재사용에 딜레이를 주지 않으면 재사용하기 전에 워커 스레드에서 이 세션이 호출될 수도
-			case MessageType::CLOSE:
-			{
-				DoPostClose(connection, msg, msgType, connectionIndex);
-				break;
-			}
-			case MessageType::ONRECV:
-			{
-				DoPostRecvPacket(connection, msg, msgType, connectionIndex, buf, copySize, bytes);
-				UniqueMessagePool.get()->DeallocateMsg(msg);
-				break;
-			}
-		}
-		return true;
-	}
-
-	void IocpServer::SendPacket(const int connectionIndex, const void* packet, const short packetSize)
-	{
-		auto connection = GetConnection(connectionIndex);
-		if (connection == nullptr)
-		{
-			Log->Write(LogType::L_ERROR, "%s | GetConnection() failure", __FUNCTION__);
+			Log->Write(LogType::L_ERROR, "%s | GetSession() failure", __FUNCTION__);
 			return;
 		}
 
 		char* sendBufReserved = nullptr;
-		auto result = connection->ReserveSendPacketBuffer(&sendBufReserved, packetSize);
+		auto result = session->ReserveSendPacketBuffer(&sendBufReserved, packetSize);
 		if (result == Result::RESERVED_BUFFER_NOT_CONNECTED)
 		{
 			Log->Write(LogType::L_ERROR, "%s | Not connected failure", __FUNCTION__);
@@ -130,9 +84,9 @@ namespace ServerLibrary
 		}
 		else if (result == Result::RESERVED_BUFFER_EMPTY)
 		{
-			if (!connection->CloseCompletely())
+			if (!session->CloseCompletely())
 			{
-				HandleConnectionCloseException(connection);
+				HandleSessionCloseException(session);
 			}
 
 			Log->Write(LogType::L_ERROR, "%s | RingSendBuffer.ForwardMark() failure", __FUNCTION__);
@@ -140,11 +94,11 @@ namespace ServerLibrary
 		}
 		memcpy(sendBufReserved, packet, packetSize);
 
-		if (connection->PostSend(packetSize) == false)
+		if (session->PostSend(packetSize) == false)
 		{
-			if (!connection->CloseCompletely())
+			if (!session->CloseCompletely())
 			{
-				HandleConnectionCloseException(connection);
+				HandleSessionCloseException(session);
 			}
 		}
 	}
@@ -225,38 +179,38 @@ namespace ServerLibrary
 		return true;
 	}
 
-	bool IocpServer::CreateConnections()
+	bool IocpServer::CreateSessions()
 	{
-		ConnectionConfig config;
-		config.MaxRecvBufferSize = ServerInitConfig->ConnectionMaxRecvBufferSize;
-		config.MaxSendBufferSize = ServerInitConfig->ConnectionMaxSendBufferSize;
+		SessionConfig config;
+		config.MaxRecvBufferSize = ServerInitConfig->SessionMaxRecvBufferSize;
+		config.MaxSendBufferSize = ServerInitConfig->SessionMaxSendBufferSize;
 		config.MaxRecvOverlappedBufferSize = ServerInitConfig->MaxRecvOverlappedBufferSize;
 		config.MaxSendOverlappedBufferSize = ServerInitConfig->MaxSendOverlappedBufferSize;
 
-		for (int i = 0; i < ServerInitConfig->MaxConnectionCount; ++i)
+		for (int i = 0; i < ServerInitConfig->MaxSessionCount; ++i)
 		{
-			auto connection = new Connection();
-			connection->Init(ListenSocket, i, &config, Log);
-			VectorConnection.push_back(connection);
+			auto session = new Session();
+			session->Init(ListenSocket, i, &config, Log);
+			SessionVector.push_back(session);
 		}
 		return true;
 	}
 
-	void IocpServer::DestroyConnections()
+	void IocpServer::DestroySessions()
 	{
-		for (int i = 0; i < ServerInitConfig->MaxConnectionCount; ++i)
+		for (int i = 0; i < ServerInitConfig->MaxSessionCount; ++i)
 		{
-			delete VectorConnection[i];
+			delete SessionVector[i];
 		}
 	}
 
-	Connection* IocpServer::GetConnection(const int connectionIndex)
+	Session* IocpServer::GetSession(const int connectionIndex)
 	{
-		if (connectionIndex < 0 || connectionIndex >= ServerInitConfig->MaxConnectionCount)
+		if (connectionIndex < 0 || connectionIndex >= ServerInitConfig->MaxSessionCount)
 		{
 			return nullptr;
 		}
-		return VectorConnection[connectionIndex];
+		return SessionVector[connectionIndex];
 	}
 
 	bool IocpServer::CreateWorkerThread()
@@ -279,18 +233,18 @@ namespace ServerLibrary
 		{
 			DWORD bytes = 0;
 			OverlappedEx* overlappedEx = nullptr;
-			Connection* connection = nullptr;
+			Session* session = nullptr;
 
 			auto result = GetQueuedCompletionStatus(
 				WorkerIocp,	&bytes,
-				reinterpret_cast<PULONG_PTR>(&connection),
+				reinterpret_cast<PULONG_PTR>(&session),
 				reinterpret_cast<OVERLAPPED**>(&overlappedEx),
 				INFINITE
 			);
 
 			if (!result || (0 == bytes && IoMode::ACCEPT != overlappedEx->Mode))
 			{
-				HandleWorkerThreadException(connection, overlappedEx);
+				HandleWorkerThreadException(session, overlappedEx);
 				continue;
 			}
 
@@ -326,7 +280,53 @@ namespace ServerLibrary
 		}
 	}
 
-	Result IocpServer::PostMessageToQueue(Connection* connection, Message* msg, const DWORD packetSize)
+	bool IocpServer::ProcessIocpMessage(OUT char& msgType, OUT int& sessionIndex, OUT char** buf, OUT short& copySize, int waitMilliseconds)
+	{
+		Message* msg = nullptr;
+		Session* session = nullptr;
+		DWORD bytes = 0;
+		if (waitMilliseconds == 0)
+		{
+			waitMilliseconds = INFINITE;
+		}
+
+		auto result = GetQueuedCompletionStatus(
+			LogicIocp, &bytes,
+			reinterpret_cast<PULONG_PTR>(&session),
+			reinterpret_cast<OVERLAPPED**>(&msg),
+			waitMilliseconds
+		);
+		// assert(result == true);
+		if (result == false)
+		{
+			//Log->Write(LogType::L_ERROR, "%s | GetQueuedCompletionStatus() from LogicIocp failure[%d]", __FUNCTION__, WSAGetLastError());
+			return false;
+		}
+
+		switch (msg->Type)
+		{
+		case MessageType::CONNECTION:
+		{
+			DoPostConnection(session, msg, msgType, sessionIndex);
+			break;
+		}
+		// 재사용에 딜레이를 주지 않으면 재사용하기 전에 워커 스레드에서 이 세션이 호출될 수도
+		case MessageType::CLOSE:
+		{
+			DoPostClose(session, msg, msgType, sessionIndex);
+			break;
+		}
+		case MessageType::ONRECV:
+		{
+			DoPostRecvPacket(session, msg, msgType, sessionIndex, buf, copySize, bytes);
+			UniqueMessagePool.get()->DeallocateMsg(msg);
+			break;
+		}
+		}
+		return true;
+	}
+
+	Result IocpServer::PostMessageToQueue(Session* session, Message* msg, const DWORD packetSize)
 	{
 		if (LogicIocp == INVALID_HANDLE_VALUE || msg == nullptr)
 		{
@@ -336,7 +336,7 @@ namespace ServerLibrary
 
 		auto result = PostQueuedCompletionStatus(
 			LogicIocp, packetSize,
-			reinterpret_cast<ULONG_PTR>(connection),
+			reinterpret_cast<ULONG_PTR>(session),
 			reinterpret_cast<OVERLAPPED*>(msg)
 		);
 
@@ -348,7 +348,7 @@ namespace ServerLibrary
 		return Result::SUCCESS;
 	}
 
-	void IocpServer::HandleWorkerThreadException(Connection* connection, const OverlappedEx* overlappedEx)
+	void IocpServer::HandleWorkerThreadException(Session* session, const OverlappedEx* overlappedEx)
 	{
 		if (overlappedEx == nullptr)
 		{
@@ -360,118 +360,118 @@ namespace ServerLibrary
 		{
 			case IoMode::ACCEPT:
 			{
-				connection->DecrementAcceptIoCount();
+				session->DecrementAcceptIoCount();
 				break;
 			}
 			case IoMode::RECV:
 			{
-				connection->DecrementRecvIoCount();
+				session->DecrementRecvIoCount();
 				break;
 			}
 			case IoMode::SEND:
 			{
-				connection->DecrementSendIoCount();
+				session->DecrementSendIoCount();
 				break;
 			}
 		}
 
-		if (!connection->CloseCompletely())
+		if (!session->CloseCompletely())
 		{
-			HandleConnectionCloseException(connection);
+			HandleSessionCloseException(session);
 		}
 		return;
 	}
 
-	void IocpServer::HandleConnectionCloseException(Connection* connection)
+	void IocpServer::HandleSessionCloseException(Session* session)
 	{
-		if (connection == nullptr)
+		if (session == nullptr)
 		{
-			Log->Write(LogType::L_ERROR, "%s | connection is nullptr", __FUNCTION__);
+			Log->Write(LogType::L_ERROR, "%s | session is nullptr", __FUNCTION__);
 			return;
 		}
+		session->Disconnect();
+		session->SetStateDisconnected();
 
-		connection->Disconnect();
-		connection->SetStateDisconnected();
-
-		if (PostMessageToQueue(connection, connection->GetCloseMsg()) != Result::SUCCESS)
+		if (PostMessageToQueue(session, session->GetCloseMsg()) != Result::SUCCESS)
 		{
-			connection->ResetConnection();
+			session->ResetSession();
 		}
 	}
 
 	void IocpServer::DoAccept(const OverlappedEx* overlappedEx)
 	{
-		auto connection = GetConnection(overlappedEx->ConnectionIndex);
-		if (connection == nullptr)
+		auto session = GetSession(overlappedEx->SessionIndex);
+		if (session == nullptr)
 		{
-			Log->Write(LogType::L_ERROR, "%s | connection is nullptr", __FUNCTION__);
+			Log->Write(LogType::L_ERROR, "%s | session is nullptr", __FUNCTION__);
 			return;
 		}
-		connection->DecrementAcceptIoCount();
+		session->DecrementAcceptIoCount();
 
-		if (connection->SetAddressInfo() == false)
+		if (session->SetAddressInfo() == false)
 		{
 			Log->Write(LogType::L_ERROR, "%s | GetAcceptExSockaddrs() failure[%d]", __FUNCTION__, WSAGetLastError());
-			if (!connection->CloseCompletely())
+			if (!session->CloseCompletely())
 			{
-				HandleConnectionCloseException(connection);
+				HandleSessionCloseException(session);
 			}
 			return;
 		}
 
-		if (!connection->BindIocp(WorkerIocp))
+		if (!session->BindIocp(WorkerIocp))
 		{
-			if (!connection->CloseCompletely())
+			if (!session->CloseCompletely())
 			{
-				HandleConnectionCloseException(connection);
+				HandleSessionCloseException(session);
 			}
 			return;
 		}
-		connection->SetStateConnected();
+		session->SetStateConnected();
 
-		auto result = connection->PostRecv(connection->GetRecvBufferBegin(), 0);
+		auto result = session->PostRecv(0, 0);
 		if (result != Result::SUCCESS)
 		{
 			Log->Write(LogType::L_ERROR, "%s | PostRecv() failure[%d]", __FUNCTION__, WSAGetLastError());
-			HandleConnectionCloseException(connection);
+			HandleSessionCloseException(session);
 			return;
 		}
 
-		if (PostMessageToQueue(connection, connection->GetConnectionMsg()) != Result::SUCCESS)
+		if (PostMessageToQueue(session, session->GetConnectionMsg()) != Result::SUCCESS)
 		{
-			connection->Disconnect();
-			connection->ResetConnection();
+			session->Disconnect();
+			session->ResetSession();
 			return;
 		}
 	}
 
 	void IocpServer::DoRecv(OverlappedEx* overlappedEx, const DWORD size)
 	{
-		Connection* connection = GetConnection(overlappedEx->ConnectionIndex);
-		if (connection == nullptr)
+		Session* session = GetSession(overlappedEx->SessionIndex);
+		if (session == nullptr)
 		{
-			Log->Write(LogType::L_ERROR, "%s | connection is nullptr", __FUNCTION__);
+			Log->Write(LogType::L_ERROR, "%s | session is nullptr", __FUNCTION__);
 			return;
 		}
 
-		connection->DecrementRecvIoCount();
+		session->DecrementRecvIoCount();
 		//overlappedEx->Wsabuf.buf = overlappedEx->SocketMsg;
 		overlappedEx->Remain += size; 
 
-		auto remain = overlappedEx->Remain; 
+		auto remain = overlappedEx->Remain;
+		auto forwardLength = overlappedEx->Remain;
 		auto buf = overlappedEx->Wsabuf.buf;
 
-		ForwardPacket(connection, remain, buf);
-		if (connection->PostRecv(buf, remain) != Result::SUCCESS)
+		ForwardPacket(session, remain, buf);
+		if (session->PostRecv(forwardLength, remain) != Result::SUCCESS)
 		{
-			if (!connection->CloseCompletely())
+			if (!session->CloseCompletely())
 			{
-				HandleConnectionCloseException(connection);
+				HandleSessionCloseException(session);
 			}
 		}
 	}
 
-	void IocpServer::ForwardPacket(Connection* connection, DWORD& remain, char* buf)
+	void IocpServer::ForwardPacket(Session* session, DWORD& remain, char* buf)
 	{
 		short packetSize = 0;
 
@@ -484,12 +484,12 @@ namespace ServerLibrary
 			memcpy(&packetSize, buf, kPacketSizeLength);
 			auto currentSize = packetSize;
 
-			if (currentSize <= 0 || currentSize > connection->GetRecvBufferSize())
+			if (currentSize <= 0 || currentSize > session->GetRecvBufferSize())
 			{
 				Log->Write(LogType::L_ERROR, "%s | Wrong packet is received", __FUNCTION__);
-				if (!connection->CloseCompletely())
+				if (!session->CloseCompletely())
 				{
-					HandleConnectionCloseException(connection);
+					HandleSessionCloseException(session);
 				}
 				return;
 			}
@@ -504,7 +504,7 @@ namespace ServerLibrary
 				}
 
 				msg->SetMessagae(MessageType::ONRECV, buf);
-				if (PostMessageToQueue(connection, msg, packetSize) != Result::SUCCESS)
+				if (PostMessageToQueue(session, msg, packetSize) != Result::SUCCESS)
 				{
 					UniqueMessagePool->DeallocateMsg(msg);
 					return;
@@ -521,27 +521,27 @@ namespace ServerLibrary
 
 	void IocpServer::DoSend(OverlappedEx* overlappedEx, const DWORD size)
 	{
-		Connection* connection = GetConnection(overlappedEx->ConnectionIndex);
-		if (connection == nullptr)
+		Session* session = GetSession(overlappedEx->SessionIndex);
+		if (session == nullptr)
 		{
-			Log->Write(LogType::L_ERROR, "%s | connection is nullptr", __FUNCTION__);
+			Log->Write(LogType::L_ERROR, "%s | session is nullptr", __FUNCTION__);
 			return;
 		}
 
-		connection->DecrementSendIoCount();
+		session->DecrementSendIoCount();
 		overlappedEx->Remain += size;
 
 		// 모든 메시지를 전송하지 못했을 때
 		if (static_cast<DWORD>(overlappedEx->TotalBytes) > overlappedEx->Remain)
 		{
-			connection->IncrementSendIoCount();
+			session->IncrementSendIoCount();
 			overlappedEx->Wsabuf.buf += size;
 			overlappedEx->Wsabuf.len -= size;
 			memset(&overlappedEx->Overlapped, 0, sizeof OVERLAPPED);
 
 			DWORD bytes = 0;
 			auto result = WSASend(
-				connection->GetClientSocket(),
+				session->GetClientSocket(),
 				&overlappedEx->Wsabuf, 1,
 				&bytes, 0, 
 				&overlappedEx->Overlapped, nullptr
@@ -549,11 +549,11 @@ namespace ServerLibrary
 
 			if (result == SOCKET_ERROR && WSAGetLastError() != WSA_IO_PENDING)
 			{
-				connection->DecrementSendIoCount();
+				session->DecrementSendIoCount();
 				Log->Write(LogType::L_ERROR, "%s | WSASend() failure[%d]", __FUNCTION__, WSAGetLastError());
-				if (!connection->CloseCompletely())
+				if (!session->CloseCompletely())
 				{
-					HandleConnectionCloseException(connection);
+					HandleSessionCloseException(session);
 				}
 				return;
 			}
@@ -562,55 +562,55 @@ namespace ServerLibrary
 		else
 		{
 			// ??
-			connection->ReleaseSendBuffer(overlappedEx->TotalBytes);
-			connection->SetSendAvaliable();
-			//if (connection->PostSend(0) == false)
+			//session->ReleaseSendBuffer(overlappedEx->TotalBytes);
+			session->SetSendAvaliable();
+			//if (session->PostSend(0) == false)
 			//{
-			//	if (!connection->CloseCompletely())
+			//	if (!session->CloseCompletely())
 			//	{
-			//		HandleConnectionCloseException(connection);
+			//		HandleSessionCloseException(session);
 			//	}
 			//}
 		}
 	}
 
-	void IocpServer::DoPostConnection(Connection* connection, const Message* msg, OUT char& msgType, OUT int& connectionIndex)
+	void IocpServer::DoPostConnection(Session* session, const Message* msg, OUT char& msgType, OUT int& sessionIndex)
 	{
-		if (connection->IsConnected() == false)
+		if (session->IsConnected() == false)
 		{
 			Log->Write(LogType::L_ERROR, "%s | Not connected", __FUNCTION__);
 			return;
 		}
 
 		msgType = static_cast<char>(msg->Type);
-		connectionIndex = connection->GetIndex();
-		Log->Write(LogType::L_INFO, "%s | Connection index:%d", __FUNCTION__, connectionIndex);
+		sessionIndex = session->GetIndex();
+		Log->Write(LogType::L_INFO, "%s | Session index:%d", __FUNCTION__, sessionIndex);
 	}
 
-	void IocpServer::DoPostClose(Connection* connection, const Message* msg, OUT char& msgType, OUT int& connectionIndex)
+	void IocpServer::DoPostClose(Session* session, const Message* msg, OUT char& msgType, OUT int& sessionIndex)
 	{
-		if (connection->IsConnected() == false)
+		if (session->IsConnected() == false)
 		{
-			Log->Write(LogType::L_ERROR, "%s | Not connected", __FUNCTION__);
+			Log->Write(LogType::L_ERROR, "%s | session is disconnected", __FUNCTION__);
 			return;
 		}
 
 		msgType = static_cast<char>(msg->Type);
-		connectionIndex = connection->GetIndex();
-		auto result = connection->ResetConnection();
+		sessionIndex = session->GetIndex();
+		auto result = session->ResetSession();
 		if (result == Result::SUCCESS)
 		{
-			Log->Write(LogType::L_ERROR, "%s | Disconnection index:%d", __FUNCTION__, connectionIndex);
+			Log->Write(LogType::L_ERROR, "%s | Disconnection index:%d", __FUNCTION__, sessionIndex);
 			return;
 		}
 		else
 		{
-			Log->Write(LogType::L_ERROR, "%s | ResetConnection() failure", __FUNCTION__);
+			Log->Write(LogType::L_ERROR, "%s | ResetSession() failure", __FUNCTION__);
 			return;
 		}
 	}
 
-	void IocpServer::DoPostRecvPacket(Connection* connection, const Message* msg, OUT char& msgType, OUT int& connectionIndex, char* buf, OUT short& copySize, const DWORD size)
+	void IocpServer::DoPostRecvPacket(Session* session, const Message* msg, OUT char& msgType, OUT int& sessionIndex, OUT char** buf, OUT short& copySize, const DWORD size)
 	{
 		if (msg->Contents == nullptr)
 		{
@@ -619,9 +619,10 @@ namespace ServerLibrary
 		}
 
 		msgType = static_cast<char>(msg->Type);
-		connectionIndex = connection->GetIndex();
+		sessionIndex = session->GetIndex();
 		copySize = static_cast<short>(size);// -kPacketHeaderLength;
-		memcpy(buf, msg->Contents/*[kPacketHeaderLength]*/, copySize);
-		//connection->ReleaseRecvBuffer(size); // ?
+		*buf = msg->Contents;
+		//memcpy(buf, msg->Contents/*[kPacketHeaderLength]*/, copySize);
+		//session->ReleaseRecvBuffer(size); // ?
 	}
 }

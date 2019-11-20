@@ -18,13 +18,15 @@ namespace ChatServerLibrary
 		MaxUserCount = max_lobbyUserCount;
 		Log = log;
 
-		for (int i = 0; i < MaxUserCount; ++i) {
+		for (int i = 0; i < MaxUserCount; ++i) 
+		{
 			LobbyUser lobbyUser;
 			lobbyUser.Index = (short)i;
 			LobbyUserList.push_back(lobbyUser);
 		}
 
-		for (int i = 0; i < max_roomCount; ++i) {
+		for (int i = 0; i < max_roomCount; ++i) 
+		{
 			RoomList.emplace_back(new Room());
 			RoomList[i]->Init((short)i, max_roomUserCount, Log);
 			RoomList[i]->SendPacketFunc = SendPacketFunc;
@@ -33,7 +35,8 @@ namespace ChatServerLibrary
 
 	void Lobby::Release()
 	{
-		for (size_t i = 0; i < RoomList.size(); ++i) {
+		for (size_t i = 0; i < RoomList.size(); ++i) 
+		{
 			delete RoomList[i];
 		}
 
@@ -53,9 +56,13 @@ namespace ChatServerLibrary
 	ErrorCode Lobby::AddUser(User* user)
 	{
 		auto findIter = std::find_if(std::begin(LobbyUserList), std::end(LobbyUserList),
-			[](auto& lobbyUser) {return lobbyUser.User == nullptr; });
+			[](auto& lobbyUser)
+			{
+				return lobbyUser.User == nullptr; 
+			});
 
-		if (findIter == std::end(LobbyUserList)) {
+		if (findIter == std::end(LobbyUserList)) 
+		{
 			return ErrorCode::LOBBY_ENTER_MAX_USER_COUNT;
 		}
 		
@@ -65,16 +72,19 @@ namespace ChatServerLibrary
 
 	ErrorCode Lobby::EnterLobby(User* user)
 	{
-		if (UserIndexDic.size() >= MaxUserCount) {
+		if (UserIndexDic.size() >= MaxUserCount) 
+		{
 			return ErrorCode::LOBBY_ENTER_MAX_USER_COUNT;
 		}
 
-		if (FindUser(user->GetIndex()) != nullptr) {
+		if (FindUser(user->GetIndex()) != nullptr) 
+		{
 			return ErrorCode::LOBBY_ENTER_USER_DUPLICATION;
 		}
 
 		auto add_result = AddUser(user);
-		if (add_result != ErrorCode::NONE) {
+		if (add_result != ErrorCode::NONE) 
+		{
 			return add_result;
 		}
 
@@ -88,7 +98,8 @@ namespace ChatServerLibrary
 	ErrorCode Lobby::LeaveLobby(const int userIndex)
 	{
 		auto user = FindUser(userIndex);
-		if (user == nullptr) {
+		if (user == nullptr) 
+		{
 			ErrorCode::LOBBY_LEAVE_USER_INVALID;
 		}
 
@@ -104,7 +115,8 @@ namespace ChatServerLibrary
 	ErrorCode Lobby::LeaveLobbyToEnterRomm(const int userIndex)
 	{
 		auto user = FindUser(userIndex);
-		if (user == nullptr) {
+		if (user == nullptr) 
+		{
 			ErrorCode::LOBBY_LEAVE_USER_INVALID;
 		}
 
@@ -120,7 +132,8 @@ namespace ChatServerLibrary
 	User* Lobby::FindUser(const int userIndex)
 	{
 		auto findIter = UserIndexDic.find(userIndex);
-		if (findIter == UserIndexDic.end()) {
+		if (findIter == UserIndexDic.end()) 
+		{
 			return nullptr;
 		}
 
@@ -129,12 +142,14 @@ namespace ChatServerLibrary
 
 	void Lobby::SendAllUsersInfoToSession(short packetId, const int sessionIndex)
 	{
-		Common::PacketNotifyEntrance packet;
+		PacketNotifyEntrance packet;
 		packet.UsersCount = (short)UserIndexDic.size();
 		int index = 0;
-		short total_size = 4;
-		for (auto user : UserIdDic) {
-			if (user.first == nullptr) {
+		short totalSize = 4; // UserCount(short) + ErroCode(short)
+		for (auto user : UserIdDic) 
+		{
+			if (user.first == nullptr) 
+			{
 				continue;
 			}
 
@@ -144,48 +159,57 @@ namespace ChatServerLibrary
 			index += 2;
 			memcpy(&packet.UserId[index], user.first, size);
 			index += size;
-			total_size += size + 2;
+			totalSize += size + 2;
 		}
+		packet.TotalSize = totalSize + kPacketHeaderLength;
+		packet.Id = packetId;
 		packet.ErrorCode = (short)ErrorCode::NONE;
-		//Server->SetSendingData(sessionIndex, packetId, total_size/*sizeof(packet)*/, (char*)&packet);
+		SendPacketFunc(sessionIndex, &packet, packet.TotalSize);
 	}
 
 	void Lobby::NotifyToAll(short packetId, const int userIndex)
 	{
-		if (UserIndexDic.size() == 1) {
+		if (UserIndexDic.size() == 1) 
+		{
 			return;
 		}
 
-		Common::PacketNotifyNewUser packet;
-		short total_size = 2;	//(sizeof erroCode)
+		PacketNotifyNewUser packet;
+		short totalSize = 2;	//(sizeof erroCode)
 		auto user = FindUser(userIndex);
 		std::string id_string = user->GetId();
 		auto size = id_string.size();
 		memcpy(packet.UserId, &size, 2);
 		memcpy(&packet.UserId[2], user->GetId(), size);
-		total_size += (short)size + 2;
-		packet.ErrorCode = (short)ErrorCode::NONE;
+		totalSize += (short)size + 2;
 
-		SendToAllUsers(packetId, total_size, (const char*)&packet, user->GetSessionIndex());
+		packet.ErrorCode	= (short)ErrorCode::NONE;
+		packet.Id			= packetId;
+		packet.TotalSize	= totalSize;
+		SendToAllUsers(&packet, totalSize, user->GetSessionIndex());
 	}
 
-	void Lobby::SendToAllUsers(const short packetId, const short data_size, const char* data, const int exception_sessionIndex)
+	void Lobby::SendToAllUsers(void* packet, const short packetSize, const int exceptionIndex)
 	{
 		for (auto& user : UserIndexDic) {
-			if (user.second->GetSessionIndex() == exception_sessionIndex) {
+			if (user.second->GetSessionIndex() == exceptionIndex) 
+			{
 				continue;
 			}
-
-			//Server->SetSendingData(user.second->GetSessionIndex(), packetId, data_size, data);
+			SendPacketFunc(user.second->GetSessionIndex(), &packet, packetSize);
 		}
 	}
 
 	void Lobby::RemoveUser(const int userIndex)
 	{
 		auto findIter = std::find_if(std::begin(LobbyUserList), std::end(LobbyUserList), 
-			[&userIndex](auto& lobbyUser) { return lobbyUser.User != nullptr && lobbyUser.User->GetIndex() == userIndex; });
+			[&userIndex](auto& lobbyUser)
+			{ 
+				return lobbyUser.User != nullptr && lobbyUser.User->GetIndex() == userIndex; 
+			});
 
-		if (findIter == std::end(LobbyUserList)) {
+		if (findIter == std::end(LobbyUserList)) 
+		{
 			return;
 		}
 
@@ -214,11 +238,13 @@ namespace ChatServerLibrary
 
 	Room* Lobby::CreateRoom(short roomIndex)
 	{
-		if (roomIndex > RoomList.size() - 1) {
+		if (roomIndex > RoomList.size() - 1) 
+		{
 			nullptr;
 		}
 
-		if (RoomList[roomIndex]->IsCreated() == false) {
+		if (RoomList[roomIndex]->IsCreated() == false) 
+		{
 			return RoomList[roomIndex];
 		}
 		
@@ -227,15 +253,18 @@ namespace ChatServerLibrary
 
 	Room* Lobby::GetRoom(const short roomIndex)
 	{
-		if (roomIndex < 0 || roomIndex >= RoomList.size() - 1) {
+		if (roomIndex < 0 || roomIndex >= RoomList.size() - 1) 
+		{
 			return nullptr;
 		}
 
-		else if (RoomList[roomIndex]->IsCreated() == true) {
+		else if (RoomList[roomIndex]->IsCreated() == true) 
+		{
 			return RoomList[roomIndex];
 		}
 
-		else {
+		else 
+		{
 			return nullptr;
 		}
 	}

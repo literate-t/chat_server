@@ -28,10 +28,10 @@ namespace ServerLibrary
 		int WorkerThreadCount					= -1;
 		int MaxRecvOverlappedBufferSize			= -1; // 한번에 받을 수 있는 최대 크기
 		int MaxSendOverlappedBufferSize			= -1; // 한번에 보낼 수 있는 최대 크기
-		int ConnectionMaxRecvBufferSize			= -1; // 받기용 버퍼의 최대 크기(데이터를 받으면 여기에 저장되고, 데이터의 위치가 애플리케이션에 전달되므로 넉넉하게 커야 한다)
-		int ConnectionMaxSendBufferSize			= -1; // 보내기용 버퍼의 최대 크기
+		int SessionMaxRecvBufferSize			= -1; // 받기용 버퍼의 최대 크기(데이터를 받으면 여기에 저장되고, 데이터의 위치가 애플리케이션에 전달되므로 넉넉하게 커야 한다)
+		int SessionMaxSendBufferSize			= -1; // 보내기용 버퍼의 최대 크기
 		int MaxPacketSize						= -1;
-		int MaxConnectionCount					= -1;
+		int MaxSessionCount						= -1;
 		int MaxMessagePoolCount					= -1;
 		int ExtraMessagePoolCount				= -1;
 		int PerformancePacketMillisecondsTime	= -1;
@@ -42,7 +42,7 @@ namespace ServerLibrary
 		int MaxRoomUserCount					= -1;
 	};	
 	
-	struct ConnectionConfig
+	struct SessionConfig
 	{
 		int MaxRecvBufferSize				= -1;
 		int MaxSendBufferSize				= -1;
@@ -75,12 +75,12 @@ namespace ServerLibrary
 		int				TotalBytes; // 총 송수신된 양
 		DWORD			Remain;		  // 현재까지 받은 패킷의 바이트 수(remain)
 		char*			SocketMsg;
-		int				ConnectionIndex = 0;
+		int				SessionIndex = 0;
 
-		OverlappedEx(int connectionIndex_)
+		OverlappedEx(int sessionIndex)
 		{
 			memset(this, 0, sizeof OverlappedEx);
-			ConnectionIndex = connectionIndex_;
+			SessionIndex = sessionIndex;
 		}
 	};
 

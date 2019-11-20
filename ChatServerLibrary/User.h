@@ -14,8 +14,8 @@ namespace ChatServerLibrary
 		};
 
 	public:
-		User(); 
-		~User();
+		User()	= default;
+		~User() = default;
 
 		void			Init(const short index);		
 		void			Clear();

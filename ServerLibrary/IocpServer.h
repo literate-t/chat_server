@@ -22,34 +22,34 @@ namespace ServerLibrary
 		bool Start();
 		void End();
 		void Init(ServerConfig* config, ILog* log);
-		bool ProcessIocpMessage(OUT char& msgType, OUT int& connectionIndex, char* buf, OUT short& copySize, int waitMilliseconds);
-		void SendPacket(const int connectionIndex, const void* packet, const short packetSize);
+		bool ProcessIocpMessage(OUT char& msgType, OUT int& sessionIndex, OUT char** buf, OUT short& copySize, int waitMilliseconds);
+		void SendPacket(const int sessionIndex, const void* packet, const short packetSize);
 
 		int GetMaxPacketSize()		{ return ServerInitConfig->MaxPacketSize; }
-		int GetMaxConnectinoCount() { return ServerInitConfig->MaxConnectionCount; }
+		int GetMaxSessionCount() { return ServerInitConfig->MaxSessionCount; }
 
 	private:
 		Result CreateListenSocket();
 		Result CreateIocp();
 		bool CreateMessagePool();
 		bool BindListenSocketIocp();
-		bool CreateConnections();
-		void DestroyConnections();
-		Connection* GetConnection(const int connectionIndex);
+		bool CreateSessions();
+		void DestroySessions();
+		Session* GetSession(const int sessionIndex);
 		bool CreateWorkerThread();
 		void WorkerThread();
-		Result PostMessageToQueue(Connection* connection, Message* msg, const DWORD packetSize = 0);
-		void HandleWorkerThreadException(Connection* connection, const OverlappedEx* overlappedEx);
-		void HandleConnectionCloseException(Connection* connection);
+		Result PostMessageToQueue(Session* session, Message* msg, const DWORD packetSize = 0);
+		void HandleWorkerThreadException(Session* session, const OverlappedEx* overlappedEx);
+		void HandleSessionCloseException(Session* session);
 
 		void DoAccept(const OverlappedEx* overlappedEx);
 		void DoRecv(OverlappedEx* overlappedEx, const DWORD size);
 		void DoSend(OverlappedEx* overlappedEx, const DWORD size);
-		void ForwardPacket(Connection* connection, DWORD& remain, char* buffer);
+		void ForwardPacket(Session* session, DWORD& remain, char* buffer);
 
-		void DoPostConnection(Connection* connection, const Message* msg, OUT char& msgType, OUT int& connectionIndex);
-		void DoPostClose(Connection* connection, const Message* msg, OUT char& msgType, OUT int& connectionIndex);
-		void DoPostRecvPacket(Connection* connection, const Message* msg, OUT char& msgType, OUT int& connectionIndex, char* buf, OUT short& copySize, const DWORD ioSize);		
+		void DoPostConnection(Session* session, const Message* msg, OUT char& msgType, OUT int& sessionIndex);
+		void DoPostClose(Session* session, const Message* msg, OUT char& msgType, OUT int& sessionIndex);
+		void DoPostRecvPacket(Session* session, const Message* msg, OUT char& msgType, OUT int& sessionIndex, OUT char** buf, OUT short& copySize, const DWORD ioSize);
 
 	private:
 		ServerConfig* ServerInitConfig = nullptr;
@@ -57,13 +57,12 @@ namespace ServerLibrary
 
 		SOCKET ListenSocket = INVALID_SOCKET;
 
-		vector<Connection*> VectorConnection;
+		vector<Session*> SessionVector;
 		HANDLE WorkerIocp = INVALID_HANDLE_VALUE;
 		HANDLE LogicIocp = INVALID_HANDLE_VALUE;
 
 		bool IsWorkerThreadRunnig = true;
 		vector<unique_ptr<thread>> WorkerThreadVector;
-
-		unique_ptr<MessagePool> UniqueMessagePool;
+		unique_ptr<MessagePool>	   UniqueMessagePool;
 	};
 }

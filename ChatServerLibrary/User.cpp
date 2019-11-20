@@ -3,16 +3,6 @@
 
 namespace ChatServerLibrary
 {
-	User::User()
-	{
-
-	}
-
-	User::~User()
-	{
-
-	}
-
 	void User::Init(const short index)
 	{
 		Index = index;
@@ -20,12 +10,12 @@ namespace ChatServerLibrary
 
 	void User::Clear()
 	{
-		SessionIndex = -1;
-		Id = nullptr;
-		Set = false;
-		DomainState = DomainState::NONE;
-		LobbyIndex = -1;
-		RoomIndex = -1;
+		SessionIndex	= -1;
+		Id				= nullptr;
+		Set				= false;
+		DomainState		= DomainState::NONE;
+		LobbyIndex		= -1;
+		RoomIndex		= -1;
 	}
 
 	void User::SetLoginInfo(const int sessionIndex, const char* id)

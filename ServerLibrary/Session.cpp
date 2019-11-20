@@ -5,7 +5,7 @@
 
 namespace ServerLibrary
 {
-	void Connection::Init(const SOCKET listenSocket, const int index, const ConnectionConfig* config, ILog* log)
+	void Session::Init(const SOCKET listenSocket, const int index, const SessionConfig* config, ILog* log)
 	{
 		Log = log;
 		ListenSocket = listenSocket;
@@ -28,7 +28,7 @@ namespace ServerLibrary
 		AcceptExSocket();
 	}
 
-	void Connection::Init()
+	void Session::Init()
 	{
 		memset(Ip, 0, kMaxIpLength);
 
@@ -44,12 +44,12 @@ namespace ServerLibrary
 		SendIoCount = 0;
 	}
 
-	void Connection::SetLog(ILog* log)
+	void Session::SetLog(ILog* log)
 	{
 		Log = log;
 	}
 
-	Result Connection::AcceptExSocket()
+	Result Session::AcceptExSocket()
 	{
 		memset(&RecvOverlappedEx->Overlapped, 0, sizeof OVERLAPPED);
 
@@ -57,7 +57,7 @@ namespace ServerLibrary
 		RecvOverlappedEx->SocketMsg = AddrBuf;
 		RecvOverlappedEx->Wsabuf.len = RecvBufSize;
 		RecvOverlappedEx->Mode = IoMode::ACCEPT;
-		RecvOverlappedEx->ConnectionIndex = Index;
+		RecvOverlappedEx->SessionIndex = Index;
 
 		ClientSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_IP, nullptr, 0, WSA_FLAG_OVERLAPPED);
 		if (ClientSocket == INVALID_SOCKET)
@@ -87,7 +87,7 @@ namespace ServerLibrary
 		return Result::SUCCESS;
 	}
 
-	bool Connection::CloseCompletely()
+	bool Session::CloseCompletely()
 	{
 		// 소켓만 종료한 채로 전부 처리될 때까지 대기?
 		if (Connected && (AcceptIoCount != 0 || RecvIoCount != 0 || SendIoCount != 0))
@@ -96,7 +96,7 @@ namespace ServerLibrary
 			return true;
 		}
 
-		// 한 버만 접속 종료 처리 하기 위함
+		// 한 번만 접속 종료 처리 하기 위함
 		if (InterlockedCompareExchange(reinterpret_cast<long*>(&Closed), TRUE, FALSE) == static_cast<long>(FALSE))
 		{
 			return false;
@@ -105,7 +105,7 @@ namespace ServerLibrary
 		return true;
 	}
 
-	void Connection::Disconnect(bool forced)
+	void Session::Disconnect(bool forced)
 	{
 		SetStateDisconnected();
 		LockGuard lock(Cs);
@@ -122,7 +122,7 @@ namespace ServerLibrary
 		}
 	}
 
-	Result Connection::ResetConnection()
+	Result Session::ResetSession()
 	{
 		LockGuard lock(Cs);
 
@@ -134,7 +134,7 @@ namespace ServerLibrary
 		return AcceptExSocket();
 	}
 
-	bool Connection::BindIocp(const HANDLE WorkerIocp)
+	bool Session::BindIocp(const HANDLE WorkerIocp)
 	{
 		LockGuard lock(Cs);
 		auto iocp = CreateIoCompletionPort(
@@ -151,17 +151,18 @@ namespace ServerLibrary
 		return true;
 	}
 
-	Result Connection::PostRecv(const char* nextBuf, const DWORD remain)
+	Result Session::PostRecv(const int forwardLength, const DWORD remain)
 	{
 		assert(Connected == TRUE && RecvOverlappedEx != nullptr);
 
 		RecvOverlappedEx->Mode = IoMode::RECV;
 		RecvOverlappedEx->Remain = remain;
 
-		// 링 수신 버퍼 사용하는 부분을 의도를 모르겠다 개씨발 새끼들아				
-		auto move = static_cast<int>(remain - (RingRecvBuffer.GetWriteMark() - nextBuf));
+		// 링 수신 버퍼 사용하는 부분을 의도를 모르겠다 개씨발 새끼들아		
+		//auto currentBuf = RingRecvBuffer.GetWriteMark();
+		//auto move = static_cast<int>(remain - (currentBuf - nextBuf));
 		RecvOverlappedEx->Wsabuf.len = RecvBufSize;
-		RecvOverlappedEx->Wsabuf.buf = RingRecvBuffer.ForwardMark(move/*, RecvBufSize*/, remain);
+		RecvOverlappedEx->Wsabuf.buf = RingRecvBuffer.ForwardMark(forwardLength/*, RecvBufSize*/, remain);
 		assert(RecvOverlappedEx->Wsabuf.buf != nullptr);
 
 		RecvOverlappedEx->SocketMsg = RecvOverlappedEx->Wsabuf.buf;// -remain; // 얘는 왜 또 빼냐
@@ -189,7 +190,7 @@ namespace ServerLibrary
 		return Result::SUCCESS;
 	}
 
-	bool Connection::PostSend(const int sendSize)
+	bool Session::PostSend(const int sendSize)
 	{
 		// 남은 패킷이 있는가
 		//if (sendSize > 0)
@@ -215,7 +216,7 @@ namespace ServerLibrary
 
 			SendOverlappedEx->Wsabuf.buf = buf;
 			SendOverlappedEx->Wsabuf.len = size;
-			SendOverlappedEx->ConnectionIndex = Index;
+			SendOverlappedEx->SessionIndex = Index;
 
 			SendOverlappedEx->Remain = 0;
 			SendOverlappedEx->TotalBytes = size;
@@ -244,7 +245,7 @@ namespace ServerLibrary
 		return true;
 	}
 
-	Result Connection::ReserveSendPacketBuffer(OUT char** buf, const int size)
+	Result Session::ReserveSendPacketBuffer(OUT char** buf, const int size)
 	{
 		//assert(Connected);
 		if (!Connected)
@@ -261,7 +262,7 @@ namespace ServerLibrary
 		return Result::SUCCESS;
 	}
 
-	bool Connection::SetAddressInfo()
+	bool Session::SetAddressInfo()
 	{
 		SOCKADDR* localAddr		= nullptr;
 		SOCKADDR* remoteAddr	= nullptr;

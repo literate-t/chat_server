@@ -27,14 +27,14 @@ namespace ChatServerLibrary
 		};
 
 		UserMgr = make_unique<UserManager>();
-		UserMgr->Init(Config->MaxConnectionCount);
+		UserMgr->Init(Config->MaxSessionCount);
 		UserMgr->SendPacketFunc = SendPacketFunc;
 
 		LobbyMgr = make_unique<LobbyManager>();
 		LobbyManagerConfig config = { Config->MaxLobbyCount, Config->MaxLobbyUserCount,
 									  Config->MaxRoomCount, Config->MaxRoomUserCount };
-		LobbyMgr->Init(&config, Server.get(), Log.get());
 		LobbyMgr->SendPacketFunc = SendPacketFunc;
+		LobbyMgr->Init(&config, Server.get(), Log.get());
 
 		PacketMgr = make_unique<PacketManager>();
 		PacketMgr->Init(UserMgr.get(), LobbyMgr.get(), Log.get());
@@ -53,10 +53,10 @@ namespace ChatServerLibrary
 		while (IsRunning)
 		{
 			char type = 0;
-			int connectionIndex = 0;
+			int sessionIndex = 0;
 			short copySize = 0;
 
-			if (!Server->ProcessIocpMessage(type, connectionIndex, buf, copySize, waitMilliseconds))
+			if (!Server->ProcessIocpMessage(type, sessionIndex, &buf, copySize, waitMilliseconds))
 			{
 				continue;
 			}
@@ -66,23 +66,22 @@ namespace ChatServerLibrary
 			{
 				case ServerLibrary::MessageType::CONNECTION:
 				{
-					Log->Write(ServerLibrary::LogType::L_INFO, "On connect index:%d", connectionIndex);
+					Log->Write(ServerLibrary::LogType::L_INFO, "On connect index:%d", sessionIndex);
 					break;
 				}
 
 				case ServerLibrary::MessageType::CLOSE:
 				{
-					Log->Write(ServerLibrary::LogType::L_INFO, "On close index:%d close process is needed", connectionIndex);
+					Log->Write(ServerLibrary::LogType::L_INFO, "On close index:%d close process is needed", sessionIndex);
 					break;
 				}
 
 				case ServerLibrary::MessageType::ONRECV:
 				{
-					PacketMgr->ProcessPacket(connectionIndex, buf, copySize);
+					PacketMgr->ProcessPacket(sessionIndex, buf, copySize);
 					break;
 				}
 			}
-
 		}
 		delete[] buf;
 	}
@@ -106,10 +105,10 @@ namespace ChatServerLibrary
 		Config->WorkerThreadCount = GetPrivateProfileInt(L"ServerConfig", L"WorkerThreadCount", 0, configPath);
 		Config->MaxRecvOverlappedBufferSize = GetPrivateProfileInt(L"ServerConfig", L"MaxRecvOverlappedBufferSize", 0, configPath);
 		Config->MaxSendOverlappedBufferSize =	GetPrivateProfileInt(L"ServerConfig", L"MaxSendOverlappedBufferSize", 0, configPath);
-		Config->ConnectionMaxRecvBufferSize =	GetPrivateProfileInt(L"ServerConfig", L"ConnectionMaxRecvBufferSize", 0, configPath);
-		Config->ConnectionMaxSendBufferSize =	GetPrivateProfileInt(L"ServerConfig", L"ConnectionMaxSendBufferSize", 0, configPath);
+		Config->SessionMaxRecvBufferSize =	GetPrivateProfileInt(L"ServerConfig", L"SessionMaxRecvBufferSize", 0, configPath);
+		Config->SessionMaxSendBufferSize =	GetPrivateProfileInt(L"ServerConfig", L"SessionMaxSendBufferSize", 0, configPath);
 		Config->MaxPacketSize =	GetPrivateProfileInt(L"ServerConfig", L"MaxPacketSize", 0, configPath);
-		Config->MaxConnectionCount =	GetPrivateProfileInt(L"ServerConfig", L"MaxConnectionCount", 0, configPath);
+		Config->MaxSessionCount =	GetPrivateProfileInt(L"ServerConfig", L"MaxSessionCount", 0, configPath);
 		Config->MaxMessagePoolCount =	GetPrivateProfileInt(L"ServerConfig", L"MaxMessagePoolCount", 0, configPath);
 		Config->ExtraMessagePoolCount =	GetPrivateProfileInt(L"ServerConfig", L"ExtraMessagePoolCount", 0, configPath);
 		Config->PerformancePacketMillisecondsTime = GetPrivateProfileInt(L"ServerConfig", L"PerformancePacketMillisecondsTime", 0, configPath);

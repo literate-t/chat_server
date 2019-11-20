@@ -128,7 +128,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Connection.cpp" />
+    <ClCompile Include="Session.cpp" />
     <ClCompile Include="IocpServer.cpp" />
     <ClCompile Include="Lock.cpp" />
     <ClCompile Include="MessagePool.cpp" />
@@ -139,7 +139,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="conmanip.h" />
-    <ClInclude Include="Connection.h" />
+    <ClInclude Include="Session.h" />
     <ClInclude Include="Definitions.h" />
     <ClInclude Include="ILog.h" />
     <ClInclude Include="IocpServer.h" />

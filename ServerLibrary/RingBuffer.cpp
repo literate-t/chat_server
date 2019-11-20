@@ -127,7 +127,8 @@ namespace ServerLibrary
 			LastPos = End;
 		}
 
-		if (WriteSize > reqReadSize)
+		// origin : (WriteSize > reqReadSize
+		if (WriteSize >= reqReadSize)
 		{
 			if (LastPos - ReadPos >= reqReadSize)
 			{

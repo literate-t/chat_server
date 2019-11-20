@@ -10,9 +10,10 @@ namespace ChatServerLibrary
 
 	void UserManager::Init(const int maxUserCount)
 	{
-		for (int i = 0; i < maxUserCount; ++i) {
+		for (int i = 0; i < maxUserCount; ++i) 
+		{
 			User user;
-			user.Init((short)i);
+			user.Init(static_cast<short>(i));
 			UserPool.push_back(user);
 			UserIndexPool.push(i);
 		}
@@ -20,7 +21,8 @@ namespace ChatServerLibrary
 
 	User* UserManager::AllocateUserFromPoolIndex()
 	{
-		if (UserIndexPool.empty()) {
+		if (UserIndexPool.empty()) 
+		{
 			return nullptr;
 		}
 
@@ -38,12 +40,14 @@ namespace ChatServerLibrary
 
 	ErrorCode UserManager::AddUser(const int sessionIndex, const char* id)
 	{
-		if (FindUser(id) != nullptr) {
+		if (FindUser(id) != nullptr) 
+		{
 			return ErrorCode::USER_MGR_ID_DUPLICATION;
 		}
 
 		auto user = AllocateUserFromPoolIndex();
-		if (user == nullptr) {
+		if (user == nullptr) 
+		{
 			return ErrorCode::USER_MGR_MAX_USER_COUNT;
 		}
 
@@ -73,11 +77,13 @@ namespace ChatServerLibrary
 	std::tuple<ErrorCode, User*> UserManager::GetUser(const int sessionIndex)
 	{
 		auto user = FindUser(sessionIndex);
-		if (user == nullptr) {
+		if (user == nullptr) 
+		{
 			return { ErrorCode::USER_MGR_INVALID_SESSION_INDEX, nullptr };
 		}
 
-		if (user->IsSet() == false) {
+		if (user->IsSet() == false) 
+		{
 			return { ErrorCode::USER_MGR_NOT_SET_USER, nullptr };
 		}
 
@@ -87,7 +93,8 @@ namespace ChatServerLibrary
 	User* UserManager::FindUser(const int sessionIndex)
 	{
 		auto find_iter = UserSessionDic.find(sessionIndex);
-		if (find_iter == UserSessionDic.end()) {
+		if (find_iter == UserSessionDic.end()) 
+		{
 			return nullptr;
 		}
 
@@ -97,10 +104,10 @@ namespace ChatServerLibrary
 	User* UserManager::FindUser(const char* id)
 	{
 		auto find_iter = UserIdDic.find(id);
-		if (find_iter == UserIdDic.end()) {
+		if (find_iter == UserIdDic.end()) 
+		{
 			return nullptr;
 		}
-
 		return find_iter->second;
 	}
 }
