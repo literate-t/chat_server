@@ -1,37 +1,7 @@
-# Prerequisites
-*.d
-
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
-
-# Etc
-x64/
-server_library/x64/
-.vs/
+x64
+ServerLibrary/x64
+ChatServerLibrary/x64
+ConsoleHost/x64
+.vs
+ChatClient/bin/Debug
+ChatClient/obj/Debug
