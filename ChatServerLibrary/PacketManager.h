@@ -19,7 +19,11 @@ namespace ChatServerLibrary
 		void ProcessPacket(int sessionIndex, char* buf, short copySize);
 		void Login(int sessionIndex, char* buf, short copySize);
 		void LobbyEnter(int sessionIndex, char* buf, short copySize);
-		//void ProcessLogoff(int connectionIndex, char* buf, short copySize);
+		void LobbyLeave(int sessionIndex, char* buf, short copySize);
+		void RoomEnter(int sessionIndex, char* buf, short copySize);
+		void RoomLeave(int sessionIndex, char* buf, short copySize);
+		void RoomChat(int sessionIndex, char* buf, short copySize);
+		bool ProcessLogoff(int sessionIndex);
 
 
 		function<void(int, void*, short)> SendPacketFunc;

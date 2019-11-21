@@ -38,15 +38,15 @@ namespace ChatServerLibrary
 
 		ErrorCode SetRoom(short lobbyIndex, const char* roomTitle);
 		ErrorCode EnterRoom(User* user);
-		void SendAllUsersInfoToSession(const int sessionIndex);
+		void SendAllUsersInfoToSession(short packetId, const int sessionIndex);
 		void NotifyToAll(short packetId, const int userIndex);
 		ErrorCode LeaveRoom(const short user_index);
 
 		bool IsMaster(const short userIndex);
 
-		void SendToAllUsers(const short packetId, const short dataSize, const char* data, const int exceptionIndex = -1);
+		void SendToAllUsers(void* packet, const short packetSize, const int exceptionIndex = -1);
 		void SendChat(const char* userId, const short roomIndex, const char* msg);
-		void ChatToAllUsers(const short packetId, const short roomIndex, const short dataSize, const char* data);
+		void ChatToAllUsers(void* packet, const short packetSize, const int roomIndex);
 
 		function<void(int, void*, short)> SendPacketFunc;
 

@@ -58,14 +58,16 @@ namespace ChatServerLibrary
 		return ErrorCode::NONE;
 	}
 
-	void Room::SendAllUsersInfoToSession(const int sessionIndex)
+	void Room::SendAllUsersInfoToSession(short packetId, const int sessionIndex)
 	{
-		Common::PacketNotifyEntrance packet;
+		PacketNotifyEntrance packet;
 		packet.UsersCount = (short)UserIndexDic.size();
 		int index = 0;
-		short totalSize = 4;
-		for (auto userInfo : UserIndexDic) {
-			if (userInfo.second == nullptr) {
+		short totalSize = 4; // UserCount(short) + ErrorCode(short)
+		for (auto userInfo : UserIndexDic) 
+		{
+			if (userInfo.second == nullptr) 
+			{
 				continue;
 			}
 
@@ -77,17 +79,21 @@ namespace ChatServerLibrary
 			index += size;
 			totalSize += size + 2;
 		}
+		packet.TotalSize = totalSize + kPacketHeaderLength;
+		packet.Id = packetId;
 		packet.ErrorCode = (short)ErrorCode::NONE;
+		SendPacketFunc(sessionIndex, &packet, packet.TotalSize);
 		//server_->SetSendingData(sessionIndex, (short)PacketId::ROOM_ENTER_RES, totalSize, (char*)&packet);
 	}
 
 	void Room::NotifyToAll(short packetId, const int userIndex)
 	{
-		if (UserIndexDic.size() <= 1) {
+		if (UserIndexDic.size() <= 1) 
+		{
 			return;
 		}
 
-		Common::PacketNotifyNewUser packet;
+		PacketNotifyNewUser packet;
 		short totalSize = 2;//(sizeof erroCode)
 
 		auto user = FindUser(userIndex);
@@ -96,9 +102,23 @@ namespace ChatServerLibrary
 		memcpy(packet.UserId, &size, 2);
 		memcpy(&packet.UserId[2], user->GetId(), size);
 		totalSize += (short)size + 2;
-		packet.ErrorCode = (short)ErrorCode::NONE;
 
-		SendToAllUsers(packetId, sizeof(packet), (const char*)&packet, user->GetSessionIndex());
+		packet.TotalSize = totalSize + kPacketHeaderLength;
+		packet.Id = packetId;
+		packet.ErrorCode = static_cast<short>(ErrorCode::NONE);
+		SendToAllUsers(&packet, packet.TotalSize, user->GetSessionIndex());
+	}
+
+	void Room::SendToAllUsers(void* packet, const short packetSize, const int exceptionIndex)
+	{
+		for (auto& user : UserIndexDic)
+		{
+			if (user.second->GetSessionIndex() == exceptionIndex)
+			{
+				continue;
+			}
+			SendPacketFunc(user.second->GetSessionIndex(), packet, packetSize);
+		}
 	}
 
 	User* Room::FindUser(const int userIndex)
@@ -135,17 +155,6 @@ namespace ChatServerLibrary
 		return ErrorCode::NONE;
 	}
 
-	void Room::SendToAllUsers(const short packetId, const short dataSize, const char* data, const int exceptionIndex)
-	{
-		for (auto userInfo : UserIndexDic) {
-			if (userInfo.second->GetSessionIndex() == exceptionIndex) {
-				continue;
-			}
-
-			//server_->SetSendingData(userInfo.second->GetSessionIndex(), packetId, dataSize, data);
-		}
-	}
-
 	short& Room::GetIndex()
 	{ 
 		return Index; 	
@@ -173,24 +182,31 @@ namespace ChatServerLibrary
 
 	void Room::SendChat(const char* userId, const short roomIndex, const char* msg)
 	{
-		Common::PacketRoomChat packetChat;
+		PacketRoomChat packetChat;
 		std::string temp = userId;
 		packetChat.IdSize = (short)temp.size();
 		memcpy(packetChat.UserId, userId, packetChat.IdSize);
+
 		temp = msg;
 		packetChat.MsgSize = (short)temp.size();
 		memcpy(packetChat.Msg, msg, packetChat.MsgSize);
 
-		ChatToAllUsers((short)PacketId::ROOM_CHAT_RES, roomIndex, sizeof packetChat, (const char*)&packetChat);
+		packetChat.Id = static_cast<short>(PacketId::ROOM_CHAT_RES);
+		packetChat.TotalSize = sizeof PacketRoomChat;
+		packetChat.ErrorCode = static_cast<short>(ErrorCode::NONE);
+
+		ChatToAllUsers(&packetChat, packetChat.TotalSize, roomIndex);
 	}
 
-	void Room::ChatToAllUsers(const short packetId, const short roomIndex, const short dataSize, const char* data)
+	void Room::ChatToAllUsers(void* packet, const short packetSize, const int roomIndex)
 	{
-		for (auto userInfo : UserIndexDic) {
-			if (userInfo.second->GetRoomIndex() != roomIndex) {
+		for (auto user : UserIndexDic)
+		{
+			if (user.second->GetRoomIndex() != roomIndex) 
+			{
 				continue;
 			}
-
+			SendPacketFunc(user.second->GetSessionIndex(), packet, packetSize);
 			//server_->SetSendingData(userInfo.second->GetSessionIndex(), packetId, dataSize, data);
 		}
 	}

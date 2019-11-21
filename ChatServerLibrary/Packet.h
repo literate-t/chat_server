@@ -6,8 +6,8 @@ namespace Common
 #pragma pack(push, 1)
 	struct PacketHeader
 	{
-		unsigned short TotalSize;
-		unsigned short Id;
+		short TotalSize;
+		short Id;
 	};
 
 	// 로그인 요청
@@ -25,7 +25,7 @@ namespace Common
 
 	struct PacketBasicRes : public PacketHeader
 	{
-		unsigned short ErrorCode = 0;
+		short ErrorCode = 0;
 	};
 
 	// 입장 알림
@@ -49,9 +49,9 @@ namespace Common
 		char Msg[kMaxRoomChatSize] = { 0 };
 	};
 
-	struct PacketBasicEnterLeaveReq
+	struct PacketBasicEnterLeaveReq : public PacketHeader
 	{
-		short Index;
+		short Index = -1;
 	};
 
 #pragma pack(pop)

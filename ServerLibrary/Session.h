@@ -39,6 +39,7 @@ namespace ServerLibrary
 		void DecrementRecvIoCount() { RecvIoCount = RecvIoCount ? --RecvIoCount : 0; }
 		void IncrementSendIoCount() { ++SendIoCount; }
 		void DecrementSendIoCount() { SendIoCount = SendIoCount ? --SendIoCount : 0; }
+		short GetRecvIoCount() { return RecvIoCount.load(); }
 
 		bool IsConnected() { return Connected; }
 		void SetStateConnected() { InterlockedExchange(reinterpret_cast<long*>(&Connected), TRUE); }

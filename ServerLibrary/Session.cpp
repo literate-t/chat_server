@@ -89,7 +89,7 @@ namespace ServerLibrary
 
 	bool Session::CloseCompletely()
 	{
-		// 소켓만 종료한 채로 전부 처리될 때까지 대기?
+		// 카운트가 남았다면 소켓은 끊고 iocp에서 완료를 기다린다
 		if (Connected && (AcceptIoCount != 0 || RecvIoCount != 0 || SendIoCount != 0))
 		{
 			Disconnect();
@@ -118,7 +118,6 @@ namespace ServerLibrary
 				setsockopt(ClientSocket, SOL_SOCKET, SO_LINGER, reinterpret_cast<char*>(&linger), sizeof LINGER);
 			}
 			closesocket(ClientSocket);
-			ClientSocket = INVALID_SOCKET;
 		}
 	}
 
@@ -187,6 +186,14 @@ namespace ServerLibrary
 			Log->Write(LogType::L_ERROR, "%s | WSARecv() failure: error[%d]", __FUNCTION__, WSAGetLastError());
 			return Result::POSTRECV_NULL_SOCKET_ERROR;
 		}
+		else
+		{
+			// Main::Run()에서는 어디에 sleep을 걸어도 패킷을 제대로 처리 못하는 상황이 생기는데
+			// 이 부분에서 Log->Write 함수를 호출하거나 sleep을 걸면 오류가 안 생긴다.
+			// 멀티스레드 환경이기 때문에 순서상의 어떤 문제가 있는 것으로 생각됨
+			this_thread::sleep_for(chrono::milliseconds(1));
+			//Log->Write(LogType::L_WARN, "%s | WSARecv() completed", __FUNCTION__, WSAGetLastError());
+		}
 		return Result::SUCCESS;
 	}
 
@@ -240,6 +247,14 @@ namespace ServerLibrary
 				DecrementSendIoCount();
 				Log->Write(LogType::L_ERROR, "%s | WSASend() failure[%d]", __FUNCTION__, WSAGetLastError());
 				return false;
+			}
+			else
+			{
+				// Main::Run()에서는 어디에 sleep을 걸어도 패킷을 제대로 처리 못하는 상황이 생기는데
+				// 이 부분에서 Log->Write 함수를 호출하거나 sleep을 걸면 오류가 안 생긴다.
+				// 멀티스레드 환경이기 때문에 순서상의 어떤 문제가 있는 것으로 생각됨
+				this_thread::sleep_for(chrono::milliseconds(1));
+				//Log->Write(LogType::L_WARN, "%s | WSASend() completed", __FUNCTION__);
 			}
 		}
 		return true;

@@ -300,6 +300,7 @@ namespace ServerLibrary
 		if (result == false)
 		{
 			//Log->Write(LogType::L_ERROR, "%s | GetQueuedCompletionStatus() from LogicIocp failure[%d]", __FUNCTION__, WSAGetLastError());
+			this_thread::sleep_for(chrono::milliseconds(1));
 			return false;
 		}
 
@@ -366,6 +367,7 @@ namespace ServerLibrary
 			case IoMode::RECV:
 			{
 				session->DecrementRecvIoCount();
+				Log->Write(LogType::L_ERROR, "%s | RecvIoCount is %d", __FUNCTION__, session->GetRecvIoCount());
 				break;
 			}
 			case IoMode::SEND:
@@ -389,8 +391,8 @@ namespace ServerLibrary
 			Log->Write(LogType::L_ERROR, "%s | session is nullptr", __FUNCTION__);
 			return;
 		}
-		session->Disconnect();
-		session->SetStateDisconnected();
+		//session->Disconnect();
+		//session->SetStateDisconnected();
 
 		if (PostMessageToQueue(session, session->GetCloseMsg()) != Result::SUCCESS)
 		{
@@ -534,6 +536,7 @@ namespace ServerLibrary
 		// 모든 메시지를 전송하지 못했을 때
 		if (static_cast<DWORD>(overlappedEx->TotalBytes) > overlappedEx->Remain)
 		{
+			Log->Write(LogType::L_ERROR, "%s | 전송 진행 중", __FUNCTION__);
 			session->IncrementSendIoCount();
 			overlappedEx->Wsabuf.buf += size;
 			overlappedEx->Wsabuf.len -= size;
@@ -597,17 +600,8 @@ namespace ServerLibrary
 
 		msgType = static_cast<char>(msg->Type);
 		sessionIndex = session->GetIndex();
+		session->Disconnect();
 		auto result = session->ResetSession();
-		if (result == Result::SUCCESS)
-		{
-			Log->Write(LogType::L_ERROR, "%s | Disconnection index:%d", __FUNCTION__, sessionIndex);
-			return;
-		}
-		else
-		{
-			Log->Write(LogType::L_ERROR, "%s | ResetSession() failure", __FUNCTION__);
-			return;
-		}
 	}
 
 	void IocpServer::DoPostRecvPacket(Session* session, const Message* msg, OUT char& msgType, OUT int& sessionIndex, OUT char** buf, OUT short& copySize, const DWORD size)

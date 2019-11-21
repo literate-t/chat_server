@@ -10,6 +10,7 @@
     <ClCompile Include="UserManager.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="PacketManagerLobby.cpp" />
+    <ClCompile Include="PacketManagerRoom.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Main.h" />

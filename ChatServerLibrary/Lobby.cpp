@@ -163,7 +163,7 @@ namespace ChatServerLibrary
 		}
 		packet.TotalSize = totalSize + kPacketHeaderLength;
 		packet.Id = packetId;
-		packet.ErrorCode = (short)ErrorCode::NONE;
+		packet.ErrorCode = static_cast<short>(ErrorCode::NONE);
 		SendPacketFunc(sessionIndex, &packet, packet.TotalSize);
 	}
 
@@ -175,7 +175,7 @@ namespace ChatServerLibrary
 		}
 
 		PacketNotifyNewUser packet;
-		short totalSize = 2;	//(sizeof erroCode)
+		short totalSize = 2;	//(sizeof errorCode)
 		auto user = FindUser(userIndex);
 		std::string id_string = user->GetId();
 		auto size = id_string.size();
@@ -183,10 +183,10 @@ namespace ChatServerLibrary
 		memcpy(&packet.UserId[2], user->GetId(), size);
 		totalSize += (short)size + 2;
 
-		packet.ErrorCode	= (short)ErrorCode::NONE;
 		packet.Id			= packetId;
-		packet.TotalSize	= totalSize;
-		SendToAllUsers(&packet, totalSize, user->GetSessionIndex());
+		packet.TotalSize	= totalSize + kPacketHeaderLength;
+		packet.ErrorCode = static_cast<short>(ErrorCode::NONE);
+		SendToAllUsers(&packet, packet.TotalSize, user->GetSessionIndex());
 	}
 
 	void Lobby::SendToAllUsers(void* packet, const short packetSize, const int exceptionIndex)
@@ -196,7 +196,7 @@ namespace ChatServerLibrary
 			{
 				continue;
 			}
-			SendPacketFunc(user.second->GetSessionIndex(), &packet, packetSize);
+			SendPacketFunc(user.second->GetSessionIndex(), packet, packetSize);
 		}
 	}
 

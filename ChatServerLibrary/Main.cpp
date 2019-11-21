@@ -60,6 +60,12 @@ namespace ChatServerLibrary
 			{
 				continue;
 			}
+			//auto result = Server->ProcessIocpMessage(type, sessionIndex, &buf, copySize, waitMilliseconds);
+			//if (!result)
+			//{
+			//	this_thread::sleep_for(chrono::milliseconds(1));
+			//	continue;
+			//}
 
 			auto msgType = static_cast<ServerLibrary::MessageType>(type);
 			switch (msgType)
@@ -72,7 +78,11 @@ namespace ChatServerLibrary
 
 				case ServerLibrary::MessageType::CLOSE:
 				{
-					Log->Write(ServerLibrary::LogType::L_INFO, "On close index:%d close process is needed", sessionIndex);
+					auto result = PacketMgr->ProcessLogoff(sessionIndex);
+					if (result)
+					{
+						Log->Write(ServerLibrary::LogType::L_INFO, "Session index:%d is closed", sessionIndex);
+					}
 					break;
 				}
 
