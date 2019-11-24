@@ -90,35 +90,6 @@ namespace ServerLibrary
 		TotalDataSize	+= forwardLength;
 
 		return WritePos;
-
-		//if (WriteSize + forwardLength > BufferSize)
-		//{
-		//	return nullptr;
-		//}
-
-		//if (static_cast<int>(End - WritePos) > forwardLength)
-		//{
-		//	WritePos		+= forwardLength;
-		//	WriteSize		+= forwardLength;
-		//	TotalDataSize	+= forwardLength;
-		//}
-
-		//else
-		//{
-		//	LastPos = WritePos;
-		//	////이건 진짜 아무리 생각해도 이상하네. 아예 산술적으로 맞지가 않음
-		//	//////memcpy(begin_, write_mark_ - (sofar_length - forward_length), sofar_length);
-		//	////memcpy(begin_, write_mark_ - sofar_length, sofar_length);
-		//	////write_mark_ = begin_ + sofar_length;
-		//	//memcpy(begin_, write_mark_, forward_length);
-		//	//write_mark_ = begin_ + forward_length;
-		//	//memcpy(Begin, WritePos - (remain - forwardLength), remain);
-		//	WritePos		= Begin + remain;
-		//	WriteSize		+= remain;
-		//	TotalDataSize	+= remain;
-		//}
-
-		//return WritePos;
 	}
 
 	void RingBuffer::ReleaseBuffer(int releaseSize)

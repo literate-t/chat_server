@@ -1,6 +1,4 @@
 #include "stdafx.h"
-//#include "MessagePool.h"
-//#include "ILog.h"
 
 namespace ServerLibrary
 {
