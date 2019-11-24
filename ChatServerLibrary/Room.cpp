@@ -1,7 +1,3 @@
-//#include "ErrorCode.h"
-//#include "Packet.h"
-//#include "Room.h"
-//#include "User.h"
 #include "stdafx.h"
 
 using PacketId = Common::PacketId;
@@ -83,7 +79,6 @@ namespace ChatServerLibrary
 		packet.Id = packetId;
 		packet.ErrorCode = (short)ErrorCode::NONE;
 		SendPacketFunc(sessionIndex, &packet, packet.TotalSize);
-		//server_->SetSendingData(sessionIndex, (short)PacketId::ROOM_ENTER_RES, totalSize, (char*)&packet);
 	}
 
 	void Room::NotifyToAll(short packetId, const int userIndex)

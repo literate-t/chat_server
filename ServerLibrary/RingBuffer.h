@@ -19,8 +19,8 @@ namespace ServerLibrary
 		inline char* GetWriteMark() { return WritePos; }
 		inline char* GetEndMark() { return End; }
 
-		char* ForwardMark(const int forward_length);
-		char* ForwardMark(const int forward_length/*, const int next_length*/, const DWORD remain_length);
+		char* ForwardSendPos(const int forward_length);
+		char* ForwardRecvPos(const int forward_length);
 
 		void ReleaseBuffer(int release_size);
 		int GetUsedBufferSize() { return WriteSize; }

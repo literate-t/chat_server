@@ -10,8 +10,9 @@ namespace ServerLibrary
 		Log = log;
 		ListenSocket = listenSocket;
 		Index = index;
-		RecvBufSize = config->MaxRecvBufferSize;
-		SendBufSize = config->MaxSendBufferSize;
+		RecvBufSize		= config->MaxRecvBufferSize;
+		SendBufSize		= config->MaxSendBufferSize;
+		MaxPacketSize	= config->MaxPacketSize;
 
 		RingRecvBuffer.Create(RecvBufSize);
 		RingSendBuffer.Create(SendBufSize);
@@ -54,7 +55,6 @@ namespace ServerLibrary
 		memset(&RecvOverlappedEx->Overlapped, 0, sizeof OVERLAPPED);
 
 		RecvOverlappedEx->Wsabuf.buf = AddrBuf;
-		RecvOverlappedEx->SocketMsg = AddrBuf;
 		RecvOverlappedEx->Wsabuf.len = RecvBufSize;
 		RecvOverlappedEx->Mode = IoMode::ACCEPT;
 		RecvOverlappedEx->SessionIndex = Index;
@@ -157,14 +157,10 @@ namespace ServerLibrary
 		RecvOverlappedEx->Mode = IoMode::RECV;
 		RecvOverlappedEx->Remain = remain;
 
-		// 링 수신 버퍼 사용하는 부분을 의도를 모르겠다 개씨발 새끼들아		
-		//auto currentBuf = RingRecvBuffer.GetWriteMark();
-		//auto move = static_cast<int>(remain - (currentBuf - nextBuf));
-		RecvOverlappedEx->Wsabuf.len = RecvBufSize;
-		RecvOverlappedEx->Wsabuf.buf = RingRecvBuffer.ForwardMark(forwardLength/*, RecvBufSize*/, remain);
+		RecvOverlappedEx->Wsabuf.len = MaxPacketSize;
+		RecvOverlappedEx->Wsabuf.buf = RingRecvBuffer.ForwardRecvPos(forwardLength);
 		assert(RecvOverlappedEx->Wsabuf.buf != nullptr);
 
-		RecvOverlappedEx->SocketMsg = RecvOverlappedEx->Wsabuf.buf;// -remain; // 얘는 왜 또 빼냐
 		memset(&RecvOverlappedEx->Overlapped, 0, sizeof WSAOVERLAPPED);
 		IncrementRecvIoCount();
 
@@ -199,18 +195,9 @@ namespace ServerLibrary
 
 	bool Session::PostSend(const int sendSize)
 	{
-		// 남은 패킷이 있는가
-		//if (sendSize > 0)
-		//{
-		//	  RingSendBuffer.SetUsedBufferSize(sendSize);
-		//}
-
 		if (InterlockedCompareExchange(reinterpret_cast<long*>(&Sendable), FALSE, TRUE))
 		{
 			auto size = 0;
-			// 분명 문제 생긴다
-			// 첫 사용이라면 size가 0이 될 테니까
-			//auto buf = RingSendBuffer.GetBuffer(SendBufSize, size);
 			auto buf = RingSendBuffer.GetBuffer(sendSize, size);
 			if (buf == nullptr)
 			{
@@ -269,7 +256,7 @@ namespace ServerLibrary
 			return Result::RESERVED_BUFFER_NOT_CONNECTED;
 		}
 
-		*buf = RingSendBuffer.ForwardMark(size);
+		*buf = RingSendBuffer.ForwardSendPos(size);
 		if (*buf == nullptr)
 		{			
 			return Result::RESERVED_BUFFER_EMPTY;

@@ -1,7 +1,4 @@
 #pragma once
-//#include <unordered_map>
-//#include <functional>
-//#include "../ServerLibrary/ILog.h"
 #include "stdafx.h"
 
 using namespace Common;
@@ -24,7 +21,6 @@ namespace ChatServerLibrary
 		void RoomLeave(int sessionIndex, char* buf, short copySize);
 		void RoomChat(int sessionIndex, char* buf, short copySize);
 		bool ProcessLogoff(int sessionIndex);
-
 
 		function<void(int, void*, short)> SendPacketFunc;
 

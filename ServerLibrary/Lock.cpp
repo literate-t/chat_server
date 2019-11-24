@@ -1,5 +1,4 @@
 #include "stdafx.h"
-//#include "Lock.h"
 #define SPIN_LOCK	100
 
 namespace ServerLibrary

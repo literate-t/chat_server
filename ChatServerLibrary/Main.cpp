@@ -1,7 +1,5 @@
 #include "stdafx.h"
 #include "../ServerLibrary/Logger.h"
-//#include "Main.h"
-
 
 namespace ChatServerLibrary
 {
@@ -60,12 +58,6 @@ namespace ChatServerLibrary
 			{
 				continue;
 			}
-			//auto result = Server->ProcessIocpMessage(type, sessionIndex, &buf, copySize, waitMilliseconds);
-			//if (!result)
-			//{
-			//	this_thread::sleep_for(chrono::milliseconds(1));
-			//	continue;
-			//}
 
 			auto msgType = static_cast<ServerLibrary::MessageType>(type);
 			switch (msgType)
@@ -113,8 +105,6 @@ namespace ChatServerLibrary
 		Config->Port = (unsigned short)GetPrivateProfileInt(L"ServerConfig", L"Port", 0,  configPath);
 		Config->BackLogCount = GetPrivateProfileInt(L"ServerConfig", L"BackLogCount", 0, configPath);
 		Config->WorkerThreadCount = GetPrivateProfileInt(L"ServerConfig", L"WorkerThreadCount", 0, configPath);
-		Config->MaxRecvOverlappedBufferSize = GetPrivateProfileInt(L"ServerConfig", L"MaxRecvOverlappedBufferSize", 0, configPath);
-		Config->MaxSendOverlappedBufferSize =	GetPrivateProfileInt(L"ServerConfig", L"MaxSendOverlappedBufferSize", 0, configPath);
 		Config->SessionMaxRecvBufferSize =	GetPrivateProfileInt(L"ServerConfig", L"SessionMaxRecvBufferSize", 0, configPath);
 		Config->SessionMaxSendBufferSize =	GetPrivateProfileInt(L"ServerConfig", L"SessionMaxSendBufferSize", 0, configPath);
 		Config->MaxPacketSize =	GetPrivateProfileInt(L"ServerConfig", L"MaxPacketSize", 0, configPath);

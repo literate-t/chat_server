@@ -1,7 +1,4 @@
 #include "stdafx.h"
-//#include "ErrorCode.h"
-//#include "UserManager.h"
-//#include "User.h"
 
 namespace ChatServerLibrary
 {

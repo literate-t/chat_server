@@ -10,7 +10,6 @@ namespace ChatClient {
         SimpleNetwork Network = new SimpleNetwork();
 
         bool IsNetworkThreadRunning = false;
-        bool IsBackGroundProcessRunning = false;
         bool IsRoom = false;
 
         Thread NetworkReadThread = null;
@@ -27,7 +26,7 @@ namespace ChatClient {
         }
 
         private void MainForm_Load(object sender, EventArgs e) {
-            PacketBuffer.Init(8096 * 10, PacketDefine.PacketHeaderSize, 1024);
+            PacketBuffer.Init(8096 * 10, PacketDefine.kPacketHeaderSize, 1024);
 
             IsNetworkThreadRunning = true;
             NetworkReadThread = new Thread(NetworkReadProcess);
@@ -35,7 +34,6 @@ namespace ChatClient {
             NetworkSendThread = new Thread(NetworkSendProcess);
             NetworkSendThread.Start();
 
-            IsBackGroundProcessRunning = true;
             dispatcherTimer = new DispatcherTimer();
             dispatcherTimer.Tick += new EventHandler(BackGroundProcess);
             dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 100);
@@ -68,10 +66,10 @@ namespace ChatClient {
                         }
 
                         var packet = new PacketData();
-                        packet.DataSize = (short)(data.Count - PacketDefine.PacketHeaderSize);
+                        packet.DataSize = (short)(data.Count - PacketDefine.kPacketHeaderSize);
                         packet.PacketId = BitConverter.ToInt16(data.Array, data.Offset + 2);
                         packet.BodyData = new byte[packet.DataSize];
-                        Buffer.BlockCopy(data.Array, data.Offset + PacketDefine.PacketHeaderSize, packet.BodyData, 0, packet.DataSize);
+                        Buffer.BlockCopy(data.Array, data.Offset + PacketDefine.kPacketHeaderSize, packet.BodyData, 0, packet.DataSize);
                         lock (((System.Collections.ICollection)RecvPacketQueue).SyncRoot) {
                             RecvPacketQueue.Enqueue(packet);
                         }
@@ -121,7 +119,7 @@ namespace ChatClient {
             if (bodyData != null)
                 bodyDataSize = (Int16)bodyData.Length;
 
-            var packetSize = PacketDefine.PacketHeaderSize + bodyDataSize;
+            var packetSize = PacketDefine.kPacketHeaderSize + bodyDataSize;
             List<byte> data = new List<byte>();
             data.AddRange(BitConverter.GetBytes((Int16)packetSize));
             data.AddRange(BitConverter.GetBytes((Int16)packetId));
@@ -154,10 +152,10 @@ namespace ChatClient {
         private void buttonLogoff_Click(object sender, EventArgs e) {
             Network.Close();
             Close();
-            //PostSend(PacketId.LOGOFF_REQ, null);
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e) {
+            Network.Close();
             IsNetworkThreadRunning = false;
             NetworkSendThread.Join();
             NetworkReadThread.Join();

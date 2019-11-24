@@ -10,8 +10,8 @@ namespace ChatClient {
     }
 
     public class LoginRequestPacket {
-        byte[] UserId = new byte[PacketDefine.MaxUserIdLength + 1];
-        byte[] UserPw = new byte[PacketDefine.MaxUserPwLength + 1];
+        byte[] UserId = new byte[PacketDefine.kMaxUserIdLength + 1];
+        byte[] UserPw = new byte[PacketDefine.kMaxUserPwLength + 1];
 
         public void SetData(string userId, string userPw) {
             Encoding.UTF8.GetBytes(userId).CopyTo(UserId, 0);
@@ -27,7 +27,7 @@ namespace ChatClient {
     }
 
     public class LoginResponsePacket {
-        byte[] UserId = new byte[PacketDefine.MaxUserIdLength];
+        byte[] UserId = new byte[PacketDefine.kMaxUserIdLength];
     }
 
     public class PacketBasicEnterLeaveReq {

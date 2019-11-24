@@ -35,7 +35,7 @@ namespace ChatClient {
 
         public Tuple<int, byte[]> Receive() {
             try {
-                byte[] readBuffer = new byte[2048];
+                byte[] readBuffer = new byte[PacketDefine.kMaxPacketSize];
                 // 서버에서 보낸 데이터 수와 실제 데이터 크기가 안 맞으면 오류 발생
                 var recvByte = ClientSocket.Receive(readBuffer, 0, readBuffer.Length, SocketFlags.None);
                 if (recvByte == 0)

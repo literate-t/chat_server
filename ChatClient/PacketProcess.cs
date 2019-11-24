@@ -53,7 +53,6 @@ namespace ChatClient {
                 buttonLogin.Enabled = true;
                 buttonEnterLobby.Enabled = false;
                 buttonConnect.Enabled = true;
-                //PostSend(PacketId.NTF_SYS_CLOSE, null);
             } else {
                 labelStatus.Text = string.Format($"로그오프 실패");
             }
@@ -223,11 +222,10 @@ namespace ChatClient {
                     userId = "나";
                 }
 
-                var msgSize = BitConverter.ToInt16(bodyData, 4 + PacketDefine.MaxUserIdLength);
-                var msg = Encoding.UTF8.GetString(bodyData, 6 + PacketDefine.MaxUserIdLength, msgSize);
+                var msgSize = BitConverter.ToInt16(bodyData, 4 + PacketDefine.kMaxUserIdLength);
+                var msg = Encoding.UTF8.GetString(bodyData, 6 + PacketDefine.kMaxUserIdLength, msgSize);
                 msg = String.Format("[{0}]{1}", userId, msg);
                 listBoxChat.Items.Add(msg);
-                //textBoxChat.Clear();
             } else if (errorCode == (short)ErrorCode.USER_MGR_NOT_SET_USER) {
                 labelStatus.Text = string.Format($"올바른 유저가 아닙니다");
             }

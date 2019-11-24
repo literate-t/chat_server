@@ -184,8 +184,7 @@ namespace ServerLibrary
 		SessionConfig config;
 		config.MaxRecvBufferSize = ServerInitConfig->SessionMaxRecvBufferSize;
 		config.MaxSendBufferSize = ServerInitConfig->SessionMaxSendBufferSize;
-		config.MaxRecvOverlappedBufferSize = ServerInitConfig->MaxRecvOverlappedBufferSize;
-		config.MaxSendOverlappedBufferSize = ServerInitConfig->MaxSendOverlappedBufferSize;
+		config.MaxPacketSize	 = ServerInitConfig->MaxPacketSize;
 
 		for (int i = 0; i < ServerInitConfig->MaxSessionCount; ++i)
 		{
@@ -296,10 +295,8 @@ namespace ServerLibrary
 			reinterpret_cast<OVERLAPPED**>(&msg),
 			waitMilliseconds
 		);
-		// assert(result == true);
 		if (result == false)
 		{
-			//Log->Write(LogType::L_ERROR, "%s | GetQueuedCompletionStatus() from LogicIocp failure[%d]", __FUNCTION__, WSAGetLastError());
 			this_thread::sleep_for(chrono::milliseconds(1));
 			return false;
 		}
@@ -311,7 +308,7 @@ namespace ServerLibrary
 			DoPostConnection(session, msg, msgType, sessionIndex);
 			break;
 		}
-		// 재사용에 딜레이를 주지 않으면 재사용하기 전에 워커 스레드에서 이 세션이 호출될 수도
+
 		case MessageType::CLOSE:
 		{
 			DoPostClose(session, msg, msgType, sessionIndex);
@@ -367,7 +364,6 @@ namespace ServerLibrary
 			case IoMode::RECV:
 			{
 				session->DecrementRecvIoCount();
-				Log->Write(LogType::L_ERROR, "%s | RecvIoCount is %d", __FUNCTION__, session->GetRecvIoCount());
 				break;
 			}
 			case IoMode::SEND:
@@ -391,8 +387,6 @@ namespace ServerLibrary
 			Log->Write(LogType::L_ERROR, "%s | session is nullptr", __FUNCTION__);
 			return;
 		}
-		//session->Disconnect();
-		//session->SetStateDisconnected();
 
 		if (PostMessageToQueue(session, session->GetCloseMsg()) != Result::SUCCESS)
 		{
@@ -456,7 +450,6 @@ namespace ServerLibrary
 		}
 
 		session->DecrementRecvIoCount();
-		//overlappedEx->Wsabuf.buf = overlappedEx->SocketMsg;
 		overlappedEx->Remain += size; 
 
 		auto remain = overlappedEx->Remain;
@@ -564,16 +557,7 @@ namespace ServerLibrary
 		// 모든 메시지 전송
 		else
 		{
-			// ??
-			//session->ReleaseSendBuffer(overlappedEx->TotalBytes);
 			session->SetSendAvaliable();
-			//if (session->PostSend(0) == false)
-			//{
-			//	if (!session->CloseCompletely())
-			//	{
-			//		HandleSessionCloseException(session);
-			//	}
-			//}
 		}
 	}
 
@@ -587,7 +571,6 @@ namespace ServerLibrary
 
 		msgType = static_cast<char>(msg->Type);
 		sessionIndex = session->GetIndex();
-		Log->Write(LogType::L_INFO, "%s | Session index:%d", __FUNCTION__, sessionIndex);
 	}
 
 	void IocpServer::DoPostClose(Session* session, const Message* msg, OUT char& msgType, OUT int& sessionIndex)
@@ -614,9 +597,7 @@ namespace ServerLibrary
 
 		msgType = static_cast<char>(msg->Type);
 		sessionIndex = session->GetIndex();
-		copySize = static_cast<short>(size);// -kPacketHeaderLength;
+		copySize = static_cast<short>(size);
 		*buf = msg->Contents;
-		//memcpy(buf, msg->Contents/*[kPacketHeaderLength]*/, copySize);
-		//session->ReleaseRecvBuffer(size); // ?
 	}
 }

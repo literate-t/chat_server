@@ -1,5 +1,4 @@
 #pragma once
-//#include <unordered_map>
 #include "stdafx.h"
 
 namespace ServerLibrary
@@ -52,7 +51,6 @@ namespace ChatServerLibrary
 
 	private:
 		ILog* Log = nullptr;
-		//IocpServer* Server = nullptr;
 
 		short Index = -1;
 		short LobbyIndex = -1;

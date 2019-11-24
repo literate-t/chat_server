@@ -1,9 +1,5 @@
 #pragma once
 #include "stdafx.h"
-//#include "Definitions.h"
-//#include "Connection.h"
-//#include "MessagePool.h"
-//#include "Performance.h"
 
 namespace ServerLibrary
 {

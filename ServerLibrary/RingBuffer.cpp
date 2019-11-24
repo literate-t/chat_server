@@ -1,8 +1,8 @@
 #include "stdafx.h"
-//#include "RingBuffer.h"
 
 namespace ServerLibrary
 {
+	const int kMaxPacketSize = 1024;
 	RingBuffer::~RingBuffer()
 	{
 		delete[] Buffer;
@@ -46,7 +46,7 @@ namespace ServerLibrary
 	}
 
 	// 송신
-	char* RingBuffer::ForwardMark(const int forwardLength)
+	char* RingBuffer::ForwardSendPos(const int forwardLength)
 	{
 		LockGuard lock(cs_);
 		char* prev = nullptr;
@@ -74,38 +74,51 @@ namespace ServerLibrary
 		return prev;
 	}
 
-	// 수신									현재 받은 데이터, 다음에 받을 데이터 길이, 현재까지 받은 패킷의 길이
-	char* RingBuffer::ForwardMark(const int forwardLength/*, const int nextLength*/, const DWORD remain)
+	// 수신									
+	char* RingBuffer::ForwardRecvPos(const int forwardLength)
 	{
 		LockGuard lock(cs_);
-		if (WriteSize + forwardLength /*+ nextLength*/ > BufferSize)
+		LastPos = WritePos;
+		WritePos += forwardLength;
+		if (static_cast<int>(End - WritePos) < kMaxPacketSize)
 		{
-			return nullptr;
+			memcpy(Begin, LastPos, forwardLength);
+			WritePos = Begin + forwardLength;
 		}
-
-		if (static_cast<int>(End - WritePos) > forwardLength/* + nextLength*/)
-		{
-			WritePos		+= forwardLength;
-			//WriteSize		+= forwardLength;
-			//TotalDataSize	+= forwardLength;
-		}
-
-		else
-		{
-			LastPos = WritePos;
-			////이건 진짜 아무리 생각해도 이상하네. 아예 산술적으로 맞지가 않음
-			//////memcpy(begin_, write_mark_ - (sofar_length - forward_length), sofar_length);
-			////memcpy(begin_, write_mark_ - sofar_length, sofar_length);
-			////write_mark_ = begin_ + sofar_length;
-			//memcpy(begin_, write_mark_, forward_length);
-			//write_mark_ = begin_ + forward_length;
-			memcpy(Begin, WritePos - (remain - forwardLength), remain);
-			WritePos		= Begin + remain;
-			//WriteSize		+= remain;
-			//TotalDataSize	+= remain;
-		}
+		
+		WriteSize		+= forwardLength;
+		TotalDataSize	+= forwardLength;
 
 		return WritePos;
+
+		//if (WriteSize + forwardLength > BufferSize)
+		//{
+		//	return nullptr;
+		//}
+
+		//if (static_cast<int>(End - WritePos) > forwardLength)
+		//{
+		//	WritePos		+= forwardLength;
+		//	WriteSize		+= forwardLength;
+		//	TotalDataSize	+= forwardLength;
+		//}
+
+		//else
+		//{
+		//	LastPos = WritePos;
+		//	////이건 진짜 아무리 생각해도 이상하네. 아예 산술적으로 맞지가 않음
+		//	//////memcpy(begin_, write_mark_ - (sofar_length - forward_length), sofar_length);
+		//	////memcpy(begin_, write_mark_ - sofar_length, sofar_length);
+		//	////write_mark_ = begin_ + sofar_length;
+		//	//memcpy(begin_, write_mark_, forward_length);
+		//	//write_mark_ = begin_ + forward_length;
+		//	//memcpy(Begin, WritePos - (remain - forwardLength), remain);
+		//	WritePos		= Begin + remain;
+		//	WriteSize		+= remain;
+		//	TotalDataSize	+= remain;
+		//}
+
+		//return WritePos;
 	}
 
 	void RingBuffer::ReleaseBuffer(int releaseSize)

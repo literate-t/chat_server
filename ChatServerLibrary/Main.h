@@ -1,9 +1,5 @@
 #pragma once
 #include "stdafx.h"
-//#include "../ServerLibrary/IocpServer.h"
-//#include "UserManager.h"
-//#include "PacketManager.h"
-//#include "LobbyManager.h"
 
 namespace ChatServerLibrary
 {

@@ -1,6 +1,3 @@
-
-//#include "Packet.h"
-//#include "PacketManager.h"
 #include "stdafx.h"
 
 namespace ChatServerLibrary
@@ -37,7 +34,7 @@ namespace ChatServerLibrary
 		}
 
 		auto loginReq = reinterpret_cast<PacketLoginReq*>(&buf[kPacketHeaderLength]);		
-		Log->Write(ServerLibrary::LogType::L_INFO, "Id:%s\n", loginReq->Id);
+		Log->Write(ServerLibrary::LogType::L_INFO, "Id:%s", loginReq->Id);
 		PacketBasicRes packetRes;
 		packetRes.TotalSize = sizeof PacketBasicRes;
 		packetRes.Id		= static_cast<short>(PacketId::LOGIN_RES);

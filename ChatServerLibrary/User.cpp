@@ -1,4 +1,3 @@
-//#include "User.h"
 #include "stdafx.h"
 
 namespace ChatServerLibrary

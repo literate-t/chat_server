@@ -2,10 +2,11 @@
 
 namespace ChatClient {
     class PacketDefine {
-        public const Int16 PacketHeaderSize = 4;
-        public const int MaxUserIdLength = 20;
-        public const int MaxUserPwLength = 20;
-        public const int MaxRoomChatSize = 256;
+        public const Int16 kPacketHeaderSize = 4;
+        public const int kMaxUserIdLength = 20;
+        public const int kMaxUserPwLength = 20;
+        public const int kMaxRoomChatSize = 256;
+        public const int kMaxPacketSize = 1024;
     }
 
     public enum PacketId : UInt16 {

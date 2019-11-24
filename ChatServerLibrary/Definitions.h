@@ -16,8 +16,6 @@ namespace ChatServerLibrary
 
 			Config.Port = Port;
 			Config.WorkerThreadCount = WorkerThreadCount;
-			Config.MaxRecvOverlappedBufferSize = MaxRecvOverlappedBufferSize;
-			Config.MaxSendOverlappedBufferSize = MaxSendOverlappedBufferSize;
 			Config.SessionMaxRecvBufferSize = SessionMaxRecvBufferSize;
 			Config.SessionMaxSendBufferSize = SessionMaxSendBufferSize;
 			Config.MaxPacketSize = MaxPacketSize;
