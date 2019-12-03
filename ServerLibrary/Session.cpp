@@ -1,7 +1,4 @@
 #include "stdafx.h"
-//#include "Connection.h"
-//#include "Definitions.h"
-//#include "ILog.h"
 
 namespace ServerLibrary
 {
@@ -37,7 +34,6 @@ namespace ServerLibrary
 		RingSendBuffer.Init();
 
 		Connected = FALSE;
-		Closed = FALSE;
 		Sendable = TRUE;
 
 		AcceptIoCount = 0;
@@ -89,20 +85,24 @@ namespace ServerLibrary
 
 	bool Session::CloseCompletely()
 	{
-		// 카운트가 남았다면 소켓은 끊고 iocp에서 완료를 기다린다
-		if (Connected && (AcceptIoCount != 0 || RecvIoCount != 0 || SendIoCount != 0))
+		if (Connected && AcceptIoCount == 0 && RecvIoCount == 0 && SendIoCount == 0)
 		{
 			Disconnect();
 			return true;
 		}
-
-		// 한 번만 접속 종료 처리 하기 위함
-		if (InterlockedCompareExchange(reinterpret_cast<long*>(&Closed), TRUE, FALSE) == static_cast<long>(FALSE))
+		// 카운트가 남았다면 소켓은 끊고 iocp에서 완료를 기다린다
+		else if (Connected && (AcceptIoCount != 0 || RecvIoCount != 0 || SendIoCount != 0))
 		{
+			Disconnect();
 			return false;
 		}
 
-		return true;
+		// 한 번만 접속 종료 처리 하기 위함
+		else if (Connected == FALSE && AcceptIoCount == 0 && RecvIoCount == 0 && SendIoCount == 0)
+		{
+			return true;
+		}
+		return false;
 	}
 
 	void Session::Disconnect(bool forced)

@@ -3,9 +3,9 @@
 
 namespace ServerLibrary
 {
-	class Session : public Lock
+	class Session
 	{
-		using LockGurad = Lock::LockGuard;
+		using LockGuard = Lock::LockGuard;
 
 	public:
 		Session() = default;
@@ -68,7 +68,6 @@ namespace ServerLibrary
 
 		char			AddrBuf[kMaxAddrLength] = { 0 };
 
-		BOOL Closed		= FALSE;
 		BOOL Connected	= FALSE;
 		BOOL Sendable	= FALSE;
 
@@ -84,8 +83,7 @@ namespace ServerLibrary
 		Message ConnectionMsg;
 		Message CloseMsg;
 
-		ILog* Log;
-
+		ILog*	Log;
 		Lock	Cs;
 	};
 }

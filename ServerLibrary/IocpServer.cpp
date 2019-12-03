@@ -84,7 +84,7 @@ namespace ServerLibrary
 		}
 		else if (result == Result::RESERVED_BUFFER_EMPTY)
 		{
-			if (!session->CloseCompletely())
+			if (session->CloseCompletely())
 			{
 				HandleSessionCloseException(session);
 			}
@@ -96,7 +96,7 @@ namespace ServerLibrary
 
 		if (session->PostSend(packetSize) == false)
 		{
-			if (!session->CloseCompletely())
+			if (session->CloseCompletely())
 			{
 				HandleSessionCloseException(session);
 			}
@@ -373,7 +373,7 @@ namespace ServerLibrary
 			}
 		}
 
-		if (!session->CloseCompletely())
+		if (session->CloseCompletely())
 		{
 			HandleSessionCloseException(session);
 		}
@@ -407,7 +407,7 @@ namespace ServerLibrary
 		if (session->SetAddressInfo() == false)
 		{
 			Log->Write(LogType::L_ERROR, "%s | GetAcceptExSockaddrs() failure[%d]", __FUNCTION__, WSAGetLastError());
-			if (!session->CloseCompletely())
+			if (session->CloseCompletely())
 			{
 				HandleSessionCloseException(session);
 			}
@@ -416,7 +416,7 @@ namespace ServerLibrary
 
 		if (!session->BindIocp(WorkerIocp))
 		{
-			if (!session->CloseCompletely())
+			if (session->CloseCompletely())
 			{
 				HandleSessionCloseException(session);
 			}
@@ -459,7 +459,7 @@ namespace ServerLibrary
 		ForwardPacket(session, remain, buf);
 		if (session->PostRecv(forwardLength, remain) != Result::SUCCESS)
 		{
-			if (!session->CloseCompletely())
+			if (session->CloseCompletely())
 			{
 				HandleSessionCloseException(session);
 			}
@@ -482,7 +482,7 @@ namespace ServerLibrary
 			if (currentSize <= 0 || currentSize > session->GetRecvBufferSize())
 			{
 				Log->Write(LogType::L_ERROR, "%s | Wrong packet is received", __FUNCTION__);
-				if (!session->CloseCompletely())
+				if (session->CloseCompletely())
 				{
 					HandleSessionCloseException(session);
 				}
@@ -547,7 +547,7 @@ namespace ServerLibrary
 			{
 				session->DecrementSendIoCount();
 				Log->Write(LogType::L_ERROR, "%s | WSASend() failure[%d]", __FUNCTION__, WSAGetLastError());
-				if (!session->CloseCompletely())
+				if (session->CloseCompletely())
 				{
 					HandleSessionCloseException(session);
 				}
@@ -575,16 +575,9 @@ namespace ServerLibrary
 
 	void IocpServer::DoPostClose(Session* session, const Message* msg, OUT char& msgType, OUT int& sessionIndex)
 	{
-		if (session->IsConnected() == false)
-		{
-			Log->Write(LogType::L_ERROR, "%s | session is disconnected", __FUNCTION__);
-			return;
-		}
-
 		msgType = static_cast<char>(msg->Type);
 		sessionIndex = session->GetIndex();
-		session->Disconnect();
-		auto result = session->ResetSession();
+		session->ResetSession();
 	}
 
 	void IocpServer::DoPostRecvPacket(Session* session, const Message* msg, OUT char& msgType, OUT int& sessionIndex, OUT char** buf, OUT short& copySize, const DWORD size)
