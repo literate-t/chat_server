@@ -23,7 +23,7 @@ namespace ServerLibrary
 		LeaveCriticalSection(&Cs);
 	}
 
-	Lock::LockGuard::LockGuard(Lock& object) :Locker(object)
+	Lock::LockGuard::LockGuard(Lock& object):Locker(object)
 	{
 		Locker.Enter();
 	}

@@ -16,7 +16,6 @@ namespace ChatServerLibrary
 	private:
 		void LoadConfig();
 
-
 	private:
 		unique_ptr<ServerLibrary::IocpServer> Server;
 		unique_ptr<ServerLibrary::ILog> Log;

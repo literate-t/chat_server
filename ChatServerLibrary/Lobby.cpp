@@ -37,16 +37,6 @@ namespace ChatServerLibrary
 		RoomList.clear();
 	}
 
-	//void Lobby::Set(IocpServer* server, ILog* log)
-	//{
-	//	Server = server;
-	//	Log = log;
-
-	//	for (auto& room : RoomList) {
-	//		room->Set(Server, Log);
-	//	}
-	//}
-
 	ErrorCode Lobby::AddUser(User* user)
 	{
 		auto findIter = std::find_if(std::begin(LobbyUserList), std::end(LobbyUserList),

@@ -1,9 +1,8 @@
 #pragma once
-//#include "Lock.h"
 
 namespace ServerLibrary
 {
-	class RingBuffer : public Lock
+	class RingBuffer
 	{
 		using LockGuard = Lock::LockGuard;
 
@@ -25,7 +24,6 @@ namespace ServerLibrary
 		void ReleaseBuffer(int release_size);
 		int GetUsedBufferSize() { return WriteSize; }
 		int GetTotalUsedBufferSize() { return TotalDataSize; }
-		// 송신할 버퍼 읽어오기(수정 필요)
 		char* GetBuffer(const int req_read_size, OUT int& res_read_size);
 
 	private:
