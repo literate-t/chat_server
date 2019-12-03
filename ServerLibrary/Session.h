@@ -22,7 +22,7 @@ namespace ServerLibrary
 		Result ResetSession();
 		bool BindIocp(const HANDLE WorkerIocp);
 		Result PostRecv(const int forwardLength, const DWORD remainByte);
-		bool PostSend(const int sendSize);
+		bool PostSend(const int sendSize, char* buffer);
 		Result ReserveSendPacketBuffer(OUT char** buf, const int sendSize);
 
 		SOCKET GetClientSocket() { return ClientSocket; }

@@ -90,6 +90,7 @@ namespace ServerLibrary
 			Disconnect();
 			return true;
 		}
+
 		// 카운트가 남았다면 소켓은 끊고 iocp에서 완료를 기다린다
 		else if (Connected && (AcceptIoCount != 0 || RecvIoCount != 0 || SendIoCount != 0))
 		{
@@ -184,22 +185,21 @@ namespace ServerLibrary
 		}
 		else
 		{
-			// Main::Run()에서는 어디에 sleep을 걸어도 패킷을 제대로 처리 못하는 상황이 생기는데
+			// Main::Run()에서 sleep을 걸어도 패킷을 제대로 처리 못하는 상황이 생기는데
 			// 이 부분에서 Log->Write 함수를 호출하거나 sleep을 걸면 오류가 안 생긴다.
 			// 멀티스레드 환경이기 때문에 순서상의 어떤 문제가 있는 것으로 생각됨
+			// 아직까지는 최선의 해결책
 			this_thread::sleep_for(chrono::milliseconds(1));
 			//Log->Write(LogType::L_WARN, "%s | WSARecv() completed", __FUNCTION__, WSAGetLastError());
 		}
 		return Result::SUCCESS;
 	}
 
-	bool Session::PostSend(const int sendSize)
+	bool Session::PostSend(const int sendSize, char* buffer)
 	{
 		if (InterlockedCompareExchange(reinterpret_cast<long*>(&Sendable), FALSE, TRUE))
 		{
-			auto size = 0;
-			auto buf = RingSendBuffer.GetBuffer(sendSize, size);
-			if (buf == nullptr)
+			if (buffer == nullptr)
 			{
 				InterlockedExchange(reinterpret_cast<long*>(&Sendable), TRUE);
 				Log->Write(LogType::L_ERROR, "%s | RingSendBuffer.GetBuffer() failure", __FUNCTION__);
@@ -208,12 +208,12 @@ namespace ServerLibrary
 
 			memset(&SendOverlappedEx->Overlapped, 0, sizeof WSAOVERLAPPED);
 
-			SendOverlappedEx->Wsabuf.buf = buf;
-			SendOverlappedEx->Wsabuf.len = size;
+			SendOverlappedEx->Wsabuf.buf = buffer;
+			SendOverlappedEx->Wsabuf.len = sendSize;
 			SendOverlappedEx->SessionIndex = Index;
 
 			SendOverlappedEx->Remain = 0;
-			SendOverlappedEx->TotalBytes = size;
+			SendOverlappedEx->TotalBytes = sendSize;
 			SendOverlappedEx->Mode = IoMode::SEND;
 
 			IncrementSendIoCount();
@@ -249,7 +249,6 @@ namespace ServerLibrary
 
 	Result Session::ReserveSendPacketBuffer(OUT char** buf, const int size)
 	{
-		//assert(Connected);
 		if (!Connected)
 		{
 			*buf = nullptr;			

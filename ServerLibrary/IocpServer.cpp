@@ -94,7 +94,7 @@ namespace ServerLibrary
 		}
 		memcpy(sendBufReserved, packet, packetSize);
 
-		if (session->PostSend(packetSize) == false)
+		if (session->PostSend(packetSize, sendBufReserved) == false)
 		{
 			if (session->CloseCompletely())
 			{

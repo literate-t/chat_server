@@ -24,7 +24,6 @@ namespace ServerLibrary
 		void ReleaseBuffer(int release_size);
 		int GetUsedBufferSize() { return WriteSize; }
 		int GetTotalUsedBufferSize() { return TotalDataSize; }
-		char* GetBuffer(const int req_read_size, OUT int& res_read_size);
 
 	private:
 		char* Buffer		= nullptr;
