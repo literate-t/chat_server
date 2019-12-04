@@ -15,7 +15,6 @@ namespace ChatServerLibrary
 			Lobby lobby;
 			lobby.SendPacketFunc = SendPacketFunc;
 			lobby.Init((short)i, (short)config->MaxLobbyCount, (short)config->MaxRoomCount, (short)config->MaxRoomUserCount, Log);
-			//lobby.Set(Server, Log);
 			LobbyList.push_back(lobby);
 		}
 	}

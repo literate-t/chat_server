@@ -51,10 +51,10 @@ namespace ChatServerLibrary
 		packetRes.ErrorCode = static_cast<short>(ErrorCode::NONE);
 		SendPacketFunc(sessionIndex, &packetRes, sizeof PacketBasicRes);
 
-		// 새 유저는 기존 접속 유저 정보를 다 받는다
+		// 새로 입장한 유저는 기존 접속 유저 정보를 받는다
 		lobby->SendAllUsersInfoToSession(static_cast<short>(PacketId::LOBBY_ENTER_USER_INFO), sessionIndex);
 
-		// 기존 유저는 새 유저 정보를 받는다
+		// 기존 유저는 새 유저를 공지받는다
 		lobby->NotifyToAll(static_cast<short>(PacketId::LOBBY_ENTER_USER_NTF), user->GetIndex());
 	}
 
@@ -69,7 +69,6 @@ namespace ChatServerLibrary
 		packetRes.Id = static_cast<short>(PacketId::LOBBY_LEAVE_RES);
 		packetRes.TotalSize = sizeof PacketBasicRes;
 
-		//auto packet = (common::PacketBasicEnterLeaveReq*)packet_info.data_;
 		auto userResult = UserMgr->GetUser(sessionIndex);
 		auto errorCode = get<0>(userResult);
 		if (errorCode != ErrorCode::NONE)
@@ -100,7 +99,7 @@ namespace ChatServerLibrary
 		packetRes.ErrorCode = static_cast<short>(ErrorCode::NONE);
 		SendPacketFunc(sessionIndex, &packetRes, sizeof PacketBasicRes);
 
-		// 로비에 남아 있는 세션에겐 퇴장하는 세션을 공지
+		// 로비에 남아 있는 세션에게 퇴장하는 세션을 공지
 		lobby->NotifyToAll(static_cast<short>(PacketId::LOBBY_LEAVE_USER_NTF), user->GetIndex());
 
 		auto leaveResult = lobby->LeaveLobby(user->GetIndex());

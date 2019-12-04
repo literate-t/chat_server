@@ -13,12 +13,6 @@ namespace ChatServerLibrary
 		MaxUserCount = maxUserCount;
 	}
 
-	//void Room::Set(IocpServer* server, ILog* logger)
-	//{
-	//	Server = server;
-	//	Log = logger;
-	//}
-
 	void Room::Clear()
 	{
 		Created = false;
@@ -202,7 +196,6 @@ namespace ChatServerLibrary
 				continue;
 			}
 			SendPacketFunc(user.second->GetSessionIndex(), packet, packetSize);
-			//server_->SetSendingData(userInfo.second->GetSessionIndex(), packetId, dataSize, data);
 		}
 	}
 }

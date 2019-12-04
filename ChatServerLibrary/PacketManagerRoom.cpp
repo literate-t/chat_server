@@ -64,7 +64,7 @@ namespace ChatServerLibrary
 			return;
 		}
 
-		// 로비 목록에서 없어지기 위한 공지
+		// 로비 목록에서 없애기 위한 알림
 		packetRes.ErrorCode = static_cast<short>(ErrorCode::NONE);
 		packetRes.Id = static_cast<short>(PacketId::LOBBY_LEAVE_RES);
 		SendPacketFunc(sessionIndex, &packetRes, packetRes.TotalSize);
@@ -124,7 +124,7 @@ namespace ChatServerLibrary
 			return;
 		}
 
-		// 룸에 남아 있는 세션에게 퇴장하는 세션을 공지
+		// 룸에 남아 있는 세션에게 퇴장하는 세션을 알림
 		room->NotifyToAll(static_cast<short>(PacketId::ROOM_LEAVE_USER_NTF), user->GetIndex());
 
 		// 방 퇴장

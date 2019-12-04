@@ -34,7 +34,6 @@ namespace ChatServerLibrary
 
 		void Init(const short lobbyIndex, const short maxLobbyUserCount, const short maxRoomCount, const short maxRoomUserCount, ILog* log);
 		void Release();
-		//void Set(IocpServer* server, ILog* logger);
 		short& GetIndex();
 		
 		ErrorCode EnterLobby(User* user);

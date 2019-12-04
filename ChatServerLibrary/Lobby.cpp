@@ -6,10 +6,10 @@ namespace ChatServerLibrary
 	Lobby::Lobby() {}
 	Lobby::~Lobby() {}
 
-	void Lobby::Init(const short lobbyIndex, const short max_lobbyUserCount, const short max_roomCount, const short max_roomUserCount, ILog* log)
+	void Lobby::Init(const short lobbyIndex, const short maxLobbyUserCount, const short maxRoomCount, const short maxRoomUserCount, ILog* log)
 	{
 		LobbyIndex = lobbyIndex;
-		MaxUserCount = max_lobbyUserCount;
+		MaxUserCount = maxLobbyUserCount;
 		Log = log;
 
 		for (int i = 0; i < MaxUserCount; ++i) 
@@ -19,10 +19,10 @@ namespace ChatServerLibrary
 			LobbyUserList.push_back(lobbyUser);
 		}
 
-		for (int i = 0; i < max_roomCount; ++i) 
+		for (int i = 0; i < maxRoomCount; ++i) 
 		{
 			RoomList.emplace_back(new Room());
-			RoomList[i]->Init((short)i, max_roomUserCount, Log);
+			RoomList[i]->Init((short)i, maxRoomUserCount, Log);
 			RoomList[i]->SendPacketFunc = SendPacketFunc;
 		}
 	}
@@ -94,6 +94,22 @@ namespace ChatServerLibrary
 		UserIdDic.erase(user->GetId());
 
 		return ErrorCode::NONE;
+	}
+
+	void Lobby::RemoveUser(const int userIndex)
+	{
+		auto findIter = std::find_if(std::begin(LobbyUserList), std::end(LobbyUserList),
+			[&userIndex](auto& lobbyUser)
+			{
+				return lobbyUser.User != nullptr && lobbyUser.User->GetIndex() == userIndex;
+			});
+
+		if (findIter == std::end(LobbyUserList))
+		{
+			return;
+		}
+
+		findIter->User = nullptr;
 	}
 
 	ErrorCode Lobby::LeaveLobbyToEnterRomm(const int userIndex)
@@ -182,22 +198,6 @@ namespace ChatServerLibrary
 			}
 			SendPacketFunc(user.second->GetSessionIndex(), packet, packetSize);
 		}
-	}
-
-	void Lobby::RemoveUser(const int userIndex)
-	{
-		auto findIter = std::find_if(std::begin(LobbyUserList), std::end(LobbyUserList), 
-			[&userIndex](auto& lobbyUser)
-			{ 
-				return lobbyUser.User != nullptr && lobbyUser.User->GetIndex() == userIndex; 
-			});
-
-		if (findIter == std::end(LobbyUserList)) 
-		{
-			return;
-		}
-
-		findIter->User = nullptr;
 	}
 
 	short& Lobby::GetIndex()

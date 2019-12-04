@@ -26,7 +26,6 @@ namespace ChatServerLibrary
 		~Room();
 
 		void Init(const short index, const short maxUserCount, ILog* log);
-		//void Set(IocpServer* server, ILog* log);
 		void Clear();
 		short& GetIndex();
 		bool IsCreated();
