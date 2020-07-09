@@ -24,6 +24,11 @@ namespace ChatServerLibrary
 			Server->SendPacket(connectionIndex, packet, packetSize);
 		};
 
+		void SendPacketFunc(int connectionIndex, void* packet, short packetSize)
+		{
+			Server->SendPacket(connectionIndex, packet, packetSize);
+		}
+
 		UserMgr = make_unique<UserManager>();
 		UserMgr->Init(Config->MaxSessionCount);
 		UserMgr->SendPacketFunc = SendPacketFunc;
