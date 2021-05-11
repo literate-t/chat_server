@@ -4,7 +4,7 @@ int main()
 {
 	ChatServerLibrary::Main main;
 	main.Init();
-	thread ChatThread([&](){main.Run(); });
+	thread ChatThread([&main](){main.Run(); });
 
 	printf("Press any key to terminate the server\n");
 	auto result = getchar();

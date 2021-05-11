@@ -5,7 +5,7 @@ namespace ChatServerLibrary
 {
 	int Main::Init()
 	{
-		Config = make_unique <ServerLibrary::ServerConfig>();
+		Config = make_unique<ServerLibrary::ServerConfig>();
 		LoadConfig();
 
 		Log = make_unique<ServerLibrary::Logger>();
