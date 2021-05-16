@@ -13,47 +13,47 @@ namespace ServerLibrary
 		Logger()
 		{
 			console_out_context	console;
-			ConsoleOut = console;
+			console_out_ = console;
 		}
 		~Logger() = default;
 
 		void Error(const char* text)
 		{
-			LockGuard lock(Cs);
-			ConsoleOut.settextcolor(console_text_colors::red);
+			LockGuard lock(cs_);
+			console_out_.settextcolor(console_text_colors::red);
 			printf("[ERROR] | %s\n", text);
 		}
 
 		void Warn(const char* text)
 		{
-			LockGuard lock(Cs);
-			ConsoleOut.settextcolor(console_text_colors::yellow);
+			LockGuard lock(cs_);
+			console_out_.settextcolor(console_text_colors::yellow);
 			printf("[WARN] | %s\n", text);
 		}
 
 		void Debug(const char* text)
 		{
-			LockGuard lock(Cs);
-			ConsoleOut.settextcolor(console_text_colors::light_white);
+			LockGuard lock(cs_);
+			console_out_.settextcolor(console_text_colors::light_white);
 			printf("[DEBUG] | %s\n", text);
 		}
 
 		void Trace(const char* text)
 		{
-			LockGuard lock(Cs);
-			ConsoleOut.settextcolor(console_text_colors::light_white);
+			LockGuard lock(cs_);
+			console_out_.settextcolor(console_text_colors::light_white);
 			printf("[TRACE] | %s\n", text);
 		}
 
 		void Info(const char* text)
 		{
-			LockGuard lock(Cs);
-			ConsoleOut.settextcolor(console_text_colors::green);
+			LockGuard lock(cs_);
+			console_out_.settextcolor(console_text_colors::green);
 			printf("[INFO] | %s\n", text);
 		}
 
 	private:
-		console_out ConsoleOut;
-		Lock Cs;		
+		console_out console_out_;
+		Lock cs_;		
 	};
 }

@@ -6,138 +6,138 @@ namespace ChatServerLibrary
 	Room::Room() {}
 	Room::~Room() {}
 
-	void Room::Init(const short index, const short maxUserCount, ILog* log)
+	void Room::Init(const short index, const short max_user_count, ILog* log)
 	{
-		Log = log;
-		Index = index;
-		MaxUserCount = maxUserCount;
+		log_ = log;
+		index_ = index;
+		max_user_count_ = max_user_count;
 	}
 
 	void Room::Clear()
 	{
-		Created = false;
-		Title		= nullptr;
-		UserIndexDic.clear();
+		created_ = false;
+		title_		= nullptr;
+		user_index_dic_.clear();
 	}
 
-	ErrorCode Room::SetRoom(short lobbyIndex, const char* roomTitle)
+	ErrorCode Room::SetRoom(short lobby_index, const char* room_title)
 	{
-		if (Created == true) {
+		if (created_ == true) {
 			return ErrorCode::ROOM_ALREADY_CREATED;
 		}
 
-		Created		= true;
-		LobbyIndex	= lobbyIndex;
-		Title		= roomTitle;
+		created_		= true;
+		lobby_index_	= lobby_index;
+		title_		= room_title;
 		return ErrorCode::NONE;
 	}
 
 	ErrorCode Room::EnterRoom(User* user)
 	{
-		if (Created == false) {
+		if (created_ == false) {
 			return ErrorCode::ROOM_NOT_CREATED;
 		}
 
-		if (UserIndexDic.size() == MaxUserCount) {
+		if (user_index_dic_.size() == max_user_count_) {
 			return ErrorCode::ROOM_ENTER_MEMBER_FULL;
 		}
 
-		user->EnterRoom(LobbyIndex, Index);
-		UserIndexDic.insert({user->GetIndex(), user});
+		user->EnterRoom(lobby_index_, index_);
+		user_index_dic_.insert({user->GetIndex(), user});
 
 		return ErrorCode::NONE;
 	}
 
-	void Room::SendAllUsersInfoToSession(short packetId, const int sessionIndex)
+	void Room::SendAllUsersInfoToSession(short packet_id, const int session_index)
 	{
 		PacketNotifyEntrance packet;
-		packet.UsersCount = (short)UserIndexDic.size();
+		packet.users_count_ = (short)user_index_dic_.size();
 		int index = 0;
-		short totalSize = 4; // UserCount(short) + ErrorCode(short)
-		for (auto userInfo : UserIndexDic) 
+		short total_size = 4; // UserCount(short) + ErrorCode(short)
+		for (auto user_info : user_index_dic_) 
 		{
-			if (userInfo.second == nullptr) 
+			if (user_info.second == nullptr) 
 			{
 				continue;
 			}
 
-			std::string idString = userInfo.second->GetId();
-			short size = (short)idString.size();
-			memcpy(&packet.UserId[index], &size, 2);
+			std::string id_string = user_info.second->GetId();
+			short size = (short)id_string.size();
+			memcpy(&packet.user_id_[index], &size, 2);
 			index += 2;
-			memcpy(&packet.UserId[index], userInfo.second->GetId(), size);
+			memcpy(&packet.user_id_[index], user_info.second->GetId(), size);
 			index += size;
-			totalSize += size + 2;
+			total_size += size + 2;
 		}
-		packet.TotalSize = totalSize + kPacketHeaderLength;
-		packet.Id = packetId;
-		packet.ErrorCode = (short)ErrorCode::NONE;
-		SendPacketFunc(sessionIndex, &packet, packet.TotalSize);
+		packet.total_size_ = total_size + kPacketHeaderLength;
+		packet.id_ = packet_id;
+		packet.error_code_ = (short)ErrorCode::NONE;
+		SendPacketFunc(session_index, &packet, packet.total_size_);
 	}
 
-	void Room::NotifyToAll(short packetId, const int userIndex)
+	void Room::NotifyToAll(short packet_id, const int user_index)
 	{
-		if (UserIndexDic.size() <= 1) 
+		if (user_index_dic_.size() <= 1) 
 		{
 			return;
 		}
 
 		PacketNotifyNewUser packet;
-		short totalSize = 2;//(sizeof erroCode)
+		short total_size = 2;//(sizeof erroCode)
 
-		auto user = FindUser(userIndex);
-		std::string idString = user->GetId();
-		auto size = idString.size();
-		memcpy(packet.UserId, &size, 2);
-		memcpy(&packet.UserId[2], user->GetId(), size);
-		totalSize += (short)size + 2;
+		auto user = FindUser(user_index);
+		std::string id_string = user->GetId();
+		auto size = id_string.size();
+		memcpy(packet.user_id_, &size, 2);
+		memcpy(&packet.user_id_[2], user->GetId(), size);
+		total_size += (short)size + 2;
 
-		packet.TotalSize = totalSize + kPacketHeaderLength;
-		packet.Id = packetId;
-		packet.ErrorCode = static_cast<short>(ErrorCode::NONE);
-		SendToAllUsers(&packet, packet.TotalSize, user->GetSessionIndex());
+		packet.total_size_ = total_size + kPacketHeaderLength;
+		packet.id_ = packet_id;
+		packet.error_code_ = static_cast<short>(ErrorCode::NONE);
+		SendToAllUsers(&packet, packet.total_size_, user->GetSessionIndex());
 	}
 
-	void Room::SendToAllUsers(void* packet, const short packetSize, const int exceptionIndex)
+	void Room::SendToAllUsers(void* packet, const short packet_size, const int exception_index)
 	{
-		for (auto& user : UserIndexDic)
+		for (auto& user : user_index_dic_)
 		{
-			if (user.second->GetSessionIndex() == exceptionIndex)
+			if (user.second->GetSessionIndex() == exception_index)
 			{
 				continue;
 			}
-			SendPacketFunc(user.second->GetSessionIndex(), packet, packetSize);
+			SendPacketFunc(user.second->GetSessionIndex(), packet, packet_size);
 		}
 	}
 
-	User* Room::FindUser(const int userIndex)
+	User* Room::FindUser(const int user_index)
 	{
-		auto findIter = UserIndexDic.find(userIndex);
-		if (findIter == UserIndexDic.end()) {
+		auto findIter = user_index_dic_.find(user_index);
+		if (findIter == user_index_dic_.end()) {
 			return nullptr;
 		}
 
 		return findIter->second;
 	}
 
-	bool Room::IsMaster(const short userIndex)
+	bool Room::IsMaster(const short user_index)
 	{
-		return UserIndexDic[0]->GetIndex() == userIndex ? true : false;
+		return user_index_dic_[0]->GetIndex() == user_index ? true : false;
 	}
 
-	ErrorCode Room::LeaveRoom(const short userIndex)
+	ErrorCode Room::LeaveRoom(const short user_index)
 	{
-		if (Created == false) {
+		if (created_ == false) {
 			return ErrorCode::ROOM_NOT_CREATED;
 		}
 
-		auto user = FindUser(userIndex);
+		auto user = FindUser(user_index);
 		if (user == nullptr) {
 			return ErrorCode::ROOM_LEAVE_NOT_MEMBER;
 		}
 
-		UserIndexDic.erase(userIndex);
-		if (UserIndexDic.empty()) {
+		user_index_dic_.erase(user_index);
+		if (user_index_dic_.empty()) {
 			Clear();
 		}
 
@@ -146,56 +146,56 @@ namespace ChatServerLibrary
 
 	short& Room::GetIndex()
 	{ 
-		return Index; 	
+		return index_; 	
 	}
 
 	bool Room::IsCreated()
 	{ 
-		return Created; 
+		return created_; 
 	}
 
 	const char* Room::GetTitle() 
 	{ 
-		return Title; 
+		return title_; 
 	}
 
 	short Room::GetMaxUserCount()
 	{ 
-		return MaxUserCount; 
+		return max_user_count_; 
 	}
 
 	short Room::GetUserCount() 
 	{ 
-		return (short)UserIndexDic.size(); 
+		return (short)user_index_dic_.size(); 
 	}
 
-	void Room::SendChat(const char* userId, const short roomIndex, const char* msg)
+	void Room::SendChat(const char* user_id, const short room_index, const char* msg)
 	{
-		PacketRoomChat packetChat;
-		std::string temp = userId;
-		packetChat.IdSize = (short)temp.size();
-		memcpy(packetChat.UserId, userId, packetChat.IdSize);
+		PacketRoomChat packet_chat;
+		std::string temp = user_id;
+		packet_chat.id_size_ = (short)temp.size();
+		memcpy(packet_chat.user_id_, user_id, packet_chat.id_size_);
 
 		temp = msg;
-		packetChat.MsgSize = (short)temp.size();
-		memcpy(packetChat.Msg, msg, packetChat.MsgSize);
+		packet_chat.msg_size_ = (short)temp.size();
+		memcpy(packet_chat.msg_, msg, packet_chat.msg_size_);
 
-		packetChat.Id = static_cast<short>(PacketId::ROOM_CHAT_RES);
-		packetChat.TotalSize = sizeof PacketRoomChat;
-		packetChat.ErrorCode = static_cast<short>(ErrorCode::NONE);
+		packet_chat.id_ = static_cast<short>(PacketId::ROOM_CHAT_RES);
+		packet_chat.total_size_ = sizeof PacketRoomChat;
+		packet_chat.error_code_ = static_cast<short>(ErrorCode::NONE);
 
-		ChatToAllUsers(&packetChat, packetChat.TotalSize, roomIndex);
+		ChatToAllUsers(&packet_chat, packet_chat.total_size_, room_index);
 	}
 
-	void Room::ChatToAllUsers(void* packet, const short packetSize, const int roomIndex)
+	void Room::ChatToAllUsers(void* packet, const short packet_size, const int room_index)
 	{
-		for (auto user : UserIndexDic)
+		for (auto user : user_index_dic_)
 		{
-			if (user.second->GetRoomIndex() != roomIndex) 
+			if (user.second->GetRoomIndex() != room_index) 
 			{
 				continue;
 			}
-			SendPacketFunc(user.second->GetSessionIndex(), packet, packetSize);
+			SendPacketFunc(user.second->GetSessionIndex(), packet, packet_size);
 		}
 	}
 }

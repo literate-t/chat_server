@@ -5,40 +5,40 @@ namespace ServerLibrary
 	const int kMaxPacketSize = 1024;
 	RingBuffer::~RingBuffer()
 	{
-		delete[] Buffer;
+		delete[] buffer_;
 	}
 
 	bool RingBuffer::Init()
 	{
 		LockGuard lock(cs_);
-		memset(Begin, 0, BufferSize);
-		WriteSize = 0;
-		WritePos = Begin;
-		ReadPos = Begin;
-		LastPos = End;
-		TotalDataSize = 0;
+		memset(begin_, 0, buffer_size_);
+		write_size_ = 0;
+		write_pos_ = begin_;
+		read_pos_ = begin_;
+		last_pos_ = end_;
+		total_data_size_ = 0;
 		return true;
 	}
 
-	bool RingBuffer::Create(int bufferSize)
+	bool RingBuffer::Create(int buffer_size)
 	{
 		{
 			LockGuard lock(cs_);
-			if (bufferSize <= 0)
+			if (buffer_size <= 0)
 			{
 				return false;
 			}
-			BufferSize = bufferSize;
+			buffer_size_ = buffer_size;
 
-			if (nullptr != Buffer)
+			if (nullptr != buffer_)
 			{
-				delete[] Buffer;
-				Buffer = nullptr;
+				delete[] buffer_;
+				buffer_ = nullptr;
 			}
-			Buffer = new char[BufferSize];
+			buffer_ = new char[buffer_size_];
 
-			Begin = Buffer;
-			End = Begin + BufferSize - 1;
+			begin_ = buffer_;
+			end_ = begin_ + buffer_size_ - 1;
 		}
 
 		Init();
@@ -46,55 +46,55 @@ namespace ServerLibrary
 	}
 
 	// 수신									
-	char* RingBuffer::ForwardRecvPos(const int forwardLength)
+	char* RingBuffer::ForwardRecvPos(const int forward_length)
 	{
 		LockGuard lock(cs_);
-		LastPos = WritePos;
-		WritePos += forwardLength;
-		if (static_cast<int>(End - WritePos) < kMaxPacketSize)
+		last_pos_ = write_pos_;
+		write_pos_ += forward_length;
+		if (static_cast<int>(end_ - write_pos_) < kMaxPacketSize)
 		{
-			memcpy(Begin, LastPos, forwardLength);
-			WritePos = Begin + forwardLength;
+			memcpy(begin_, last_pos_, forward_length);
+			write_pos_ = begin_ + forward_length;
 		}
 		
-		WriteSize		+= forwardLength;
-		TotalDataSize	+= forwardLength;
+		write_size_			+= forward_length;
+		total_data_size_	+= forward_length;
 
-		return WritePos;
+		return write_pos_;
 	}
 
 	// 송신
-	char* RingBuffer::ForwardSendPos(const int forwardLength)
+	char* RingBuffer::ForwardSendPos(const int forward_length)
 	{
 		LockGuard lock(cs_);
 		char* prev = nullptr;
-		if (WriteSize + forwardLength > BufferSize)
+		if (write_size_ + forward_length > buffer_size_)
 		{
 			return nullptr;
 		}
 
-		if ((End - WritePos) >= forwardLength)
+		if ((end_ - write_pos_) >= forward_length)
 		{
-			prev = WritePos;
-			WritePos += forwardLength;
+			prev = write_pos_;
+			write_pos_ += forward_length;
 		}
 
 		else
 		{
-			LastPos = WritePos;
-			WritePos = Begin + forwardLength;
-			prev = Begin;
+			last_pos_ = write_pos_;
+			write_pos_ = begin_ + forward_length;
+			prev = begin_;
 		}
 
-		WriteSize += forwardLength;
-		TotalDataSize += forwardLength;
+		write_size_ += forward_length;
+		total_data_size_ += forward_length;
 
 		return prev;
 	}	
 
-	void RingBuffer::ReleaseBuffer(int releaseSize)
+	void RingBuffer::ReleaseBuffer(int release_size)
 	{
 		LockGuard lock(cs_);
-		WriteSize = (releaseSize > WriteSize) ? 0 : (WriteSize - releaseSize);
+		write_size_ = (release_size > write_size_) ? 0 : (write_size_ - release_size);
 	}
 }

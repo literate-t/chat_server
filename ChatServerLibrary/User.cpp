@@ -4,108 +4,108 @@ namespace ChatServerLibrary
 {
 	void User::Init(const short index)
 	{
-		Index = index;
+		index_ = index;
 	}
 
 	void User::Clear()
 	{
-		SessionIndex	= -1;
-		Id				= nullptr;
-		Set				= false;
-		DomainState		= DomainState::NONE;
-		LobbyIndex		= -1;
-		RoomIndex		= -1;
+		session_index_	= -1;
+		id_				= nullptr;
+		set_				= false;
+		domain_state_ = DomainState::NONE;
+		lobby_index_		= -1;
+		room_index_		= -1;
 	}
 
-	void User::SetLoginInfo(const int sessionIndex, const char* id)
+	void User::SetLoginInfo(const int session_index, const char* id)
 	{
-		Set = true;
-		DomainState = DomainState::LOGIN;
-		SessionIndex = sessionIndex;
-		Id = id;
+		set_ = true;
+		domain_state_ = DomainState::LOGIN;
+		session_index_ = session_index;
+		id_ = id;
 	}
 
 	short& User::GetIndex()
 	{
-		return Index;
+		return index_;
 	}
 
 	int& User::GetSessionIndex()
 	{ 
-		return SessionIndex; 
+		return session_index_; 
 	}
 
 	const char*& User::GetId()
 	{ 
-		return Id; 
+		return id_; 
 	}
 
 	bool& User::IsSet()
 	{ 
-		return Set; 
+		return set_; 
 	}
 
 	short& User::GetLobbyIndex()
 	{ 
-		return LobbyIndex; 
+		return lobby_index_; 
 	}
 
-	void User::EnterLobby(const short lobbyIndex)
+	void User::EnterLobby(const short lobby_index)
 	{
-		LobbyIndex = lobbyIndex;
-		DomainState = DomainState::LOBBY;
+		lobby_index_ = lobby_index;
+		domain_state_ = DomainState::LOBBY;
 	}
 
 	void User::LeaveLobby()
 	{
-		LobbyIndex = -1;
-		DomainState = DomainState::LOGIN;
+		lobby_index_ = -1;
+		domain_state_ = DomainState::LOGIN;
 	}
 
 	void User::LeaveLobbyToEnterRoom()
 	{
-		DomainState = DomainState::ROOM;
+		domain_state_ = DomainState::ROOM;
 	}
 
 	short& User::GetRoomIndex()
 	{ 
-		return RoomIndex;
+		return room_index_;
 	}
 
-	void User::EnterRoom(const short lobbyIndex, const short roomIndex)
+	void User::EnterRoom(const short lobby_index, const short room_index)
 	{
-		LobbyIndex = lobbyIndex;
-		RoomIndex = roomIndex;
-		DomainState = DomainState::ROOM;
+		lobby_index_ = lobby_index;
+		room_index_ = room_index;
+		domain_state_ = DomainState::ROOM;
 	}
 
 	void User::SetDomainLogin()
 	{ 
-		DomainState = DomainState::LOGIN;
+		domain_state_ = DomainState::LOGIN;
 	}
 
 	void User::SetDomainLobby()
 	{ 
-		DomainState = DomainState::LOBBY;
+		domain_state_ = DomainState::LOBBY;
 	}
 
 	void User::SetDomainRoom()
 	{ 
-		DomainState = DomainState::ROOM;
+		domain_state_ = DomainState::ROOM;
 	}
 
 	bool User::IsDomainLogin()
 	{ 
-		return DomainState == DomainState::LOGIN ? true : false;
+		return domain_state_ == DomainState::LOGIN ? true : false;
 	}
 
 	bool User::IsDomainLobby()
 	{
-		return DomainState == DomainState::LOBBY ? true : false;
+		return domain_state_ == DomainState::LOBBY ? true : false;
 	}
 
 	bool User::IsDomainRoom()
 	{ 
-		return DomainState == DomainState::ROOM ? true : false;
+		return domain_state_ == DomainState::ROOM ? true : false;
 	}
 }

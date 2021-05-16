@@ -17,14 +17,14 @@ namespace ChatServerLibrary
 		void LoadConfig();
 
 	private:
-		unique_ptr<ServerLibrary::IocpServer> Server;
-		unique_ptr<ServerLibrary::ILog> Log;
-		unique_ptr<ServerLibrary::ServerConfig> Config;
+		unique_ptr<ServerLibrary::IocpServer> server_;
+		unique_ptr<ServerLibrary::ILog> log_;
+		unique_ptr<ServerLibrary::ServerConfig> config_;
 
-		unique_ptr<UserManager> UserMgr;
-		unique_ptr<PacketManager> PacketMgr;
-		unique_ptr<LobbyManager> LobbyMgr;
+		unique_ptr<UserManager> user_mgr_;
+		unique_ptr<PacketManager> packet_mgr_;
+		unique_ptr<LobbyManager> lobby_mgr_;
 
-		bool IsRunning = false;
+		bool is_running_ = false;
 	};
 }

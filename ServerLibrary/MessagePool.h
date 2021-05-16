@@ -6,7 +6,7 @@ namespace ServerLibrary
 	class MessagePool
 	{
 	public:
-		explicit MessagePool(const int maxMsgQueueCount, const int extraMsgQueueCount);
+		explicit MessagePool(const int max_msg_queue_count, const int extra_msg_queue_count);
 		~MessagePool();
 
 	public:
@@ -20,9 +20,9 @@ namespace ServerLibrary
 		void DestroyMsgPool();		
 
 	private:
-		concurrency::concurrent_queue<Message*> MessageQueue;
-		int MaxMsgQueueCount = -1;
-		int ExtraMsgQueueCount = -1;
-		ILog* Log;
+		concurrency::concurrent_queue<Message*> message_queue_;
+		int max_msg_queue_count_ = -1;
+		int extra_max_msg_queue_count_ = -1;
+		ILog* log_;
 	};
 }

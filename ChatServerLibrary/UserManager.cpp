@@ -5,37 +5,37 @@ namespace ChatServerLibrary
 	UserManager::UserManager()	{}
 	UserManager::~UserManager() {}
 
-	void UserManager::Init(const int maxUserCount)
+	void UserManager::Init(const int max_user_count)
 	{
-		for (int i = 0; i < maxUserCount; ++i) 
+		for (int i = 0; i < max_user_count; ++i) 
 		{
 			User user;
 			user.Init(static_cast<short>(i));
-			UserPool.push_back(user);
-			UserIndexPool.push(i);
+			user_pool_.push_back(user);
+			user_index_pool_.push(i);
 		}
 	}
 
 	User* UserManager::AllocateUserFromPoolIndex()
 	{
-		if (UserIndexPool.empty()) 
+		if (user_index_pool_.empty()) 
 		{
 			return nullptr;
 		}
 
-		int index = UserIndexPool.front();
-		UserIndexPool.pop();
+		int index = user_index_pool_.front();
+		user_index_pool_.pop();
 
-		return &UserPool[index];
+		return &user_pool_[index];
 	}
 
 	void UserManager::ReleaseUserToPoolIndex(const int index)
 	{
-		UserIndexPool.push(index);
-		UserPool[index].Clear();
+		user_index_pool_.push(index);
+		user_pool_[index].Clear();
 	}
 
-	ErrorCode UserManager::AddUser(const int sessionIndex, const char* id)
+	ErrorCode UserManager::AddUser(const int session_index, const char* id)
 	{
 		if (FindUser(id) != nullptr) 
 		{
@@ -48,32 +48,32 @@ namespace ChatServerLibrary
 			return ErrorCode::USER_MGR_MAX_USER_COUNT;
 		}
 
-		user->SetLoginInfo(sessionIndex, id);
-		UserSessionDic.insert({ sessionIndex, user});
-		UserIdDic.insert({id, user});
+		user->SetLoginInfo(session_index, id);
+		user_session_dic_.insert({ session_index, user});
+		user_id_dic_.insert({id, user});
 
 		return ErrorCode::NONE;
 	}
 
-	ErrorCode UserManager::RemoveUser(const int sessionIndex)
+	ErrorCode UserManager::RemoveUser(const int session_index)
 	{
-		auto user = FindUser(sessionIndex);
+		auto user = FindUser(session_index);
 		if (user == nullptr) {
 			return ErrorCode::USER_MGR_REMOVE_INVALID_SESSION;
 		}
 
 		auto index = user->GetIndex();
 		auto id = user->GetId();
-		UserSessionDic.erase(sessionIndex);
-		UserIdDic.erase(id);
+		user_session_dic_.erase(session_index);
+		user_id_dic_.erase(id);
 		ReleaseUserToPoolIndex(index);
 
 		return ErrorCode::NONE;
 	}
 
-	std::tuple<ErrorCode, User*> UserManager::GetUser(const int sessionIndex)
+	std::tuple<ErrorCode, User*> UserManager::GetUser(const int session_index)
 	{
-		auto user = FindUser(sessionIndex);
+		auto user = FindUser(session_index);
 		if (user == nullptr) 
 		{
 			return { ErrorCode::USER_MGR_INVALID_SESSION_INDEX, nullptr };
@@ -87,10 +87,10 @@ namespace ChatServerLibrary
 		return { ErrorCode::NONE, user };
 	}
 
-	User* UserManager::FindUser(const int sessionIndex)
+	User* UserManager::FindUser(const int session_index)
 	{
-		auto find_iter = UserSessionDic.find(sessionIndex);
-		if (find_iter == UserSessionDic.end()) 
+		auto find_iter = user_session_dic_.find(session_index);
+		if (find_iter == user_session_dic_.end()) 
 		{
 			return nullptr;
 		}
@@ -100,8 +100,8 @@ namespace ChatServerLibrary
 
 	User* UserManager::FindUser(const char* id)
 	{
-		auto find_iter = UserIdDic.find(id);
-		if (find_iter == UserIdDic.end()) 
+		auto find_iter = user_id_dic_.find(id);
+		if (find_iter == user_id_dic_.end()) 
 		{
 			return nullptr;
 		}

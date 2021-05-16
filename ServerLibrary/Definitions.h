@@ -8,28 +8,28 @@ namespace ServerLibrary
 
 	struct ServerConfig
 	{
-		unsigned short Port						=  0;
-		int BackLogCount						= -1;
-		int WorkerThreadCount					= -1;
-		int SessionMaxRecvBufferSize			= -1; // 받기용 버퍼의 최대 크기(데이터를 받으면 여기에 저장되고, 데이터의 위치가 애플리케이션에 전달되므로 넉넉하게 커야 한다)
-		int SessionMaxSendBufferSize			= -1; // 보내기용 버퍼의 최대 크기
-		int MaxPacketSize						= -1;
-		int MaxSessionCount						= -1;
-		int MaxMessagePoolCount					= -1;
-		int ExtraMessagePoolCount				= -1;
-		int PerformancePacketMillisecondsTime	= -1;
+		unsigned short port_						=  0;
+		int back_log_count_						= -1;
+		int worker_thread_count_					= -1;
+		int session_max_recv_buffer_size_			= -1; // 받기용 버퍼의 최대 크기(데이터를 받으면 여기에 저장되고, 데이터의 위치가 애플리케이션에 전달되므로 넉넉하게 커야 한다)
+		int session_max_send_buffer_size_			= -1; // 보내기용 버퍼의 최대 크기
+		int max_packet_size_						= -1;
+		int max_session_count_						= -1;
+		int max_message_pool_count_					= -1;
+		int extra_message_pool_count_				= -1;
+		int performance_packet_millisec_time_ = -1;
 
-		int MaxLobbyCount						= -1;
-		int MaxLobbyUserCount					= -1;
-		int MaxRoomCount						= -1;
-		int MaxRoomUserCount					= -1;
+		int max_lobby_count_						= -1;
+		int max_lobby_user_count_					= -1;
+		int max_room_count_						= -1;
+		int max_room_user_count_					= -1;
 	};	
 	
 	struct SessionConfig
 	{
-		int MaxRecvBufferSize	= -1;
-		int MaxSendBufferSize	= -1;
-		int MaxPacketSize		= -1;
+		int max_recv_buffer_size_	= -1;
+		int max_recv_buffer_size_	= -1;
+		int max_packet_size_	= -1;
 	};
 
 	enum class IoMode : char
@@ -50,36 +50,36 @@ namespace ServerLibrary
 
 	struct OverlappedEx
 	{
-		WSAOVERLAPPED	Overlapped;
-		WSABUF			Wsabuf;
-		IoMode			Mode;
+		WSAOVERLAPPED	overlapped_;
+		WSABUF			wsabuf_;
+		IoMode			mode_;
 
-		int				TotalBytes; // 총 송수신된 양
-		DWORD			Remain;		  // 현재까지 받은 패킷의 바이트 수(remain)
-		int				SessionIndex = 0;
+		int				total_bytes_; // 총 송수신된 양
+		DWORD			remain_;		  // 현재까지 받은 패킷의 바이트 수(remain)
+		int				session_index_ = 0;
 
-		OverlappedEx(int sessionIndex)
+		OverlappedEx(int session_index)
 		{
 			memset(this, 0, sizeof OverlappedEx);
-			SessionIndex = sessionIndex;
+			session_index_ = session_index;
 		}
 	};
 
 	struct Message
 	{
-		MessageType Type = MessageType::NONE;
-		char* Contents = nullptr;
+		MessageType type_ = MessageType::NONE;
+		char* contents_ = nullptr;
 
 		void Clear()
 		{
-			Type = MessageType::NONE;
-			Contents = nullptr;
+			type_ = MessageType::NONE;
+			contents_ = nullptr;
 		}
 
 		void SetMessagae(MessageType type, char* contents)
 		{
-			Type = type;
-			Contents = contents;
+			type_ = type;
+			contents_ = contents;
 		}
 	};
 

@@ -16,16 +16,16 @@ namespace ChatServerLibrary
 {
 	struct LobbyManagerConfig
 	{
-		int MaxLobbyCount;
-		int MaxLobbyUserCount;
-		int MaxRoomCount;
-		int MaxRoomUserCount;
+		int max_lobby_count_;
+		int max_lobby_user_count_;
+		int max_room_count_;
+		int max_room_user_count_;
 	};
 
 	struct LobbySmallInfo
 	{
-		short Num;
-		short UserCount;
+		short num_;
+		short user_count_;
 	};
 
 	using ErrorCode = Common::ErrorCode;
@@ -45,8 +45,8 @@ namespace ChatServerLibrary
 		function<void(int, void*, short)> SendPacketFunc;
 
 	private:
-		ILog*		Log		= nullptr;
-		IocpServer* Server	= nullptr;
-		std::vector<Lobby> LobbyList;
+		ILog*		log_		= nullptr;
+		IocpServer* server_	= nullptr;
+		std::vector<Lobby> lobby_list_;
 	};
 }

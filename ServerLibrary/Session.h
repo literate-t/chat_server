@@ -11,8 +11,8 @@ namespace ServerLibrary
 		Session() = default;
 		~Session() {}
 
-		Message* GetConnectionMsg() { return &ConnectionMsg; }
-		Message* GetCloseMsg() { return &CloseMsg; }
+		Message* GetConnectionMsg() { return &connection_msg_; }
+		Message* GetCloseMsg() { return &close_msg_; }
 
 		void Init(const SOCKET listenSocket, const int index, const SessionConfig* config, ILog* log);
 		void SetLog(ILog* log);
@@ -25,29 +25,29 @@ namespace ServerLibrary
 		bool PostSend(const int sendSize, char* buffer);
 		Result ReserveSendPacketBuffer(OUT char** buf, const int sendSize);
 
-		SOCKET GetClientSocket() { return ClientSocket; }
-		void SetIp(const char* ip) { memcpy(Ip, ip, kMaxIpLength); }
-		int GetIndex() { return Index; }
+		SOCKET GetClientSocket() { return client_socket_; }
+		void SetIp(const char* ip) { memcpy(ip_, ip, kMaxIpLength); }
+		int GetIndex() { return index_; }
 
-		void IncrementAcceptIoCount() { ++AcceptIoCount; }
-		void DecrementAcceptIoCount() { AcceptIoCount = AcceptIoCount ? --AcceptIoCount : 0; }
-		void IncrementRecvIoCount() { ++RecvIoCount; }
-		void DecrementRecvIoCount() { RecvIoCount = RecvIoCount ? --RecvIoCount : 0; }
-		void IncrementSendIoCount() { ++SendIoCount; }
-		void DecrementSendIoCount() { SendIoCount = SendIoCount ? --SendIoCount : 0; }
-		short GetRecvIoCount() { return RecvIoCount.load(); }
+		void IncrementAcceptIoCount() { ++accept_io_count_; }
+		void DecrementAcceptIoCount() { accept_io_count_ = accept_io_count_ ? --accept_io_count_ : 0; }
+		void IncrementRecvIoCount() { ++recv_io_count_; }
+		void DecrementRecvIoCount() { recv_io_count_ = recv_io_count_ ? --recv_io_count_ : 0; }
+		void IncrementSendIoCount() { ++send_io_count_; }
+		void DecrementSendIoCount() { send_io_count_ = send_io_count_ ? --send_io_count_ : 0; }
+		short GetRecvIoCount() { return recv_io_count_.load(); }
 
-		bool IsConnected() { return Connected; }
-		void SetStateConnected() { InterlockedExchange(reinterpret_cast<long*>(&Connected), TRUE); }
-		void SetStateDisconnected() { InterlockedExchange(reinterpret_cast<long*>(&Connected), FALSE); }
+		bool IsConnected() { return connected_; }
+		void SetStateConnected() { InterlockedExchange(reinterpret_cast<long*>(&connected_), TRUE); }
+		void SetStateDisConnected() { InterlockedExchange(reinterpret_cast<long*>(&connected_), FALSE); }
 
-		int GetRecvBufferSize() { return RingRecvBuffer.GetBufferSize(); }
-		char* GetRecvBufferBegin() { return RingRecvBuffer.GetBegin();}
-		void ReleaseRecvBuffer(const int size) { RingRecvBuffer.ReleaseBuffer(size); }
+		int GetRecvBufferSize() { return ring_recv_buffer_.GetBufferSize(); }
+		char* GetRecvBufferBegin() { return ring_recv_buffer_.GetBegin();}
+		void ReleaseRecvBuffer(const int size) { ring_recv_buffer_.ReleaseBuffer(size); }
 
 		bool SetAddressInfo();
-		void ReleaseSendBuffer(const int size) { RingSendBuffer.ReleaseBuffer(size); }
-		void SetSendAvaliable() { InterlockedExchange(reinterpret_cast<long*>(&Sendable), TRUE); }
+		void ReleaseSendBuffer(const int size) { ring_send_buffer_.ReleaseBuffer(size); }
+		void SetSendAvaliable() { InterlockedExchange(reinterpret_cast<long*>(&sendable_), TRUE); }
 		
 
 	private:
@@ -55,35 +55,35 @@ namespace ServerLibrary
 		Result AcceptExSocket();		
 
 	private:
-		int Index = -1;
-		SOCKET ClientSocket = INVALID_SOCKET;
-		SOCKET ListenSocket = INVALID_SOCKET;
+		int index_ = -1;
+		SOCKET client_socket_ = INVALID_SOCKET;
+		SOCKET listen_socket_ = INVALID_SOCKET;
 
-		OverlappedEx*	RecvOverlappedEx = nullptr;
-		OverlappedEx*	SendOverlappedEx = nullptr;
+		OverlappedEx*	recv_overlapped_ex_ = nullptr;
+		OverlappedEx*	send_overlapped_ex_ = nullptr;
 
-		RingBuffer		RingRecvBuffer;
-		RingBuffer		RingSendBuffer;
-		int				MaxPacketSize = -1;
+		RingBuffer		ring_recv_buffer_;
+		RingBuffer		ring_send_buffer_;
+		int				max_packet_size_ = -1;
 
-		char			AddrBuf[kMaxAddrLength] = { 0 };
+		char			addr_buf_[kMaxAddrLength] = { 0 };
 
-		BOOL Connected	= FALSE;
-		BOOL Sendable	= FALSE;
+		BOOL connected_	= FALSE;
+		BOOL sendable_	= FALSE;
 
-		int RecvBufSize = -1;
-		int SendBufSize = -1;
+		int recv_buf_size_ = -1;
+		int send_buf_size_ = -1;
 
-		char Ip[kMaxIpLength] = { 0 };
+		char ip_[kMaxIpLength] = { 0 };
 
-		atomic<short> AcceptIoCount = 0;
-		atomic<short> RecvIoCount	= 0;
-		atomic<short> SendIoCount	= 0;
+		atomic<short> accept_io_count_	= 0;
+		atomic<short> recv_io_count_	= 0;
+		atomic<short> send_io_count_	= 0;
 
-		Message ConnectionMsg;
-		Message CloseMsg;
+		Message connection_msg_;
+		Message close_msg_;
 
-		ILog*	Log;
-		Lock	Cs;
+		ILog*	log_;
+		Lock	cs_;
 	};
 }

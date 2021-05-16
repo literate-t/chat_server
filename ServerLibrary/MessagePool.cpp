@@ -2,10 +2,10 @@
 
 namespace ServerLibrary
 {
-	MessagePool::MessagePool(const int maxMsgPoolCount, const int extraMsgPoolCount)
+	MessagePool::MessagePool(const int max_msg_pool_count, const int extra_msg_pool_count)
 	{
-		MaxMsgQueueCount = maxMsgPoolCount;
-		ExtraMsgQueueCount = extraMsgPoolCount;
+		max_msg_queue_count_ = max_msg_pool_count;
+		extra_max_msg_queue_count_ = extra_msg_pool_count;
 		CreateMsgPool();
 	}
 
@@ -16,20 +16,20 @@ namespace ServerLibrary
 
 	void MessagePool::SetLog(ILog* log)
 	{
-		Log = log;
+		log_ = log;
 	}
 
 	bool MessagePool::CheckCounts()
 	{
-		if (MaxMsgQueueCount == -1)
+		if (max_msg_queue_count_ == -1)
 		{
-			Log->Write(LogType::L_ERROR, "%s | MaxMsgQueueCount failure", __FUNCTION__);
+			log_->Write(LogType::L_ERROR, "%s | max_msg_queue_count_ failure", __FUNCTION__);
 			return false;
 		}
 
-		if (ExtraMsgQueueCount == -1)
+		if (extra_max_msg_queue_count_ == -1)
 		{
-			Log->Write(LogType::L_ERROR, "%s | ExtraMsgQueueCount failure", __FUNCTION__);
+			log_->Write(LogType::L_ERROR, "%s | extra_max_msg_queue_count_ failure", __FUNCTION__);
 			return false;
 		}
 
@@ -39,17 +39,17 @@ namespace ServerLibrary
 	bool MessagePool::CreateMsgPool()
 	{
 		Message* msg = nullptr;
-		for (int i = 0; i < MaxMsgQueueCount; ++i)
+		for (int i = 0; i < max_msg_queue_count_; ++i)
 		{
 			msg = new Message();
 			msg->Clear();
-			MessageQueue.push(msg);
+			message_queue_.push(msg);
 		}
-		for (int i = 0; i < ExtraMsgQueueCount; ++i)
+		for (int i = 0; i < extra_max_msg_queue_count_; ++i)
 		{
 			msg = new Message();
 			msg->Clear();
-			MessageQueue.push(msg);
+			message_queue_.push(msg);
 		}
 		return true;
 	}
@@ -65,7 +65,7 @@ namespace ServerLibrary
 	Message* MessagePool::AllocateMsg()
 	{
 		Message* msg = nullptr;
-		if (!MessageQueue.try_pop(msg))
+		if (!message_queue_.try_pop(msg))
 		{
 			return nullptr;
 		}
@@ -79,7 +79,7 @@ namespace ServerLibrary
 			return false;
 		}
 		msg->Clear();
-		MessageQueue.push(msg);
+		message_queue_.push(msg);
 		return true;
 	}
 }

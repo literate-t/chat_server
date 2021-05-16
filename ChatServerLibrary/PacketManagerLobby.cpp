@@ -2,111 +2,111 @@
 
 namespace ChatServerLibrary
 {
-	void PacketManager::LobbyEnter(const int sessionIndex, char* buf, short copySize)
+	void PacketManager::LobbyEnter(const int session_index, char* buf, short copy_size)
 	{
-		if (copySize != sizeof PacketBasicEnterLeaveReq)
+		if (copy_size != sizeof PacketBasicEnterLeaveReq)
 		{
 			return;
 		}
 
-		PacketBasicRes packetRes;
-		packetRes.TotalSize = sizeof PacketBasicRes;
-		packetRes.Id = static_cast<short>(PacketId::LOBBY_ENTER_RES);
+		PacketBasicRes packet_res;
+		packet_res.total_size_ = sizeof PacketBasicRes;
+		packet_res.id_ = static_cast<short>(PacketId::LOBBY_ENTER_RES);
 
-		auto userResult = UserMgr->GetUser(sessionIndex);
-		auto errorCode = get<0>(userResult);
-		if (errorCode != ErrorCode::NONE)
+		auto user_result = user_mgr_->GetUser(session_index);
+		auto error_code = get<0>(user_result);
+		if (error_code != ErrorCode::NONE)
 		{
-			packetRes.ErrorCode = static_cast<short>(errorCode);
-			SendPacketFunc(sessionIndex, &packetRes, sizeof PacketBasicRes);
+			packet_res.error_code_ = static_cast<short>(error_code);
+			SendPacketFunc(session_index, &packet_res, sizeof PacketBasicRes);
 			return;
 		}
 
-		auto user = get<1>(userResult);
+		auto user = get<1>(user_result);
 		if (user->IsDomainLogin() == false)
 		{
-			packetRes.ErrorCode = static_cast<short>(ErrorCode::LOBBY_ENTER_INVALID_DOMAIN);
-			SendPacketFunc(sessionIndex, &packetRes, sizeof PacketBasicRes);
+			packet_res.error_code_ = static_cast<short>(ErrorCode::LOBBY_ENTER_INVALID_DOMAIN);
+			SendPacketFunc(session_index, &packet_res, sizeof PacketBasicRes);
 			return;
 		}
 
 		auto data = reinterpret_cast<PacketBasicEnterLeaveReq*>(buf);
-		auto lobby = LobbyMgr->GetLobby(data->Index);
+		auto lobby = lobby_mgr_->GetLobby(data->index_);
 		if (lobby == nullptr)
 		{
-			packetRes.ErrorCode = static_cast<short>(ErrorCode::LOBBY_ENTER_INVALID_LOBBY_INDEX);
-			SendPacketFunc(sessionIndex, &packetRes, sizeof PacketBasicRes);
+			packet_res.error_code_ = static_cast<short>(ErrorCode::LOBBY_ENTER_INVALID_LOBBY_INDEX);
+			SendPacketFunc(session_index, &packet_res, sizeof PacketBasicRes);
 			return;
 		}
 
-		auto enterResult = lobby->EnterLobby(user);
-		if (enterResult != ErrorCode::NONE)
+		auto enter_result = lobby->EnterLobby(user);
+		if (enter_result != ErrorCode::NONE)
 		{
-			packetRes.ErrorCode = static_cast<short>(enterResult);
-			SendPacketFunc(sessionIndex, &packetRes, sizeof PacketBasicRes);
+			packet_res.error_code_ = static_cast<short>(enter_result);
+			SendPacketFunc(session_index, &packet_res, sizeof PacketBasicRes);
 			return;
 		}
 
 		// 로비 입장
-		packetRes.ErrorCode = static_cast<short>(ErrorCode::NONE);
-		SendPacketFunc(sessionIndex, &packetRes, sizeof PacketBasicRes);
+		packet_res.error_code_ = static_cast<short>(ErrorCode::NONE);
+		SendPacketFunc(session_index, &packet_res, sizeof PacketBasicRes);
 
 		// 새로 입장한 유저는 기존 접속 유저 정보를 받는다
-		lobby->SendAllUsersInfoToSession(static_cast<short>(PacketId::LOBBY_ENTER_USER_INFO), sessionIndex);
+		lobby->SendAllUsersInfoToSession(static_cast<short>(PacketId::LOBBY_ENTER_USER_INFO), session_index);
 
 		// 기존 유저는 새 유저를 공지받는다
 		lobby->NotifyToAll(static_cast<short>(PacketId::LOBBY_ENTER_USER_NTF), user->GetIndex());
 	}
 
-	void PacketManager::LobbyLeave(int sessionIndex, char* buf, short copySize)
+	void PacketManager::LobbyLeave(int session_index, char* buf, short copy_size)
 	{
-		if (copySize != sizeof PacketBasicEnterLeaveReq)
+		if (copy_size != sizeof PacketBasicEnterLeaveReq)
 		{
 			return;
 		}
 
-		PacketBasicRes packetRes;
-		packetRes.Id = static_cast<short>(PacketId::LOBBY_LEAVE_RES);
-		packetRes.TotalSize = sizeof PacketBasicRes;
+		PacketBasicRes packet_res;
+		packet_res.id_ = static_cast<short>(PacketId::LOBBY_LEAVE_RES);
+		packet_res.total_size_ = sizeof PacketBasicRes;
 
-		auto userResult = UserMgr->GetUser(sessionIndex);
-		auto errorCode = get<0>(userResult);
-		if (errorCode != ErrorCode::NONE)
+		auto user_result = user_mgr_->GetUser(session_index);
+		auto error_code = get<0>(user_result);
+		if (error_code != ErrorCode::NONE)
 		{
-			packetRes.ErrorCode = static_cast<short>(errorCode);
-			SendPacketFunc(sessionIndex, &packetRes, sizeof PacketBasicRes);
+			packet_res.error_code_ = static_cast<short>(error_code);
+			SendPacketFunc(session_index, &packet_res, sizeof PacketBasicRes);
 			return;
 		}
 
-		auto user = get<1>(userResult);
+		auto user = get<1>(user_result);
 		if (user->IsDomainLobby() == false)
 		{
-			packetRes.ErrorCode = static_cast<short>(ErrorCode::LOBBY_LEAVE_INVALID_DOMAIN);
-			SendPacketFunc(sessionIndex, &packetRes, sizeof PacketBasicRes);
+			packet_res.error_code_ = static_cast<short>(ErrorCode::LOBBY_LEAVE_INVALID_DOMAIN);
+			SendPacketFunc(session_index, &packet_res, sizeof PacketBasicRes);
 			return;
 		}
 
 		auto data = reinterpret_cast<PacketBasicEnterLeaveReq*>(buf);
-		auto lobby = LobbyMgr->GetLobby(data->Index);
+		auto lobby = lobby_mgr_->GetLobby(data->index_);
 		if (lobby == nullptr)
 		{
-			packetRes.ErrorCode = static_cast<short>(ErrorCode::LOBBY_ENTER_INVALID_LOBBY_INDEX);
-			SendPacketFunc(sessionIndex, &packetRes, sizeof PacketBasicRes);
+			packet_res.error_code_ = static_cast<short>(ErrorCode::LOBBY_ENTER_INVALID_LOBBY_INDEX);
+			SendPacketFunc(session_index, &packet_res, sizeof PacketBasicRes);
 			return;
 		}
 
 		// 로비 퇴장을 요청한 세션
-		packetRes.ErrorCode = static_cast<short>(ErrorCode::NONE);
-		SendPacketFunc(sessionIndex, &packetRes, sizeof PacketBasicRes);
+		packet_res.error_code_ = static_cast<short>(ErrorCode::NONE);
+		SendPacketFunc(session_index, &packet_res, sizeof PacketBasicRes);
 
 		// 로비에 남아 있는 세션에게 퇴장하는 세션을 공지
 		lobby->NotifyToAll(static_cast<short>(PacketId::LOBBY_LEAVE_USER_NTF), user->GetIndex());
 
-		auto leaveResult = lobby->LeaveLobby(user->GetIndex());
-		if (leaveResult != ErrorCode::NONE)
+		auto leave_result = lobby->LeaveLobby(user->GetIndex());
+		if (leave_result != ErrorCode::NONE)
 		{
-			packetRes.ErrorCode = static_cast<short>(leaveResult);
-			SendPacketFunc(sessionIndex, &packetRes, sizeof PacketBasicRes);
+			packet_res.error_code_ = static_cast<short>(leave_result);
+			SendPacketFunc(session_index, &packet_res, sizeof PacketBasicRes);
 		}
 	}
 }

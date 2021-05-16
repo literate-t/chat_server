@@ -2,7 +2,7 @@
 
 namespace ChatServerLibrary
 {
-	void PacketManager::Init(UserManager* userManager, LobbyManager* lobbyManager, ServerLibrary::ILog* log)
+	void PacketManager::Init(UserManager* user_manager, LobbyManager* lobby_manager, ServerLibrary::ILog* log)
 	{
 		PacketFuncDictionary[static_cast<short>(PacketId::LOGIN_REQ)] = &PacketManager::Login;
 		PacketFuncDictionary[static_cast<short>(PacketId::LOBBY_ENTER_REQ)] = &PacketManager::LobbyEnter;
@@ -11,48 +11,48 @@ namespace ChatServerLibrary
 		PacketFuncDictionary[static_cast<short>(PacketId::ROOM_LEAVE_REQ)] = &PacketManager::RoomLeave;
 		PacketFuncDictionary[static_cast<short>(PacketId::ROOM_CHAT_REQ)] = &PacketManager::RoomChat;
 
-		UserMgr = userManager;
-		LobbyMgr = lobbyManager;
-		Log = log;
+		user_mgr_ = user_manager;
+		lobby_mgr_ = lobby_manager;
+		log_ = log;
 	}
 
-	void PacketManager::ProcessPacket(int sessionIndex, char* buf, short copySize)
+	void PacketManager::ProcessPacket(int session_index, char* buf, short copy_size)
 	{
 		PacketHeader* header = reinterpret_cast<PacketHeader*>(buf);
-		auto iter = PacketFuncDictionary.find(header->Id);
+		auto iter = PacketFuncDictionary.find(header->id_);
 		if (iter != PacketFuncDictionary.end())
 		{
-			(this->*(iter->second))(sessionIndex, buf, copySize);
+			(this->*(iter->second))(session_index, buf, copy_size);
 		}
 	}
 
-	void PacketManager::Login(const int sessionIndex, char* buf, short copySize)
+	void PacketManager::Login(const int session_index, char* buf, short copy_size)
 	{
-		if (copySize - static_cast<short>(kPacketHeaderLength) != static_cast<short>(kLoginReqPacketSize))
+		if (copy_size - static_cast<short>(kPacketHeaderLength) != static_cast<short>(kLoginReqPacketSize))
 		{
 			return;
 		}
 
-		auto loginReq = reinterpret_cast<PacketLoginReq*>(&buf[kPacketHeaderLength]);		
-		Log->Write(ServerLibrary::LogType::L_INFO, "Id:%s", loginReq->Id);
-		PacketBasicRes packetRes;
-		packetRes.TotalSize = sizeof PacketBasicRes;
-		packetRes.Id		= static_cast<short>(PacketId::LOGIN_RES);
-		auto result = UserMgr->AddUser(sessionIndex, loginReq->Id);
+		auto login_req = reinterpret_cast<PacketLoginReq*>(&buf[kPacketHeaderLength]);		
+		log_->Write(ServerLibrary::LogType::L_INFO, "id_:%s", login_req->id_);
+		PacketBasicRes packet_res;
+		packet_res.total_size_ = sizeof PacketBasicRes;
+		packet_res.id_		= static_cast<short>(PacketId::LOGIN_RES);
+		auto result = user_mgr_->AddUser(session_index, login_req->id_);
 		if (result != ErrorCode::NONE)
 		{
-			packetRes.ErrorCode = static_cast<short>(result);
-			SendPacketFunc(sessionIndex, &packetRes, sizeof packetRes);
+			packet_res.error_code_ = static_cast<short>(result);
+			SendPacketFunc(session_index, &packet_res, sizeof packet_res);
 			return;
 		}
 
-		packetRes.ErrorCode = static_cast<short>(ErrorCode::NONE);
-		SendPacketFunc(sessionIndex, &packetRes, sizeof PacketBasicRes);
+		packet_res.error_code_ = static_cast<short>(ErrorCode::NONE);
+		SendPacketFunc(session_index, &packet_res, sizeof PacketBasicRes);
 	}
 
-	bool PacketManager::ProcessLogoff(const int sessionIndex)
+	bool PacketManager::ProcessLogoff(const int session_index)
 	{
-		auto result = UserMgr->RemoveUser(sessionIndex);
+		auto result = user_mgr_->RemoveUser(session_index);
 		if (result == ErrorCode::NONE)
 		{
 			return true;

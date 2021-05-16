@@ -12,15 +12,15 @@ namespace ChatServerLibrary
 		PacketManager() = default;
 		~PacketManager() = default;
 
-		void Init(UserManager* userManager, LobbyManager* lobbyManager, ServerLibrary::ILog* log);
-		void ProcessPacket(int sessionIndex, char* buf, short copySize);
-		void Login(int sessionIndex, char* buf, short copySize);
-		void LobbyEnter(int sessionIndex, char* buf, short copySize);
-		void LobbyLeave(int sessionIndex, char* buf, short copySize);
-		void RoomEnter(int sessionIndex, char* buf, short copySize);
-		void RoomLeave(int sessionIndex, char* buf, short copySize);
-		void RoomChat(int sessionIndex, char* buf, short copySize);
-		bool ProcessLogoff(int sessionIndex);
+		void Init(UserManager* user_manager, LobbyManager* lobby_manager, ServerLibrary::ILog* log);
+		void ProcessPacket(int session_index, char* buf, short copy_size);
+		void Login(int session_index, char* buf, short copy_size);
+		void LobbyEnter(int session_index, char* buf, short copy_size);
+		void LobbyLeave(int session_index, char* buf, short copy_size);
+		void RoomEnter(int session_index, char* buf, short copy_size);
+		void RoomLeave(int session_index, char* buf, short copy_size);
+		void RoomChat(int session_index, char* buf, short copy_size);
+		bool ProcessLogoff(int session_index);
 
 		function<void(int, void*, short)> SendPacketFunc;
 
@@ -28,8 +28,8 @@ namespace ChatServerLibrary
 		using PacketFunc = void(PacketManager::*)(int, char*, short);
 		std::unordered_map<short, PacketFunc> PacketFuncDictionary;
 
-		UserManager* UserMgr		= nullptr;
-		LobbyManager* LobbyMgr		= nullptr;
-		ServerLibrary::ILog* Log	= nullptr;
+		UserManager* user_mgr_		= nullptr;
+		LobbyManager* lobby_mgr_		= nullptr;
+		ServerLibrary::ILog* log_	= nullptr;
 	};
 }

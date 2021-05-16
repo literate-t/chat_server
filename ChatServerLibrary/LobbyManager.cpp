@@ -8,23 +8,23 @@ namespace ChatServerLibrary
 
 	void LobbyManager::Init(LobbyManagerConfig* config, IocpServer* server, ILog* log)
 	{
-		Log = log;
-		Server = server;
+		log_ = log;
+		server_ = server;
 
-		for (int i = 0; i < config->MaxLobbyCount; ++i) {
+		for (int i = 0; i < config->max_lobby_count_; ++i) {
 			Lobby lobby;
 			lobby.SendPacketFunc = SendPacketFunc;
-			lobby.Init((short)i, (short)config->MaxLobbyCount, (short)config->MaxRoomCount, (short)config->MaxRoomUserCount, Log);
-			LobbyList.push_back(lobby);
+			lobby.Init((short)i, (short)config->max_lobby_count_, (short)config->max_room_count_, (short)config->max_room_user_count_, log_);
+			lobby_list_.push_back(lobby);
 		}
 	}
 
-	Lobby* LobbyManager::GetLobby(short lobbyIndex)
+	Lobby* LobbyManager::GetLobby(short lobby_index)
 	{
-		if (lobbyIndex < 0 || lobbyIndex >= (short)LobbyList.size() - 1) {
+		if (lobby_index < 0 || lobby_index >= (short)lobby_list_.size() - 1) {
 			return nullptr;
 		}
 
-		return &LobbyList[lobbyIndex];
+		return &lobby_list_[lobby_index];
 	}
 }

@@ -22,8 +22,8 @@ namespace ChatServerLibrary
 
 	struct LobbyUser
 	{
-		short Index	= -1;
-		User* User	= nullptr;
+		short index_ = -1;
+		User* user_	 = nullptr;
 	};
 
 	class Lobby
@@ -32,19 +32,19 @@ namespace ChatServerLibrary
 		Lobby();
 		~Lobby();
 
-		void Init(const short lobbyIndex, const short maxLobbyUserCount, const short maxRoomCount, const short maxRoomUserCount, ILog* log);
+		void Init(const short lobby_index, const short max_lobby_user_count, const short max_room_count, const short max_room_user_count, ILog* log);
 		void Release();
 		short& GetIndex();
 		
 		ErrorCode EnterLobby(User* user);
-		void SendAllUsersInfoToSession(short packetId, const int sessionIndex);
-		void NotifyToAll(short packetId, const int userIndex);
-		ErrorCode LeaveLobby(const int userIndex);
-		ErrorCode LeaveLobbyToEnterRomm(const int userIndex);
+		void SendAllUsersInfoToSession(short packet_id, const int session_index);
+		void NotifyToAll(short packet_id, const int user_index);
+		ErrorCode LeaveLobby(const int user_index);
+		ErrorCode LeaveLobbyToEnterRomm(const int user_index);
 
 		size_t GetUserCount();
 		Room* CreateRoom(short index);
-		Room* GetRoom(const short roomIndex);
+		Room* GetRoom(const short room_index);
 
 		short& GetMaxUserCount();
 		size_t GetMaxRoomCount();
@@ -52,21 +52,21 @@ namespace ChatServerLibrary
 		function<void(int, void*, short)> SendPacketFunc;
 
 	private:
-		void SendToAllUsers(void* packet, const short packetSize, const int exceptionIndex = -1);
-		User* FindUser(const int userIndex);
+		void SendToAllUsers(void* packet, const short packet_size, const int exception_index = -1);
+		User* FindUser(const int user_index);
 		ErrorCode AddUser(User* user);
-		void RemoveUser(const int userIndex);
+		void RemoveUser(const int user_index);
 
 	private:
-		ILog* Log	= nullptr;
-		IocpServer* Server = nullptr;
+		ILog* log_	= nullptr;
+		IocpServer* server_ = nullptr;
 
-		short LobbyIndex = -1;
-		short MaxUserCount = -1;
+		short lobby_index_ = -1;
+		short max_user_count_ = -1;
 
-		std::vector<LobbyUser>					LobbyUserList;
-		std::unordered_map<int, User*>			UserIndexDic;
-		std::unordered_map<const char*, User*>	UserIdDic;
-		std::vector<Room*>						RoomList;
+		std::vector<LobbyUser>					lobby_user_list_;
+		std::unordered_map<int, User*>			user_index_dic_;
+		std::unordered_map<const char*, User*>	user_id_dic_;
+		std::vector<Room*>						room_list_;
 	};
 }

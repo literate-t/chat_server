@@ -5,31 +5,31 @@ namespace ServerLibrary
 {
 	Lock::Lock()
 	{
-		(void)InitializeCriticalSectionAndSpinCount(&Cs, SPIN_LOCK);
+		(void)InitializeCriticalSectionAndSpinCount(&cs_, SPIN_LOCK);
 	}
 
 	Lock::~Lock()
 	{
-		DeleteCriticalSection(&Cs);
+		DeleteCriticalSection(&cs_);
 	}
 
 	void Lock::Enter()
 	{
-		EnterCriticalSection(&Cs);
+		EnterCriticalSection(&cs_);
 	}
 
 	void Lock::Leave()
 	{
-		LeaveCriticalSection(&Cs);
+		LeaveCriticalSection(&cs_);
 	}
 
-	Lock::LockGuard::LockGuard(Lock& object):Locker(object)
+	Lock::LockGuard::LockGuard(Lock& object):locker_(object)
 	{
-		Locker.Enter();
+		locker_.Enter();
 	}
 
 	Lock::LockGuard::~LockGuard()
 	{
-		Locker.Leave();
+		locker_.Leave();
 	}
 }

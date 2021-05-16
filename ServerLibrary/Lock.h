@@ -12,7 +12,7 @@ namespace ServerLibrary
 			~LockGuard();
 
 		private:
-			Lock& Locker;
+			Lock& locker_;
 		};
 
 		Lock();
@@ -22,6 +22,6 @@ namespace ServerLibrary
 		void Leave();
 
 	private:
-		CRITICAL_SECTION Cs;
+		CRITICAL_SECTION cs_;
 	};
 }
