@@ -1,7 +1,10 @@
 x64
 ServerLibrary/x64
+ServerLibrary/Debug
 ChatServerLibrary/x64
+ChatServerLibrary/Debug
 ConsoleHost/x64
+ConsoleHost/Debug
 .vs
-ChatClient/bin/Debug
-ChatClient/obj/Debug
+ChatClient/bin
+ChatClient/obj
