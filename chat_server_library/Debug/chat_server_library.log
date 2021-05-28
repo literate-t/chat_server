@@ -1,0 +1,15 @@
+﻿  Lobby.cpp
+D:\work\chat_server\chat_server_library\Lobby.cpp(59,30): warning C4018: '>=': signed 또는 unsigned가 일치하지 않습니다.
+D:\work\chat_server\chat_server_library\Lobby.cpp(225,18): warning C4018: '>': signed 또는 unsigned가 일치하지 않습니다.
+D:\work\chat_server\chat_server_library\Lobby.cpp(240,36): warning C4018: '>=': signed 또는 unsigned가 일치하지 않습니다.
+  LobbyManager.cpp
+  Main.cpp
+  PacketManager.cpp
+  PacketManagerLobby.cpp
+  PacketManagerRoom.cpp
+  Room.cpp
+  stdafx.cpp
+  User.cpp
+  UserManager.cpp
+  코드를 생성하고 있습니다...
+  chat_server_library.vcxproj -> D:\work\chat_server\Debug\chat_server_library.lib
