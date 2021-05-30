@@ -407,7 +407,7 @@ namespace server_library
 		session->SetStateConnected();
 
 		auto result = session->PostRecv(0, 0);
-		if (result != Result::SUCCESS)
+		if (Result::SUCCESS != result)
 		{
 			log_->Write(LogType::L_ERROR, "%s | PostRecv() failure[%d]", __FUNCTION__, WSAGetLastError());
 			HandleSessionCloseException(session);
@@ -425,7 +425,7 @@ namespace server_library
 	void IocpServer::DoRecv(OverlappedEx* overlapped_ex, const DWORD size)
 	{
 		Session* session = GetSession(overlapped_ex->session_index_);
-		if (session == nullptr)
+		if (nullptr == session)
 		{
 			log_->Write(LogType::L_ERROR, "%s | session is nullptr", __FUNCTION__);
 			return;
