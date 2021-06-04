@@ -19,16 +19,16 @@ namespace server_library
 		assert(result == Result::SUCCESS);
 
 		auto bresult = CreateMessagePool();
-		assert(bresult == true);
+		assert(true == bresult);
 
 		bresult = BindListenSocketIocp();
-		assert(bresult == true);
+		assert(true == bresult);
 
 		bresult = CreateSessions();
-		assert(bresult == true);
+		assert(true == bresult);
 
 		bresult = CreateWorkerThread();
-		assert(bresult == true);
+		assert(true == bresult);
 
 		log_->Write(LogType::L_INFO, "Server started");
 		return true;
@@ -247,7 +247,7 @@ namespace server_library
 				continue;
 			}
 
-			if (overlapped_ex == nullptr)
+			if (nullptr == overlapped_ex)
 			{
 				if (WSAGetLastError() != WSA_IO_PENDING)
 				{
@@ -278,7 +278,7 @@ namespace server_library
 		Message* msg = nullptr;
 		Session* session = nullptr;
 		DWORD bytes = 0;
-		if (wait_mill_sec == 0)
+		if (0 == wait_mill_sec)
 		{
 			wait_mill_sec = INFINITE;
 		}
@@ -314,7 +314,7 @@ namespace server_library
 
 	Result IocpServer::PostMessageToQueue(Session* session, Message* msg, const DWORD packet_size)
 	{
-		if (logic_iocp_ == INVALID_HANDLE_VALUE || msg == nullptr)
+		if (INVALID_HANDLE_VALUE == logic_iocp_ || nullptr == msg )
 		{
 			log_->Write(LogType::L_ERROR, "%s | PostMessageToQueue() failure", __FUNCTION__);
 			return Result::FAIL_MESSAGE_NULL;
@@ -336,7 +336,7 @@ namespace server_library
 
 	void IocpServer::HandleWorkerThreadException(Session* session, const OverlappedEx* overlapped_ex)
 	{
-		if (overlapped_ex == nullptr)
+		if (nullptr == overlapped_ex)
 		{
 			log_->Write(LogType::L_ERROR, "%s | overlapped_ex is nullptr", __FUNCTION__);
 			return;
@@ -364,7 +364,7 @@ namespace server_library
 
 	void IocpServer::HandleSessionCloseException(Session* session)
 	{
-		if (session == nullptr)
+		if (nullptr == session)
 		{
 			log_->Write(LogType::L_ERROR, "%s | session is nullptr", __FUNCTION__);
 			return;
@@ -379,14 +379,14 @@ namespace server_library
 	void IocpServer::DoAccept(const OverlappedEx* overlapped_ex)
 	{
 		auto session = GetSession(overlapped_ex->session_index_);
-		if (session == nullptr)
+		if (nullptr == session)
 		{
 			log_->Write(LogType::L_ERROR, "%s | session is nullptr", __FUNCTION__);
 			return;
 		}
 		session->DecrementAcceptIoCount();
 
-		if (session->SetAddressInfo() == false)
+		if (false == session->SetAddressInfo())
 		{
 			log_->Write(LogType::L_ERROR, "%s | GetAcceptExSockaddrs() failure[%d]", __FUNCTION__, WSAGetLastError());
 			if (session->CloseCompletely())
@@ -474,7 +474,7 @@ namespace server_library
 			if (remain >= static_cast<DWORD>(current_size))
 			{
 				auto msg = unique_message_pool_->AllocateMsg();
-				if (msg == nullptr)
+				if (nullptr == msg)
 				{
 					log_->Write(LogType::L_ERROR, "%s | Message is empty", __FUNCTION__);
 					return;
