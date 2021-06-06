@@ -50,9 +50,9 @@ namespace server_library
 			}
 		}
 
-		if (logic_iocp_ != INVALID_HANDLE_VALUE)
+		if (message_iocp_ != INVALID_HANDLE_VALUE)
 		{
-			CloseHandle(logic_iocp_);
+			CloseHandle(message_iocp_);
 		}
 
 		if (listen_socket_ != INVALID_SOCKET)
@@ -148,8 +148,8 @@ namespace server_library
 			return Result::FAIL_CREATE_WORKER_IOCP;
 		}
 
-		logic_iocp_ = CreateIoCompletionPort(INVALID_HANDLE_VALUE, nullptr, 0, 1);
-		if (logic_iocp_ == INVALID_HANDLE_VALUE)
+		message_iocp_ = CreateIoCompletionPort(INVALID_HANDLE_VALUE, nullptr, 0, 1);
+		if (message_iocp_ == INVALID_HANDLE_VALUE)
 		{
 			log_->Write(LogType::L_ERROR, "%s | CreateIoCompletionPort() failure[%d]", __FUNCTION__, WSAGetLastError());
 			return Result::FAIL_CREATE_LOGIC_IOCP;
@@ -273,7 +273,7 @@ namespace server_library
 		}
 	}
 
-	bool IocpServer::ProcessIocpMessage(OUT char& msg_type, OUT int& session_index, OUT char** buf, OUT short& copy_size, int wait_mill_sec)
+	bool IocpServer::ProcessMessageIOCP(OUT char& msg_type, OUT int& session_index, OUT char** buf, OUT short& copy_size, int wait_mill_sec)
 	{
 		Message* msg = nullptr;
 		Session* session = nullptr;
@@ -284,7 +284,7 @@ namespace server_library
 		}
 
 		auto result = GetQueuedCompletionStatus(
-			logic_iocp_, &bytes,
+			message_iocp_, &bytes,
 			reinterpret_cast<PULONG_PTR>(&session),
 			reinterpret_cast<OVERLAPPED**>(&msg),
 			wait_mill_sec
@@ -312,16 +312,16 @@ namespace server_library
 		return true;
 	}
 
-	Result IocpServer::PostMessageToQueue(Session* session, Message* msg, const DWORD packet_size)
+	Result IocpServer::PostMessageIOCP(Session* session, Message* msg, const DWORD packet_size)
 	{
-		if (INVALID_HANDLE_VALUE == logic_iocp_ || nullptr == msg )
+		if (INVALID_HANDLE_VALUE == message_iocp_ || nullptr == msg )
 		{
-			log_->Write(LogType::L_ERROR, "%s | PostMessageToQueue() failure", __FUNCTION__);
+			log_->Write(LogType::L_ERROR, "%s | PostMessageIOCP() failure", __FUNCTION__);
 			return Result::FAIL_MESSAGE_NULL;
 		}
 
 		auto result = PostQueuedCompletionStatus(
-			logic_iocp_, packet_size,
+			message_iocp_, packet_size,
 			reinterpret_cast<ULONG_PTR>(session),
 			reinterpret_cast<OVERLAPPED*>(msg)
 		);
@@ -370,7 +370,7 @@ namespace server_library
 			return;
 		}
 
-		if (PostMessageToQueue(session, session->GetCloseMsg()) != Result::SUCCESS)
+		if (PostMessageIOCP(session, session->GetCloseMsg()) != Result::SUCCESS)
 		{
 			session->ResetSession();
 		}
@@ -414,7 +414,7 @@ namespace server_library
 			return;
 		}
 
-		if (PostMessageToQueue(session, session->GetConnectionMsg()) != Result::SUCCESS)
+		if (PostMessageIOCP(session, session->GetConnectionMsg()) != Result::SUCCESS)
 		{
 			session->Disconnect();
 			session->ResetSession();
@@ -432,13 +432,21 @@ namespace server_library
 		}
 
 		session->DecrementRecvIoCount();
-		overlapped_ex->remain_ += size; 
+		//overlapped_ex->remain_ += size; 
+		//overlapped_ex->remain_ = size; 
 
-		auto remain = overlapped_ex->remain_;
-		auto forwardLength = overlapped_ex->remain_;
+		//auto remain = overlapped_ex->remain_;
+		//auto forwardLength = overlapped_ex->remain_;
+		auto remain = size;
+		auto forwardLength = size;
 		auto buf = overlapped_ex->wsabuf_.buf;
 
+		// remain은 0이 되어야 한다
 		ForwardPacket(session, remain, buf);
+		if (0 == remain)
+		{
+			log_->Write(LogType::L_INFO, "%s | remain is zero", __FUNCTION__);
+		}
 		if (session->PostRecv(forwardLength, remain) != Result::SUCCESS)
 		{
 			if (session->CloseCompletely())
@@ -459,9 +467,7 @@ namespace server_library
 				break;
 			}
 			memcpy(&packet_size, buf, kPacketSizeLength);
-			auto current_size = packet_size;
-
-			if (current_size <= 0 || current_size > session->GetRecvBufferSize())
+			if (packet_size <= 0 || packet_size > session->GetRecvBufferSize())
 			{
 				log_->Write(LogType::L_ERROR, "%s | Wrong packet is received", __FUNCTION__);
 				if (session->CloseCompletely())
@@ -471,7 +477,7 @@ namespace server_library
 				return;
 			}
 
-			if (remain >= static_cast<DWORD>(current_size))
+			if (remain >= static_cast<DWORD>(packet_size))
 			{
 				auto msg = unique_message_pool_->AllocateMsg();
 				if (nullptr == msg)
@@ -481,13 +487,13 @@ namespace server_library
 				}
 
 				msg->SetMessagae(MessageType::ONRECV, buf);
-				if (PostMessageToQueue(session, msg, packet_size) != Result::SUCCESS)
+				if (PostMessageIOCP(session, msg, packet_size) != Result::SUCCESS)
 				{
 					unique_message_pool_->DeallocateMsg(msg);
 					return;
 				}
-				remain -= current_size;
-				buf += current_size;
+				remain -= packet_size;
+				buf += packet_size;
 			}
 			else
 			{

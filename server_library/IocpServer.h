@@ -18,7 +18,7 @@ namespace server_library
 		bool Start();
 		void End();
 		void Init(ServerConfig* config, ILog* log);
-		bool ProcessIocpMessage(OUT char& msgType, OUT int& session_index, OUT char** buf, OUT short& copy_size, int wait_mill_sec);
+		bool ProcessMessageIOCP(OUT char& msgType, OUT int& session_index, OUT char** buf, OUT short& copy_size, int wait_mill_sec);
 		void SendPacket(const int session_index, const void* packet, const short packet_size);
 
 		int GetMaxPacketSize()		{ return server_config_->max_packet_size_; }
@@ -34,7 +34,7 @@ namespace server_library
 		Session* GetSession(const int session_index);
 		bool CreateWorkerThread();
 		void WorkerThread();
-		Result PostMessageToQueue(Session* session, Message* msg, const DWORD packet_size = 0);
+		Result PostMessageIOCP(Session* session, Message* msg, const DWORD packet_size = 0);
 		void HandleWorkerThreadException(Session* session, const OverlappedEx* overlapped_ex);
 		void HandleSessionCloseException(Session* session);
 
@@ -55,7 +55,7 @@ namespace server_library
 
 		vector<Session*> session_vec_;
 		HANDLE worker_iocp_= INVALID_HANDLE_VALUE;
-		HANDLE logic_iocp_ = INVALID_HANDLE_VALUE;
+		HANDLE message_iocp_ = INVALID_HANDLE_VALUE;
 
 		bool is_worker_thread_running_= true;
 		vector<unique_ptr<thread>> worker_thread_vec_;

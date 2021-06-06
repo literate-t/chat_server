@@ -59,7 +59,7 @@ namespace chat_server_library
 			int session_index = 0;
 			short copy_size = 0;
 
-			if (!server_->ProcessIocpMessage(type, session_index, &buf, copy_size, wait_milli_sec))
+			if (!server_->ProcessMessageIOCP(type, session_index, &buf, copy_size, wait_milli_sec))
 			{
 				continue;
 			}

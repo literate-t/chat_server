@@ -153,10 +153,10 @@ namespace server_library
 
 	Result Session::PostRecv(const int forward_length, const DWORD remain)
 	{
-		assert(connected_ == TRUE && recv_overlapped_ex_ != nullptr);
+		assert(TRUE == connected_ && nullptr != recv_overlapped_ex_);
 
 		recv_overlapped_ex_->mode_ = IoMode::RECV;
-		recv_overlapped_ex_->remain_ = remain;
+		//recv_overlapped_ex_->remain_ = remain;
 
 		recv_overlapped_ex_->wsabuf_.len = max_packet_size_;
 		recv_overlapped_ex_->wsabuf_.buf = ring_recv_buffer_.ForwardRecvPos(forward_length);
