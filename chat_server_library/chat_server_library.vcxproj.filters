@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="PacketManager.cpp" />
+    <ClCompile Include="Lobby.cpp" />
+    <ClCompile Include="LobbyManager.cpp" />
+    <ClCompile Include="Room.cpp" />
+    <ClCompile Include="User.cpp" />
+    <ClCompile Include="UserManager.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="PacketManagerLobby.cpp" />
+    <ClCompile Include="PacketManagerRoom.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Main.h" />
+    <ClInclude Include="ErrorCode.h" />
+    <ClInclude Include="Packet.h" />
+    <ClInclude Include="PacketId.h" />
+    <ClInclude Include="Definitions.h" />
+    <ClInclude Include="PacketManager.h" />
+    <ClInclude Include="Lobby.h" />
+    <ClInclude Include="LobbyManager.h" />
+    <ClInclude Include="Room.h" />
+    <ClInclude Include="User.h" />
+    <ClInclude Include="UserManager.h" />
+    <ClInclude Include="stdafx.h" />
+  </ItemGroup>
+</Project>
