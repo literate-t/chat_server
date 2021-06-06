@@ -6,4 +6,4 @@ x64/
 **/x64/
 ChatClient/bin/
 ChatClient/obj/
-vs/
+.vs/
