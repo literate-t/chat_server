@@ -94,7 +94,7 @@ namespace server_library
 		// 카운트가 남았다면 소켓은 끊고 iocp에서 완료를 기다린다
 		else if (connected_ && (accept_io_count_ != 0 || recv_io_count_ != 0 || send_io_count_ != 0))
 		{
-			Disconnect();
+			//Disconnect();
 			return false;
 		}
 

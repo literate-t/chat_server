@@ -40,7 +40,7 @@ namespace chat_server_library
 		void SendAllUsersInfoToSession(short packet_id, const int session_index);
 		void NotifyToAll(short packet_id, const int user_index);
 		ErrorCode LeaveLobby(const int user_index);
-		ErrorCode LeaveLobbyToEnterRomm(const int user_index);
+		ErrorCode LeaveLobbyToEnterRoom(const int user_index);
 
 		size_t GetUserCount();
 		Room* CreateRoom(short index);

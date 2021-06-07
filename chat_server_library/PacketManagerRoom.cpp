@@ -71,7 +71,7 @@ namespace chat_server_library
 		lobby->NotifyToAll(static_cast<short>(PacketId::LOBBY_LEAVE_USER_NTF), user->GetIndex());
 
 		// lobby에서 나가고 Domain은 Room으로 변경
-		lobby->LeaveLobbyToEnterRomm(user->GetIndex());
+		lobby->LeaveLobbyToEnterRoom(user->GetIndex());
 
 		// 방 입장 알림
 		packet_res.id_ = static_cast<short>(PacketId::ROOM_ENTER_RES);

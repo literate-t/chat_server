@@ -112,7 +112,7 @@ namespace chat_server_library
 		findIter->user_ = nullptr;
 	}
 
-	ErrorCode Lobby::LeaveLobbyToEnterRomm(const int user_index)
+	ErrorCode Lobby::LeaveLobbyToEnterRoom(const int user_index)
 	{
 		auto user = FindUser(user_index);
 		if (user == nullptr) 
