@@ -199,7 +199,7 @@ namespace server_library
 	{
 		if (InterlockedCompareExchange(reinterpret_cast<long*>(&sendable_), FALSE, TRUE))
 		{
-			if (buffer == nullptr)
+			if (nullptr == buffer)
 			{
 				InterlockedExchange(reinterpret_cast<long*>(&sendable_), TRUE);
 				log_->Write(LogType::L_ERROR, "%s | ring_send_buffer_.GetBuffer() failure", __FUNCTION__);
@@ -229,7 +229,7 @@ namespace server_library
 				nullptr
 			);
 
-			if (result == SOCKET_ERROR && WSAGetLastError() != WSA_IO_PENDING)
+			if (SOCKET_ERROR == result && WSAGetLastError() != WSA_IO_PENDING)
 			{
 				DecrementSendIoCount();
 				log_->Write(LogType::L_ERROR, "%s | WSASend() failure[%d]", __FUNCTION__, WSAGetLastError());
@@ -281,7 +281,7 @@ namespace server_library
 		if (0 != remoteAddrLen)
 		{
 			SOCKADDR_IN* remoteAddrIn = reinterpret_cast<SOCKADDR_IN*>(remoteAddr);
-			if (remoteAddrIn != nullptr)
+			if (nullptr != remoteAddrIn)
 			{
 				char ip[kMaxIpLength] = { 0 };
 				inet_ntop(AF_INET, &remoteAddrIn->sin_addr, ip, kMaxIpLength);
