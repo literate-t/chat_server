@@ -1,0 +1,10 @@
+Debug/
+Release/
+x64/
+**/Debug/
+**/Release/
+**/x64/
+ChatClient/bin/
+ChatClient/obj/
+.vs/
+*.sln
