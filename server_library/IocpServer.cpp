@@ -13,10 +13,10 @@ namespace server_library
 	bool IocpServer::Start()
 	{
 		auto result = CreateListenSocket();
-		assert(result == Result::SUCCESS);
+		assert(Result::SUCCESS == result);
 
 		result = CreateIocp();
-		assert(result == Result::SUCCESS);
+		assert(Result::SUCCESS == result);
 
 		auto bresult = CreateMessagePool();
 		assert(true == bresult);
@@ -36,7 +36,7 @@ namespace server_library
 
 	void IocpServer::End()
 	{
-		if (worker_iocp_ != INVALID_HANDLE_VALUE)
+		if (INVALID_HANDLE_VALUE != worker_iocp_)
 		{
 			is_worker_thread_running_ = false;
 			CloseHandle(worker_iocp_);
@@ -50,12 +50,12 @@ namespace server_library
 			}
 		}
 
-		if (message_iocp_ != INVALID_HANDLE_VALUE)
+		if (INVALID_HANDLE_VALUE != message_iocp_)
 		{
 			CloseHandle(message_iocp_);
 		}
 
-		if (listen_socket_ != INVALID_SOCKET)
+		if (INVALID_SOCKET != listen_socket_)
 		{
 			closesocket(listen_socket_);
 			listen_socket_ = INVALID_SOCKET;
@@ -69,7 +69,7 @@ namespace server_library
 	void IocpServer::SendPacket(const int session_index, const void* packet, const short packet_size)
 	{
 		auto session = GetSession(session_index);
-		if (session == nullptr)
+		if (nullptr == session)
 		{
 			log_->Write(LogType::L_ERROR, "%s | GetSession() failure", __FUNCTION__);
 			return;
@@ -82,7 +82,7 @@ namespace server_library
 			log_->Write(LogType::L_ERROR, "%s | Not connected failure", __FUNCTION__);
 			return;
 		}
-		else if (result == Result::RESERVED_BUFFER_EMPTY)
+		else if (Result::RESERVED_BUFFER_EMPTY == result)
 		{
 			if (session->CloseCompletely())
 			{
@@ -113,7 +113,7 @@ namespace server_library
 		}
 
 		listen_socket_ = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_IP, nullptr, 0, WSA_FLAG_OVERLAPPED);
-		if (listen_socket_ == INVALID_SOCKET)
+		if (INVALID_SOCKET == listen_socket_)
 		{
 			log_->Write(LogType::L_ERROR, "%s | WSASocket() failure: error[%d]", __FUNCTION__, WSAGetLastError());
 			return Result::FAIL_CREATE_LISTENSOCKET;
@@ -125,13 +125,13 @@ namespace server_library
 		addr_in.sin_port = htons(server_config_->port_);
 		addr_in.sin_addr.s_addr = htonl(INADDR_ANY);
 
-		if (bind(listen_socket_, (sockaddr*)&addr_in, sizeof addr_in) == SOCKET_ERROR)
+		if (SOCKET_ERROR == bind(listen_socket_, (sockaddr*)&addr_in, sizeof addr_in))
 		{
 			log_->Write(LogType::L_ERROR, "%s | bind() failure[%d]", __FUNCTION__, GetLastError());
 			return Result::FAIL_BIND_LISTENSOCKET;
 		}
 
-		if (listen(listen_socket_, server_config_->back_log_count_) == SOCKET_ERROR)
+		if (SOCKET_ERROR == listen(listen_socket_, server_config_->back_log_count_))
 		{
 			log_->Write(LogType::L_ERROR, "%s | listen() failure[%d]", __FUNCTION__, GetLastError());
 			return Result::FAIL_LISTEN_LISTENSOCKET;
@@ -142,14 +142,14 @@ namespace server_library
 	Result IocpServer::CreateIocp()
 	{
 		worker_iocp_ = CreateIoCompletionPort(INVALID_HANDLE_VALUE, nullptr, 0, 0);
-		if (worker_iocp_ == INVALID_HANDLE_VALUE)
+		if (INVALID_HANDLE_VALUE == worker_iocp_)
 		{
 			log_->Write(LogType::L_ERROR, "%s | CreateIoCompletionPort() failure[%d]", __FUNCTION__, WSAGetLastError());
 			return Result::FAIL_CREATE_WORKER_IOCP;
 		}
 
 		message_iocp_ = CreateIoCompletionPort(INVALID_HANDLE_VALUE, nullptr, 0, 1);
-		if (message_iocp_ == INVALID_HANDLE_VALUE)
+		if (INVALID_HANDLE_VALUE == message_iocp_)
 		{
 			log_->Write(LogType::L_ERROR, "%s | CreateIoCompletionPort() failure[%d]", __FUNCTION__, WSAGetLastError());
 			return Result::FAIL_CREATE_LOGIC_IOCP;
@@ -171,7 +171,7 @@ namespace server_library
 	bool IocpServer::BindListenSocketIocp()
 	{
 		auto iocp = CreateIoCompletionPort(reinterpret_cast<HANDLE>(listen_socket_), worker_iocp_, 0, 0);
-		if (iocp == INVALID_HANDLE_VALUE || iocp != worker_iocp_)
+		if (INVALID_HANDLE_VALUE == iocp || worker_iocp_ != iocp)
 		{
 			log_->Write(LogType::L_ERROR, "%s | CreateIoCompletionPort() failure: error[%d]", __FUNCTION__, WSAGetLastError());
 			return false;
@@ -508,7 +508,7 @@ namespace server_library
 	void IocpServer::DoSend(OverlappedEx* overlapped_ex, const DWORD size)
 	{
 		Session* session = GetSession(overlapped_ex->session_index_);
-		if (session == nullptr)
+		if (nullptr == session)
 		{
 			log_->Write(LogType::L_ERROR, "%s | session is nullptr", __FUNCTION__);
 			return;
@@ -534,7 +534,7 @@ namespace server_library
 				&overlapped_ex->overlapped_, nullptr
 			);
 
-			if (result == SOCKET_ERROR && WSAGetLastError() != WSA_IO_PENDING)
+			if (SOCKET_ERROR == result && WSA_IO_PENDING != WSAGetLastError())
 			{
 				session->DecrementSendIoCount();
 				log_->Write(LogType::L_ERROR, "%s | WSASend() failure[%d]", __FUNCTION__, WSAGetLastError());
@@ -554,7 +554,7 @@ namespace server_library
 
 	void IocpServer::DoPostConnection(Session* session, const Message* msg, OUT char& msg_type, OUT int& session_index)
 	{
-		if (session->IsConnected() == false)
+		if (false == session->IsConnected())
 		{
 			log_->Write(LogType::L_ERROR, "%s | Not connected", __FUNCTION__);
 			return;
@@ -573,7 +573,7 @@ namespace server_library
 
 	void IocpServer::DoPostRecvPacket(Session* session, const Message* msg, OUT char& msg_type, OUT int& session_index, OUT char** buf, OUT short& copy_size, const DWORD size)
 	{
-		if (msg->contents_ == nullptr)
+		if (nullptr == msg->contents_)
 		{
 			log_->Write(LogType::L_ERROR, "%s | Message contents is nullptre", __FUNCTION__);
 			return;

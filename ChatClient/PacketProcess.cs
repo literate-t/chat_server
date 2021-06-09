@@ -162,7 +162,7 @@ namespace ChatClient {
                 buttonEnterRoom.Enabled = false;
                 buttonLeaveRoom.Enabled = true;
                 buttonLogoff.Enabled = false;
-                IsRoom = true;
+                _isRoom = true;
             } else {
                 labelStatus.Text = string.Format($"{textBoxRoomNumber.Text}번 방 입장 실패");
             }

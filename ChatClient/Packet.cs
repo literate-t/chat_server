@@ -10,18 +10,18 @@ namespace ChatClient {
     }
 
     public class LoginRequestPacket {
-        byte[] UserId = new byte[PacketDefine.kMaxUserIdLength + 1];
-        byte[] UserPw = new byte[PacketDefine.kMaxUserPwLength + 1];
+        byte[] _userId = new byte[PacketDefine.kMaxUserIdLength + 1];
+        byte[] _userPw = new byte[PacketDefine.kMaxUserPwLength + 1];
 
         public void SetData(string userId, string userPw) {
-            Encoding.UTF8.GetBytes(userId).CopyTo(UserId, 0);
-            Encoding.UTF8.GetBytes(userPw).CopyTo(UserPw, 0);
+            Encoding.UTF8.GetBytes(userId).CopyTo(_userId, 0);
+            Encoding.UTF8.GetBytes(userPw).CopyTo(_userPw, 0);
         }
 
         public byte[] ToBytes() {
             List<byte> data = new List<byte>();
-            data.AddRange(UserId);
-            data.AddRange(UserPw);
+            data.AddRange(_userId);
+            data.AddRange(_userPw);
             return data.ToArray();
         }
     }
