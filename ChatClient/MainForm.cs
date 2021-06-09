@@ -7,61 +7,61 @@ using System.Text;
 
 namespace ChatClient {
     public partial class MainForm : Form {
-        SimpleNetwork Network = new SimpleNetwork();
+        SimpleNetwork _network = new SimpleNetwork();
 
-        bool IsNetworkThreadRunning = false;
-        bool IsRoom = false;
+        bool _isNetworkThreadRunning = false;
+        bool _isRoom = false;
 
-        Thread NetworkReadThread = null;
-        Thread NetworkSendThread = null;
+        Thread _networkReadThread = null;
+        Thread _networkSendThread = null;
 
-        PacketBufferManager PacketBuffer = new PacketBufferManager();
-        Queue<PacketData> RecvPacketQueue = new Queue<PacketData>();
-        Queue<byte[]> SendPacketQueue = new Queue<byte[]>();
+        PacketBufferManager _packetBuffer = new PacketBufferManager();
+        Queue<PacketData> _recvPacketQueue = new Queue<PacketData>();
+        Queue<byte[]> _sendPacketQueue = new Queue<byte[]>();
 
-        DispatcherTimer dispatcherTimer;
+        DispatcherTimer _dispatcherTimer;
 
         public MainForm() {
             InitializeComponent();
         }
 
         private void MainForm_Load(object sender, EventArgs e) {
-            PacketBuffer.Init(8096 * 10, PacketDefine.kPacketHeaderSize, 1024);
+            _packetBuffer.Init(8096 * 10, PacketDefine.kPacketHeaderSize, 1024);
 
-            IsNetworkThreadRunning = true;
-            NetworkReadThread = new Thread(NetworkReadProcess);
-            NetworkReadThread.Start();
-            NetworkSendThread = new Thread(NetworkSendProcess);
-            NetworkSendThread.Start();
+            _isNetworkThreadRunning = true;
+            _networkReadThread = new Thread(NetworkReadProcess);
+            _networkReadThread.Start();
+            _networkSendThread = new Thread(NetworkSendProcess);
+            _networkSendThread.Start();
 
-            dispatcherTimer = new DispatcherTimer();
-            dispatcherTimer.Tick += new EventHandler(BackGroundProcess);
-            dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 100);
-            dispatcherTimer.Start();
+            _dispatcherTimer = new DispatcherTimer();
+            _dispatcherTimer.Tick += new EventHandler(BackGroundProcess);
+            _dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 100);
+            _dispatcherTimer.Start();
 
             buttonLogoff.Enabled = false;
             SetPacketHandler();
         }
 
         void NetworkReadProcess() {
-            while (IsNetworkThreadRunning) {
+            while (_isNetworkThreadRunning) {
                 Thread.Sleep(1);
-                if (Network.IsConnected() == false) {
+                if (_network.IsConnected() == false) {
                     continue;
                 }
 
-                var recvData = Network.Receive();
+                var recvData = _network.Receive();
                 if (recvData != null) {
-                    PacketBuffer.Write(recvData.Item2, 0, recvData.Item1);
+                    _packetBuffer.Write(recvData.Item2, 0, recvData.Item1);
                     while (true) {
-                        var data = PacketBuffer.Read();
+                        var data = _packetBuffer.Read();
                         if (data.Count < 1) {
                             break;
                         }
                         var packetSize = BitConverter.ToInt16(data.Array, data.Offset);
 
                         if (data.Count < packetSize) {
-                            PacketBuffer.SetReadPosToPrev();
+                            _packetBuffer.SetReadPosToPrev();
                             break;
                         }
 
@@ -70,8 +70,8 @@ namespace ChatClient {
                         packet.PacketId = BitConverter.ToInt16(data.Array, data.Offset + 2);
                         packet.BodyData = new byte[packet.DataSize];
                         Buffer.BlockCopy(data.Array, data.Offset + PacketDefine.kPacketHeaderSize, packet.BodyData, 0, packet.DataSize);
-                        lock (((System.Collections.ICollection)RecvPacketQueue).SyncRoot) {
-                            RecvPacketQueue.Enqueue(packet);
+                        lock (((System.Collections.ICollection)_recvPacketQueue).SyncRoot) {
+                            _recvPacketQueue.Enqueue(packet);
                         }
                     }
                 }
@@ -79,16 +79,16 @@ namespace ChatClient {
         }
 
         void NetworkSendProcess() {
-            while (IsNetworkThreadRunning) {
+            while (_isNetworkThreadRunning) {
                 Thread.Sleep(1);
 
-                if (Network.IsConnected() == false)
+                if (_network.IsConnected() == false)
                     continue;
 
-                lock (((System.Collections.ICollection)SendPacketQueue).SyncRoot) {
-                    if (SendPacketQueue.Count > 0) {
-                        var packet = SendPacketQueue.Dequeue();
-                        Network.Send(packet);
+                lock (((System.Collections.ICollection)_sendPacketQueue).SyncRoot) {
+                    if (_sendPacketQueue.Count > 0) {
+                        var packet = _sendPacketQueue.Dequeue();
+                        _network.Send(packet);
                     }
                 }
             }
@@ -96,9 +96,9 @@ namespace ChatClient {
 
         void BackGroundProcess(object sender, EventArgs e) {
             try {
-                lock (((System.Collections.ICollection)RecvPacketQueue).SyncRoot) {
-                    if (RecvPacketQueue.Count > 0) {
-                        var packet = RecvPacketQueue.Dequeue();
+                lock (((System.Collections.ICollection)_recvPacketQueue).SyncRoot) {
+                    if (_recvPacketQueue.Count > 0) {
+                        var packet = _recvPacketQueue.Dequeue();
                         if (packet.PacketId != 0)
                             PacketProcess(packet);
                     }
@@ -110,7 +110,7 @@ namespace ChatClient {
         }
 
         private bool PostSend(PacketId packetId, byte[] bodyData) {
-            if (Network.IsConnected() == false) {
+            if (_network.IsConnected() == false) {
                 labelStatus.Text = string.Format($"서버와의 연결이 끊어졌습니다.");
                 return false;
             }
@@ -123,18 +123,16 @@ namespace ChatClient {
             List<byte> data = new List<byte>();
             data.AddRange(BitConverter.GetBytes((Int16)packetSize));
             data.AddRange(BitConverter.GetBytes((Int16)packetId));
+            data.AddRange(bodyData);
 
-            if (bodyData != null)
-                data.AddRange(bodyData);
-
-            SendPacketQueue.Enqueue(data.ToArray());
+            _sendPacketQueue.Enqueue(data.ToArray());
             return true;
         }
 
         private void ButtonConnect_Click(object sender, EventArgs e) {
             string ip = "127.0.0.1";
             int port = 32452;
-            if (Network.Connect(ip, port)) {
+            if (_network.Connect(ip, port)) {
                 labelStatus.Text = string.Format($"{DateTime.Now} / 서버 접속 완료");
                 buttonConnect.Enabled = false;
             } else {
@@ -150,16 +148,16 @@ namespace ChatClient {
         }
 
         private void buttonLogoff_Click(object sender, EventArgs e) {
-            Network.Close();
+            _network.Close();
             Close();
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e) {
-            Network.Close();
-            IsNetworkThreadRunning = false;
-            NetworkSendThread.Join();
-            NetworkReadThread.Join();
-            dispatcherTimer.Stop();
+            _network.Close();
+            _isNetworkThreadRunning = false;
+            _networkSendThread.Join();
+            _networkReadThread.Join();
+            _dispatcherTimer.Stop();
         }
 
         private void buttonEnterLobby_Click(object sender, EventArgs e) {
@@ -202,7 +200,7 @@ namespace ChatClient {
 
         private void textBoxChat_TextChanged(object sender, EventArgs e) {
             var length = textBoxChat.Text.Length;
-            if (IsRoom == true && length > 0) {
+            if (_isRoom == true && length > 0) {
                 buttonSendMsg.Enabled = true;
             } else {
                 buttonSendMsg.Enabled = false;
