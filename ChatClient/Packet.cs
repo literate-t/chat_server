@@ -13,15 +13,15 @@ namespace ChatClient {
         byte[] _userId = new byte[PacketDefine.kMaxUserIdLength + 1];
         byte[] _userPw = new byte[PacketDefine.kMaxUserPwLength + 1];
 
-        public void SetData(string userId, string userPw) {
+        public void SetData(string userId) {
             Encoding.UTF8.GetBytes(userId).CopyTo(_userId, 0);
-            Encoding.UTF8.GetBytes(userPw).CopyTo(_userPw, 0);
+            //Encoding.UTF8.GetBytes(userPw).CopyTo(_userPw, 0);
         }
 
         public byte[] ToBytes() {
             List<byte> data = new List<byte>();
             data.AddRange(_userId);
-            data.AddRange(_userPw);
+            //data.AddRange(_userPw);
             return data.ToArray();
         }
     }

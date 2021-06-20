@@ -31,16 +31,16 @@ namespace ChatClient {
             var errorCode = BitConverter.ToInt16(bodyData, 0);
             if (errorCode == (short)ErrorCode.NONE) {
                 labelStatus.Text = string.Format($"로그인 완료");
-                buttonLogin.Enabled = false;
+                //buttonLogin.Enabled = false;
                 buttonLogoff.Enabled = true;
                 buttonEnterLobby.Enabled = true;
             } else if (errorCode == (short)ErrorCode.USER_MGR_ID_DUPLICATION) {
                 labelStatus.Text = string.Format($"이미 로그인 되어 있는 아이디");
-                buttonLogin.Enabled = true;
+                //buttonLogin.Enabled = true;
                 buttonLogoff.Enabled = false;
             } else {
                 labelStatus.Text = string.Format($"아이디/비밀번호 불일치");
-                buttonLogin.Enabled = true;
+                //buttonLogin.Enabled = true;
                 buttonLogoff.Enabled = false;
             }
         }
@@ -50,7 +50,7 @@ namespace ChatClient {
             if (errorCode == (short)ErrorCode.NONE) {
                 labelStatus.Text = string.Format($"로그오프 완료");
                 buttonLogoff.Enabled = false;
-                buttonLogin.Enabled = true;
+                //buttonLogin.Enabled = true;
                 buttonEnterLobby.Enabled = false;
                 buttonConnect.Enabled = true;
             } else {
@@ -218,7 +218,8 @@ namespace ChatClient {
             if (errorCode == (short)ErrorCode.NONE) {
                 var userIdSize = BitConverter.ToInt16(bodyData, 2);
                 var userId = Encoding.UTF8.GetString(bodyData, 4, userIdSize);
-                if (userId == textBoxId.Text) {
+                //if (userId == textBoxId.Text) {
+                if (userId == _id) { 
                     userId = "나";
                 }
 

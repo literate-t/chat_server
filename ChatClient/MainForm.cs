@@ -11,6 +11,7 @@ namespace ChatClient {
 
         bool _isNetworkThreadRunning = false;
         bool _isRoom = false;
+        string _id = null;
 
         Thread _networkReadThread = null;
         Thread _networkSendThread = null;
@@ -21,7 +22,8 @@ namespace ChatClient {
 
         DispatcherTimer _dispatcherTimer;
 
-        public MainForm() {
+        public MainForm(string id = "kim tae hyeon") {
+            _id = id;
             InitializeComponent();
         }
 
@@ -135,14 +137,17 @@ namespace ChatClient {
             if (_network.Connect(ip, port)) {
                 labelStatus.Text = string.Format($"{DateTime.Now} / 서버 접속 완료");
                 buttonConnect.Enabled = false;
+                ButtonLogin_Click();
             } else {
                 labelStatus.Text = string.Format($"{DateTime.Now} / 서버 접속 실패");
             }
         }
 
-        private void ButtonLogin_Click(object sender, EventArgs e) {
+        //private void ButtonLogin_Click(object sender, EventArgs e) {
+        private void ButtonLogin_Click() {
             var loginRequest = new LoginRequestPacket();
-            loginRequest.SetData(textBoxId.Text, textBoxPw.Text);
+            //loginRequest.SetData(textBoxId.Text, textBoxPw.Text);
+            loginRequest.SetData(_id);
             PostSend(PacketId.LOGIN_REQ, loginRequest.ToBytes());
             labelStatus.Text = string.Format($"로그인 요청");
         }

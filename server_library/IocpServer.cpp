@@ -77,26 +77,30 @@ namespace server_library
 
 		char* send_buf_reserved = nullptr;
 		auto result = session->ReserveSendPacketBuffer(&send_buf_reserved, packet_size);
-		if (result == Result::RESERVED_BUFFER_NOT_CONNECTED)
+		if (Result::RESERVED_BUFFER_NOT_CONNECTED == result)
 		{
 			log_->Write(LogType::L_ERROR, "%s | Not connected failure", __FUNCTION__);
-			return;
-		}
-		else if (Result::RESERVED_BUFFER_EMPTY == result)
-		{
-			if (session->CloseCompletely())
+			if (session->CloseCompletely(true))
 			{
 				HandleSessionCloseException(session);
 			}
-
+			return;
+		}
+		// 받을 수 있는 최대 패킷을 초과함(비정상적 패킷)
+		else if (Result::RESERVED_BUFFER_EMPTY == result)
+		{
 			log_->Write(LogType::L_ERROR, "%s | RingSendBuffer.ForwardSendPos() failure", __FUNCTION__);
+			if (session->CloseCompletely(true))
+			{
+				HandleSessionCloseException(session);
+			}
 			return;
 		}
 		memcpy(send_buf_reserved, packet, packet_size);
 
 		if (false == session->PostSend(packet_size, send_buf_reserved))
 		{
-			if (session->CloseCompletely())
+			if (session->CloseCompletely(true))
 			{
 				HandleSessionCloseException(session);
 			}
@@ -241,8 +245,10 @@ namespace server_library
 				INFINITE
 			);
 
+			
 			if (!result || (0 == bytes && IoMode::ACCEPT != overlapped_ex->mode_))
 			{
+				log_->Write(LogType::L_INFO, "%s | GQCS result = %d bytes=%d", __FUNCTION__, result, bytes);
 				HandleWorkerThreadException(session, overlapped_ex);
 				continue;
 			}
@@ -254,7 +260,7 @@ namespace server_library
 					log_->Write(LogType::L_ERROR, "%s | GetQueuedCompletionStatus() failure[%d]", __FUNCTION__, WSAGetLastError());
 					continue;
 				}
-				log_->Write(LogType::L_ERROR, "%s | overlapped_ex is nullptr[%d]", __FUNCTION__, WSAGetLastError());
+				log_->Write(LogType::L_ERROR, "%s | overlapped_ex is nullptr[%d] and WSA_IO_PENDING", __FUNCTION__, WSAGetLastError());
 				continue;
 			}
 
@@ -389,7 +395,7 @@ namespace server_library
 		if (false == session->SetAddressInfo())
 		{
 			log_->Write(LogType::L_ERROR, "%s | GetAcceptExSockaddrs() failure[%d]", __FUNCTION__, WSAGetLastError());
-			if (session->CloseCompletely())
+			if (session->CloseCompletely(true))
 			{
 				HandleSessionCloseException(session);
 			}
@@ -398,7 +404,7 @@ namespace server_library
 
 		if (!session->BindIocp(worker_iocp_))
 		{
-			if (session->CloseCompletely())
+			if (session->CloseCompletely(true))
 			{
 				HandleSessionCloseException(session);
 			}
@@ -439,6 +445,7 @@ namespace server_library
 		//auto forwardLength = overlapped_ex->remain_;
 
 		auto remain = size;
+		log_->Write(LogType::L_INFO, "%s | remain was %d", __FUNCTION__, remain);
 		auto forward_length = size;
 		auto buf = overlapped_ex->wsabuf_.buf;
 
@@ -452,7 +459,7 @@ namespace server_library
 		//if (session->PostRecv(forward_length, remain) != Result::SUCCESS)
 		if (session->PostRecv(forward_length) != Result::SUCCESS)
 		{
-			if (session->CloseCompletely())
+			if (session->CloseCompletely(true))
 			{
 				HandleSessionCloseException(session);
 			}
@@ -473,7 +480,7 @@ namespace server_library
 			if (packet_size <= 0 || packet_size > session->GetRecvBufferSize())
 			{
 				log_->Write(LogType::L_ERROR, "%s | Wrong packet is received", __FUNCTION__);
-				if (session->CloseCompletely())
+				if (session->CloseCompletely(true))
 				{
 					HandleSessionCloseException(session);
 				}
@@ -538,15 +545,16 @@ namespace server_library
 			{
 				session->DecrementSendIoCount();
 				log_->Write(LogType::L_ERROR, "%s | WSASend() failure[%d]", __FUNCTION__, WSAGetLastError());
-				if (session->CloseCompletely())
+				if (session->CloseCompletely(true))
 				{
 					HandleSessionCloseException(session);
 				}
 				return;
 			}
 		}
+
 		// 모든 메시지 전송
-		else
+		else if (static_cast<DWORD>(overlapped_ex->total_bytes_) == overlapped_ex->remain_)
 		{
 			session->SetSendAvaliable();
 		}

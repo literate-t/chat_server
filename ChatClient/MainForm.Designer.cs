@@ -23,14 +23,6 @@
         /// 이 메서드의 내용을 코드 편집기로 수정하지 마세요.
         /// </summary>
         private void InitializeComponent() {
-            this.groupBoxSetup = new System.Windows.Forms.GroupBox();
-            this.textBoxPw = new System.Windows.Forms.TextBox();
-            this.labelPw = new System.Windows.Forms.Label();
-            this.textBoxId = new System.Windows.Forms.TextBox();
-            this.buttonLogoff = new System.Windows.Forms.Button();
-            this.labelId = new System.Windows.Forms.Label();
-            this.buttonConnect = new System.Windows.Forms.Button();
-            this.buttonLogin = new System.Windows.Forms.Button();
             this.groupBoxLobby = new System.Windows.Forms.GroupBox();
             this.listBoxLobby = new System.Windows.Forms.ListBox();
             this.buttonLeaveLobby = new System.Windows.Forms.Button();
@@ -47,92 +39,14 @@
             this.buttonEnterRoom = new System.Windows.Forms.Button();
             this.textBoxRoomNumber = new System.Windows.Forms.TextBox();
             this.labelStatus = new System.Windows.Forms.Label();
-            this.groupBoxSetup.SuspendLayout();
+            this.buttonConnect = new System.Windows.Forms.Button();
+            this.buttonLogoff = new System.Windows.Forms.Button();
+            this.groupBoxSetup = new System.Windows.Forms.GroupBox();
             this.groupBoxLobby.SuspendLayout();
             this.groupBoxRoom.SuspendLayout();
             this.groupBoxUserList.SuspendLayout();
+            this.groupBoxSetup.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // groupBoxSetup
-            // 
-            this.groupBoxSetup.Controls.Add(this.textBoxPw);
-            this.groupBoxSetup.Controls.Add(this.labelPw);
-            this.groupBoxSetup.Controls.Add(this.textBoxId);
-            this.groupBoxSetup.Controls.Add(this.buttonLogoff);
-            this.groupBoxSetup.Controls.Add(this.labelId);
-            this.groupBoxSetup.Controls.Add(this.buttonConnect);
-            this.groupBoxSetup.Controls.Add(this.buttonLogin);
-            this.groupBoxSetup.Location = new System.Drawing.Point(12, 12);
-            this.groupBoxSetup.Name = "groupBoxSetup";
-            this.groupBoxSetup.Size = new System.Drawing.Size(340, 77);
-            this.groupBoxSetup.TabIndex = 0;
-            this.groupBoxSetup.TabStop = false;
-            this.groupBoxSetup.Text = "사용자 정보";
-            // 
-            // textBoxPw
-            // 
-            this.textBoxPw.Location = new System.Drawing.Point(169, 47);
-            this.textBoxPw.Name = "textBoxPw";
-            this.textBoxPw.Size = new System.Drawing.Size(82, 21);
-            this.textBoxPw.TabIndex = 3;
-            // 
-            // labelPw
-            // 
-            this.labelPw.AutoSize = true;
-            this.labelPw.Font = new System.Drawing.Font("굴림", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.labelPw.Location = new System.Drawing.Point(104, 49);
-            this.labelPw.Name = "labelPw";
-            this.labelPw.Size = new System.Drawing.Size(59, 13);
-            this.labelPw.TabIndex = 2;
-            this.labelPw.Text = "비밀번호";
-            // 
-            // textBoxId
-            // 
-            this.textBoxId.Location = new System.Drawing.Point(169, 20);
-            this.textBoxId.Name = "textBoxId";
-            this.textBoxId.Size = new System.Drawing.Size(82, 21);
-            this.textBoxId.TabIndex = 1;
-            // 
-            // buttonLogoff
-            // 
-            this.buttonLogoff.Enabled = false;
-            this.buttonLogoff.Location = new System.Drawing.Point(257, 45);
-            this.buttonLogoff.Name = "buttonLogoff";
-            this.buttonLogoff.Size = new System.Drawing.Size(67, 23);
-            this.buttonLogoff.TabIndex = 2;
-            this.buttonLogoff.Text = "로그오프";
-            this.buttonLogoff.UseVisualStyleBackColor = true;
-            this.buttonLogoff.Click += new System.EventHandler(this.buttonLogoff_Click);
-            // 
-            // labelId
-            // 
-            this.labelId.AutoSize = true;
-            this.labelId.Font = new System.Drawing.Font("굴림", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.labelId.Location = new System.Drawing.Point(117, 24);
-            this.labelId.Name = "labelId";
-            this.labelId.Size = new System.Drawing.Size(46, 13);
-            this.labelId.TabIndex = 0;
-            this.labelId.Text = "아이디";
-            // 
-            // buttonConnect
-            // 
-            this.buttonConnect.Location = new System.Drawing.Point(17, 25);
-            this.buttonConnect.Name = "buttonConnect";
-            this.buttonConnect.Size = new System.Drawing.Size(77, 37);
-            this.buttonConnect.TabIndex = 1;
-            this.buttonConnect.Text = "서버연결";
-            this.buttonConnect.UseVisualStyleBackColor = true;
-            this.buttonConnect.Click += new System.EventHandler(this.ButtonConnect_Click);
-            // 
-            // buttonLogin
-            // 
-            this.buttonLogin.Location = new System.Drawing.Point(257, 18);
-            this.buttonLogin.Name = "buttonLogin";
-            this.buttonLogin.Size = new System.Drawing.Size(67, 23);
-            this.buttonLogin.TabIndex = 1;
-            this.buttonLogin.Text = "로그인";
-            this.buttonLogin.UseVisualStyleBackColor = true;
-            this.buttonLogin.Click += new System.EventHandler(this.ButtonLogin_Click);
             // 
             // groupBoxLobby
             // 
@@ -301,6 +215,37 @@
             this.labelStatus.TabIndex = 6;
             this.labelStatus.Text = "상태 표시";
             // 
+            // buttonConnect
+            // 
+            this.buttonConnect.Location = new System.Drawing.Point(81, 23);
+            this.buttonConnect.Name = "buttonConnect";
+            this.buttonConnect.Size = new System.Drawing.Size(77, 37);
+            this.buttonConnect.TabIndex = 1;
+            this.buttonConnect.Text = "서버연결";
+            this.buttonConnect.UseVisualStyleBackColor = true;
+            this.buttonConnect.Click += new System.EventHandler(this.ButtonConnect_Click);
+            // 
+            // buttonLogoff
+            // 
+            this.buttonLogoff.Enabled = false;
+            this.buttonLogoff.Location = new System.Drawing.Point(197, 24);
+            this.buttonLogoff.Name = "buttonLogoff";
+            this.buttonLogoff.Size = new System.Drawing.Size(77, 37);
+            this.buttonLogoff.TabIndex = 2;
+            this.buttonLogoff.Text = "종료";
+            this.buttonLogoff.UseVisualStyleBackColor = true;
+            this.buttonLogoff.Click += new System.EventHandler(this.buttonLogoff_Click);
+            // 
+            // groupBoxSetup
+            // 
+            this.groupBoxSetup.Controls.Add(this.buttonLogoff);
+            this.groupBoxSetup.Controls.Add(this.buttonConnect);
+            this.groupBoxSetup.Location = new System.Drawing.Point(12, 12);
+            this.groupBoxSetup.Name = "groupBoxSetup";
+            this.groupBoxSetup.Size = new System.Drawing.Size(340, 77);
+            this.groupBoxSetup.TabIndex = 0;
+            this.groupBoxSetup.TabStop = false;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
@@ -314,26 +259,17 @@
             this.Text = "Origin Test Client";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Load += new System.EventHandler(this.MainForm_Load);
-            this.groupBoxSetup.ResumeLayout(false);
-            this.groupBoxSetup.PerformLayout();
             this.groupBoxLobby.ResumeLayout(false);
             this.groupBoxRoom.ResumeLayout(false);
             this.groupBoxRoom.PerformLayout();
             this.groupBoxUserList.ResumeLayout(false);
+            this.groupBoxSetup.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
         }
 
         #endregion
-
-        private System.Windows.Forms.GroupBox groupBoxSetup;
-        private System.Windows.Forms.Label labelId;
-        private System.Windows.Forms.TextBox textBoxPw;
-        private System.Windows.Forms.Label labelPw;
-        private System.Windows.Forms.TextBox textBoxId;
-        private System.Windows.Forms.Button buttonLogin;
-        private System.Windows.Forms.Button buttonLogoff;
         private System.Windows.Forms.GroupBox groupBoxLobby;
         private System.Windows.Forms.Button buttonLeaveLobby;
         private System.Windows.Forms.Button buttonEnterLobby;
@@ -351,6 +287,8 @@
         private System.Windows.Forms.ListBox listBoxRoomUser;
         private System.Windows.Forms.ListBox listBoxChat;
         private System.Windows.Forms.Button buttonConnect;
+        private System.Windows.Forms.Button buttonLogoff;
+        private System.Windows.Forms.GroupBox groupBoxSetup;
     }
 }
 

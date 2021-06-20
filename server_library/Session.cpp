@@ -2,11 +2,13 @@
 
 namespace server_library
 {
+	using LockGuard = Lock::LockGuard;
+
 	void Session::Init(const SOCKET listen_socket, const int index, const SessionConfig* config, ILog* log)
 	{
 		log_ = log_;
 		listen_socket_ = listen_socket;
-		index_ = index_;
+		index_ = index;
 		recv_buf_size_		= config->max_recv_buffer_size_;
 		send_buf_size_		= config->max_send_buffer_size_;
 		max_packet_size_	= config->max_packet_size_;
@@ -53,10 +55,10 @@ namespace server_library
 		recv_overlapped_ex_->wsabuf_.buf = addr_buf_;
 		recv_overlapped_ex_->wsabuf_.len = recv_buf_size_;
 		recv_overlapped_ex_->mode_ = IoMode::ACCEPT;
-		//recv_overlapped_ex_->session_index_ = index_;
+		recv_overlapped_ex_->session_index_ = index_;
 
 		client_socket_ = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_IP, nullptr, 0, WSA_FLAG_OVERLAPPED);
-		if (client_socket_ == INVALID_SOCKET)
+		if (INVALID_SOCKET == client_socket_)
 		{
 			log_->Write(LogType::L_ERROR, "%s | WSASocket() failure: error[%d]", __FUNCTION__, WSAGetLastError());
 			return Result::FAIL_WSASOCKET;
@@ -83,36 +85,40 @@ namespace server_library
 		return Result::SUCCESS;
 	}
 
-	bool Session::CloseCompletely()
+	bool Session::CloseCompletely(bool forced)
 	{
-		if (connected_ && accept_io_count_ == 0 && recv_io_count_ == 0 && send_io_count_ == 0)
+		// 비정상 종료. 강제로 클라이언트를 끊어어야 하는 경우
+		if (true == forced)
 		{
-			Disconnect();
+			Disconnect(true);
+			log_->Write(LogType::L_INFO, "%s | second if return true", __FUNCTION__);
 			return true;
 		}
 
-		// 카운트가 남았다면 소켓은 끊고 iocp에서 완료를 기다린다
-		else if (connected_ && (accept_io_count_ != 0 || recv_io_count_ != 0 || send_io_count_ != 0))
+		else if (connected_ && accept_io_count_ == 0 && recv_io_count_ == 0 && send_io_count_ == 0)
 		{
-			//Disconnect();
-			return false;
-		}
+			log_->Write(LogType::L_INFO, "%s | first if return true", __FUNCTION__);
+			Disconnect();
+			return true;
+		}		
 
 		// 한 번만 접속 종료 처리 하기 위함
 		else if (connected_ == FALSE && accept_io_count_ == 0 && recv_io_count_ == 0 && send_io_count_ == 0)
 		{
-			return true;
+			log_->Write(LogType::L_INFO, "%s | third if return true", __FUNCTION__);
+			return false;
 		}
-		return false;
+		//log_->Write(LogType::L_INFO, "%s | return false", __FUNCTION__);
+		//return false;
 	}
 
 	void Session::Disconnect(bool forced)
 	{
 		SetStateDisConnected();
 		LockGuard lock(cs_);
-		if (client_socket_ != INVALID_SOCKET)
+		if (INVALID_SOCKET != client_socket_)
 		{
-			if (forced == true)
+			if (true == forced)
 			{
 				LINGER linger = { 0 };
 				linger.l_onoff = 1;
@@ -143,7 +149,7 @@ namespace server_library
 			reinterpret_cast<ULONG_PTR>(this),
 			0
 		);
-		if (iocp == INVALID_HANDLE_VALUE || iocp != worker_iocp)
+		if (INVALID_HANDLE_VALUE == iocp || iocp != worker_iocp)
 		{
 			log_->Write(LogType::L_ERROR, "%s | CreateIoCompletionPort() failure: error[%d]", __FUNCTION__, WSAGetLastError());
 			return false;
@@ -177,7 +183,7 @@ namespace server_library
 			nullptr
 		);
 
-		if (result == SOCKET_ERROR && WSAGetLastError() != WSA_IO_PENDING)
+		if (SOCKET_ERROR == result && WSAGetLastError() != WSA_IO_PENDING)
 		{
 			DecrementRecvIoCount();
 			log_->Write(LogType::L_ERROR, "%s | WSARecv() failure: error[%d]", __FUNCTION__, WSAGetLastError());
@@ -256,7 +262,7 @@ namespace server_library
 		}
 
 		*buf = ring_send_buffer_.ForwardSendPos(size);
-		if (*buf == nullptr)
+		if (nullptr  == *buf)
 		{			
 			return Result::RESERVED_BUFFER_EMPTY;
 		}

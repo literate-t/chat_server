@@ -53,7 +53,7 @@ namespace chat_server_library
 	bool PacketManager::ProcessLogoff(const int session_index)
 	{
 		auto result = user_mgr_->RemoveUser(session_index);
-		if (result == ErrorCode::NONE)
+		if (ErrorCode::NONE == result)
 		{
 			return true;
 		}
