@@ -19,7 +19,7 @@ namespace Common
 	struct PacketLoginReq
 	{
 		char id_[kMaxUserIdLength + 1] = { 0 };
-		char pw_[kMaxUserPwLength + 1] = { 0 };
+		//char pw_[kMaxUserPwLength + 1] = { 0 };
 	};
 	const size_t kLoginReqPacketSize = sizeof PacketLoginReq;
 

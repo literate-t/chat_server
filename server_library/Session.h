@@ -17,7 +17,7 @@ namespace server_library
 		void Init(const SOCKET listen_socket, const int index, const SessionConfig* config, ILog* log);
 		void SetLog(ILog* log);
 
-		bool CloseCompletely();
+		bool CloseCompletely(bool forced = false);
 		void Disconnect(bool forced = false);
 		Result ResetSession();
 		bool BindIocp(const HANDLE WorkerIocp);

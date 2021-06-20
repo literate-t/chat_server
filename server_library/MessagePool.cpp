@@ -74,7 +74,7 @@ namespace server_library
 
 	bool MessagePool::DeallocateMsg(Message* msg)
 	{
-		if (msg == nullptr)
+		if (nullptr == msg)
 		{
 			return false;
 		}
