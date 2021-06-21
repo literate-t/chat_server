@@ -3,8 +3,8 @@
 namespace ChatClient {
     class PacketDefine {
         public const Int16 kPacketHeaderSize = 4;
-        public const int kMaxUserIdLength = 20;
-        public const int kMaxUserPwLength = 20;
+        public const int kMaxUserIdLength = 30;
+        public const int kMaxUserPwLength = 30;
         public const int kMaxRoomChatSize = 256;
         public const int kMaxPacketSize = 1024;
     }

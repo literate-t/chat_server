@@ -37,7 +37,7 @@ namespace chat_server_library
 
 	ErrorCode UserManager::AddUser(const int session_index, const char* id)
 	{
-		if (FindUser(id) != nullptr) 
+		if (nullptr != FindUser(id))
 		{
 			return ErrorCode::USER_MGR_ID_DUPLICATION;
 		}
@@ -58,7 +58,7 @@ namespace chat_server_library
 	ErrorCode UserManager::RemoveUser(const int session_index)
 	{
 		auto user = FindUser(session_index);
-		if (user == nullptr) {
+		if (nullptr == user) {
 			return ErrorCode::USER_MGR_REMOVE_INVALID_SESSION;
 		}
 
@@ -74,12 +74,12 @@ namespace chat_server_library
 	std::tuple<ErrorCode, User*> UserManager::GetUser(const int session_index)
 	{
 		auto user = FindUser(session_index);
-		if (user == nullptr) 
+		if (nullptr == user)
 		{
 			return { ErrorCode::USER_MGR_INVALID_SESSION_INDEX, nullptr };
 		}
 
-		if (user->IsSet() == false) 
+		if (false == user->IsSet())
 		{
 			return { ErrorCode::USER_MGR_NOT_SET_USER, nullptr };
 		}
@@ -90,7 +90,7 @@ namespace chat_server_library
 	User* UserManager::FindUser(const int session_index)
 	{
 		auto find_iter = user_session_dic_.find(session_index);
-		if (find_iter == user_session_dic_.end()) 
+		if (user_session_dic_.end() == find_iter)
 		{
 			return nullptr;
 		}
@@ -101,7 +101,7 @@ namespace chat_server_library
 	User* UserManager::FindUser(const char* id)
 	{
 		auto find_iter = user_id_dic_.find(id);
-		if (find_iter == user_id_dic_.end()) 
+		if (user_id_dic_.end() == find_iter)
 		{
 			return nullptr;
 		}

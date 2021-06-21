@@ -11,8 +11,8 @@ namespace Common
 	};
 
 	// 로그인 요청
-	const int kMaxUserIdLength = 20;
-	const int kMaxUserPwLength = 20;
+	const int kMaxUserIdLength = 30;
+	const int kMaxUserPwLength = 30;
 	const int kPacketHeaderLength = 4;
 	const int kPacketSizeLength = 2;
 	const int kPacketTypeLength = 2;

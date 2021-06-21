@@ -1,18 +1,19 @@
 ﻿using System;
-using System.Net;
 using System.Net.Sockets;
+using System.Diagnostics;
 
 namespace ChatClient {
     class SimpleNetwork {
         public Socket ClientSocket = null;
-        public string ErrorMessage;
+        public string ErrorMessage = "";
 
         public bool Connect(string ip, int port) {
             try {
                 ClientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                ClientSocket.ReceiveTimeout = 5000;
                 ClientSocket.Connect(ip, port);
 
-                if (ClientSocket == null || ClientSocket.Connected == false)
+                if (null == ClientSocket || false == ClientSocket.Connected)
                     return false;
 
                 return true;
@@ -50,7 +51,7 @@ namespace ChatClient {
 
         public void Send(byte[] sendData) {
             try {
-                if (ClientSocket != null && ClientSocket.Connected == true)
+                if (null != ClientSocket && true == ClientSocket.Connected)
                     ClientSocket.Send(sendData, 0, sendData.Length, SocketFlags.None);
 
                 else
@@ -61,12 +62,12 @@ namespace ChatClient {
         }
 
         public void Close() {
-            if (ClientSocket != null && ClientSocket.Connected == true) {
+            if (null != ClientSocket  && true == ClientSocket.Connected) {
                 ClientSocket.Shutdown(SocketShutdown.Both);
                 ClientSocket.Close();
             }
         }
 
-        public bool IsConnected() { return (ClientSocket != null && ClientSocket.Connected == true) ? true : false; }
+        public bool IsConnected() { return (null != ClientSocket && true == ClientSocket.Connected) ? true : false; }
     }
 }

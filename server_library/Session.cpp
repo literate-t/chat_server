@@ -6,7 +6,7 @@ namespace server_library
 
 	void Session::Init(const SOCKET listen_socket, const int index, const SessionConfig* config, ILog* log)
 	{
-		log_ = log_;
+		log_ = log;
 		listen_socket_ = listen_socket;
 		index_ = index;
 		recv_buf_size_		= config->max_recv_buffer_size_;
@@ -108,8 +108,6 @@ namespace server_library
 			log_->Write(LogType::L_INFO, "%s | third if return true", __FUNCTION__);
 			return false;
 		}
-		//log_->Write(LogType::L_INFO, "%s | return false", __FUNCTION__);
-		//return false;
 	}
 
 	void Session::Disconnect(bool forced)
