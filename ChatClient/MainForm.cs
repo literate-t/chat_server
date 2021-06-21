@@ -4,6 +4,7 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Windows.Threading;
 using System.Text;
+using System.Diagnostics;
 
 namespace ChatClient {
     public partial class MainForm : Form {
@@ -21,9 +22,18 @@ namespace ChatClient {
         Queue<byte[]> _sendPacketQueue = new Queue<byte[]>();
 
         DispatcherTimer _dispatcherTimer;
+        Stopwatch stopWatch = new Stopwatch();
 
-        public MainForm(string id = "kim tae hyeon") {
+        Logger logger = new Logger();
+
+        public MainForm(string id = "user") {
+            if (id.Length > "chatclient:".Length)
+            {
+                id = id.Substring("chatclient:".Length);
+            }
             _id = id;
+            //logger.Info(_id);
+            //logger.Info(_id.Length);
             InitializeComponent();
         }
 
@@ -33,6 +43,7 @@ namespace ChatClient {
             _isNetworkThreadRunning = true;
             _networkReadThread = new Thread(NetworkReadProcess);
             _networkReadThread.Start();
+
             _networkSendThread = new Thread(NetworkSendProcess);
             _networkSendThread.Start();
 
@@ -52,7 +63,16 @@ namespace ChatClient {
                     continue;
                 }
 
+                //stopWatch.Start();                
                 var recvData = _network.Receive();
+                //stopWatch.Stop();
+                //if (stopWatch.ElapsedMilliseconds >= 5000)
+                //{
+                //    labelStatus.Text = "서버가 응답하지 않습니다";
+                //    CloseForm();
+                //}
+
+                //logger.Info(stopWatch.ElapsedMilliseconds);
                 if (recvData != null) {
                     _packetBuffer.Write(recvData.Item2, 0, recvData.Item1);
                     while (true) {
@@ -66,7 +86,6 @@ namespace ChatClient {
                             _packetBuffer.SetReadPosToPrev();
                             break;
                         }
-
                         var packet = new PacketData();
                         packet.DataSize = (short)(data.Count - PacketDefine.kPacketHeaderSize);
                         packet.PacketId = BitConverter.ToInt16(data.Array, data.Offset + 2);
@@ -153,6 +172,11 @@ namespace ChatClient {
         }
 
         private void buttonLogoff_Click(object sender, EventArgs e) {
+            _network.Close();
+        }
+
+        private void CloseForm()
+        {
             _network.Close();
             Close();
         }

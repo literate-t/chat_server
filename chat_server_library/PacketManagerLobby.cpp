@@ -13,17 +13,17 @@ namespace chat_server_library
 		packet_res.total_size_ = sizeof PacketBasicRes;
 		packet_res.id_ = static_cast<short>(PacketId::LOBBY_ENTER_RES);
 
-		auto user_result = user_mgr_->GetUser(session_index);
-		auto error_code = get<0>(user_result);
-		if (error_code != ErrorCode::NONE)
+		auto [error_code, user] = user_mgr_->GetUser(session_index);
+		//auto error_code = get<0>(user_result);
+		if (ErrorCode::NONE != error_code)
 		{
 			packet_res.error_code_ = static_cast<short>(error_code);
 			SendPacketFunc(session_index, &packet_res, sizeof PacketBasicRes);
 			return;
 		}
 
-		auto user = get<1>(user_result);
-		if (user->IsDomainLogin() == false)
+		//auto user = get<1>(user_result);
+		if (false == user->IsDomainLogin())
 		{
 			packet_res.error_code_ = static_cast<short>(ErrorCode::LOBBY_ENTER_INVALID_DOMAIN);
 			SendPacketFunc(session_index, &packet_res, sizeof PacketBasicRes);

@@ -30,6 +30,7 @@ namespace chat_server_library
 	{
 		if (copy_size - static_cast<short>(kPacketHeaderLength) != static_cast<short>(kLoginReqPacketSize))
 		{
+			log_->Write(server_library::LogType::L_ERROR, "Login packet size error");
 			return;
 		}
 

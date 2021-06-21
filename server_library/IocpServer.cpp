@@ -451,10 +451,10 @@ namespace server_library
 
 		// remain은 0이 되어야 한다
 		ForwardPacket(session, remain, buf);
-		if (0 == remain)
-		{
-			log_->Write(LogType::L_INFO, "%s | remain is zero", __FUNCTION__);
-		}
+		//if (0 == remain)
+		//{
+		//	log_->Write(LogType::L_INFO, "%s | remain is zero", __FUNCTION__);
+		//}
 
 		//if (session->PostRecv(forward_length, remain) != Result::SUCCESS)
 		if (session->PostRecv(forward_length) != Result::SUCCESS)
