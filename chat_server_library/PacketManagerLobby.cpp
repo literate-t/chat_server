@@ -32,7 +32,7 @@ namespace chat_server_library
 
 		auto data = reinterpret_cast<PacketBasicEnterLeaveReq*>(buf);
 		auto lobby = lobby_mgr_->GetLobby(data->index_);
-		if (lobby == nullptr)
+		if (nullptr == lobby)
 		{
 			packet_res.error_code_ = static_cast<short>(ErrorCode::LOBBY_ENTER_INVALID_LOBBY_INDEX);
 			SendPacketFunc(session_index, &packet_res, sizeof PacketBasicRes);

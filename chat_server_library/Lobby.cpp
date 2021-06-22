@@ -148,7 +148,7 @@ namespace chat_server_library
 		short total_size = 4; // UserCount(short) + ErroCode(short)
 		for (auto user : user_id_dic_) 
 		{
-			if (user.first == nullptr) 
+			if (nullptr == user.first)
 			{
 				continue;
 			}

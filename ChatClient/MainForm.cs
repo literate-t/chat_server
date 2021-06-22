@@ -172,7 +172,8 @@ namespace ChatClient {
         }
 
         private void buttonLogoff_Click(object sender, EventArgs e) {
-            _network.Close();
+            //_network.Close();
+            _network.ShutDown(System.Net.Sockets.SocketShutdown.Send);
         }
 
         private void CloseForm()

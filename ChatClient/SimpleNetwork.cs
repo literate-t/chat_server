@@ -68,6 +68,11 @@ namespace ChatClient {
             }
         }
 
+        public void ShutDown(SocketShutdown how)
+        {
+            ClientSocket.Shutdown(how);
+        }
+
         public bool IsConnected() { return (null != ClientSocket && true == ClientSocket.Connected) ? true : false; }
     }
 }
