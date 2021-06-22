@@ -245,9 +245,10 @@ namespace server_library
 				INFINITE
 			);
 
-			
+			is_worker_thread_running_;
 			if (!result || (0 == bytes && IoMode::ACCEPT != overlapped_ex->mode_))
 			{
+				log_->Write(LogType::L_INFO, "%s | WSAGetLastError() = %d", __FUNCTION__, WSAGetLastError());
 				log_->Write(LogType::L_INFO, "%s | GQCS result = %d bytes=%d", __FUNCTION__, result, bytes);
 				HandleWorkerThreadException(session, overlapped_ex);
 				continue;
@@ -360,7 +361,9 @@ namespace server_library
 			session->DecrementSendIoCount();
 			break;
 		}
-
+		log_->Write(LogType::L_INFO, "%s | AcceptIoCount : %d", __FUNCTION__, session->GetAcceptIoCount());
+		log_->Write(LogType::L_INFO, "%s | RecvIoCount : %d", __FUNCTION__, session->GetRecvIoCount());
+		log_->Write(LogType::L_INFO, "%s | SendtIoCount : %d", __FUNCTION__, session->GetSendIoCount());
 		if (session->CloseCompletely())
 		{
 			HandleSessionCloseException(session);

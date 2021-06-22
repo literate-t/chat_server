@@ -91,13 +91,13 @@ namespace server_library
 		if (true == forced)
 		{
 			Disconnect(true);
-			log_->Write(LogType::L_INFO, "%s | second if return true", __FUNCTION__);
+			log_->Write(LogType::L_INFO, "%s | 1. forced disconn return true", __FUNCTION__);
 			return true;
 		}
 
 		else if (connected_ && accept_io_count_ == 0 && recv_io_count_ == 0 && send_io_count_ == 0)
 		{
-			log_->Write(LogType::L_INFO, "%s | first if return true", __FUNCTION__);
+			log_->Write(LogType::L_INFO, "%s | 2. normal disconn return true", __FUNCTION__);
 			Disconnect();
 			return true;
 		}		
@@ -105,9 +105,10 @@ namespace server_library
 		// 한 번만 접속 종료 처리 하기 위함
 		else if (connected_ == FALSE && accept_io_count_ == 0 && recv_io_count_ == 0 && send_io_count_ == 0)
 		{
-			log_->Write(LogType::L_INFO, "%s | third if return true", __FUNCTION__);
-			return false;
+			log_->Write(LogType::L_INFO, "%s | 3. already disconn return true", __FUNCTION__);
+			return true;
 		}
+		return false;
 	}
 
 	void Session::Disconnect(bool forced)

@@ -30,13 +30,15 @@ namespace server_library
 		void SetIp(const char* ip) { memcpy(ip_, ip, kMaxIpLength); }
 		int GetIndex() { return index_; }
 
+		short GetAcceptIoCount() { return accept_io_count_.load(); }
+		short GetRecvIoCount() { return recv_io_count_.load(); }
+		short GetSendIoCount() { return send_io_count_.load(); }
 		void IncrementAcceptIoCount() { ++accept_io_count_; }
 		void DecrementAcceptIoCount() { accept_io_count_ = accept_io_count_ ? --accept_io_count_ : 0; }
 		void IncrementRecvIoCount() { ++recv_io_count_; }
 		void DecrementRecvIoCount() { recv_io_count_ = recv_io_count_ ? --recv_io_count_ : 0; }
 		void IncrementSendIoCount() { ++send_io_count_; }
 		void DecrementSendIoCount() { send_io_count_ = send_io_count_ ? --send_io_count_ : 0; }
-		short GetRecvIoCount() { return recv_io_count_.load(); }
 
 		bool IsConnected() { return connected_; }
 		void SetStateConnected() { InterlockedExchange(reinterpret_cast<long*>(&connected_), TRUE); }
