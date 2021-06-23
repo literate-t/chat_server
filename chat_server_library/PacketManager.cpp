@@ -40,7 +40,7 @@ namespace chat_server_library
 		packet_res.total_size_ = sizeof PacketBasicRes;
 		packet_res.id_ = static_cast<short>(PacketId::LOGIN_RES);
 		auto result = user_mgr_->AddUser(session_index, login_req->id_);
-		if (result != ErrorCode::NONE)
+		if (ErrorCode::NONE != result)
 		{
 			packet_res.error_code_ = static_cast<short>(result);
 			SendPacketFunc(session_index, &packet_res, sizeof packet_res);
