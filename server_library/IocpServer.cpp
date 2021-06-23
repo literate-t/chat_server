@@ -296,7 +296,8 @@ namespace server_library
 			reinterpret_cast<OVERLAPPED**>(&msg),
 			wait_mill_sec
 		);
-		if (result == false)
+
+		if (false == result)
 		{
 			this_thread::sleep_for(chrono::milliseconds(1));
 			return false;
@@ -311,6 +312,7 @@ namespace server_library
 		case MessageType::CLOSE:
 			DoPostClose(session, msg, msg_type, session_index);
 			break;
+
 		case MessageType::ONRECV:
 			DoPostRecvPacket(session, msg, msg_type, session_index, buf, copy_size, bytes);
 			unique_message_pool_.get()->DeallocateMsg(msg);

@@ -4,7 +4,7 @@ namespace chat_server_library
 {
 	void PacketManager::RoomEnter(const int session_index, char* buf, short copy_size)
 	{
-		if (copy_size != sizeof PacketBasicEnterLeaveReq)
+		if (sizeof PacketBasicEnterLeaveReq != copy_size)
 		{
 			return;
 		}
@@ -13,8 +13,7 @@ namespace chat_server_library
 		packet_res.id_ = static_cast<short>(PacketId::ROOM_ENTER_RES);
 		packet_res.total_size_ = sizeof PacketBasicRes;
 
-		auto user_result = user_mgr_->GetUser(session_index);
-		auto error_code = get<0>(user_result);
+		auto [error_code, user] = user_mgr_->GetUser(session_index);
 		if (error_code != ErrorCode::NONE)
 		{
 			packet_res.error_code_ = static_cast<short>(error_code);
@@ -22,8 +21,7 @@ namespace chat_server_library
 			return;
 		}
 
-		auto user = get<1>(user_result);
-		if (user->IsDomainLobby() == false)
+		if (false == user->IsDomainLobby())
 		{
 			packet_res.error_code_ = static_cast<short>(ErrorCode::ROOM_ENTER_INVALID_DOMAIN);
 			SendPacketFunc(session_index, &packet_res, packet_res.total_size_);
