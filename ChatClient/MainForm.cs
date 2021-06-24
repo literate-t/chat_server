@@ -51,7 +51,7 @@ namespace ChatClient {
             _dispatcherTimer.Tick += new EventHandler(BackGroundProcess);
             _dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 100);
             _dispatcherTimer.Start();
-
+             
             buttonLogoff.Enabled = false;
             SetPacketHandler();
         }
@@ -59,23 +59,16 @@ namespace ChatClient {
         void NetworkReadProcess() {
             while (_isNetworkThreadRunning) {
                 Thread.Sleep(1);
-                if (_network.IsConnected() == false) {
+                if (false == _network.IsConnected()) {
                     continue;
                 }
 
-                //stopWatch.Start();                
                 var recvData = _network.Receive();
-                //stopWatch.Stop();
-                //if (stopWatch.ElapsedMilliseconds >= 5000)
-                //{
-                //    labelStatus.Text = "서버가 응답하지 않습니다";
-                //    CloseForm();
-                //}
-
-                //logger.Info(stopWatch.ElapsedMilliseconds);
-                if (recvData != null) {
+                if (null != recvData) {
+                    // 기본적인 데이터 검사를 위해 쓰고
                     _packetBuffer.Write(recvData.Item2, 0, recvData.Item1);
                     while (true) {
+                        // 읽는다
                         var data = _packetBuffer.Read();
                         if (data.Count < 1) {
                             break;
@@ -172,8 +165,9 @@ namespace ChatClient {
         }
 
         private void buttonLogoff_Click(object sender, EventArgs e) {
-            //_network.Close();
-            _network.ShutDown(System.Net.Sockets.SocketShutdown.Send);
+            _network.Close();
+            Close();
+            //_network.ShutDown(System.Net.Sockets.SocketShutdown.Send);
         }
 
         private void CloseForm()

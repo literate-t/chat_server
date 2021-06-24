@@ -224,11 +224,12 @@ namespace chat_server_library
 	{
 		if (room_index > room_list_.size() - 1) 
 		{
-			nullptr;
+			return nullptr;
 		}
 
-		if (room_list_[room_index]->IsCreated() == false) 
+		if (false == room_list_[room_index]->IsCreated())
 		{
+			room_list_[room_index]->Set
 			return room_list_[room_index];
 		}
 		
@@ -242,7 +243,7 @@ namespace chat_server_library
 			return nullptr;
 		}
 
-		else if (room_list_[room_index]->IsCreated() == true) 
+		else if (true == room_list_[room_index]->IsCreated())
 		{
 			return room_list_[room_index];
 		}
