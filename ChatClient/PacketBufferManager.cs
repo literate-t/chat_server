@@ -26,7 +26,7 @@ namespace ChatClient {
         }
 
         public bool Write(byte[] data, int pos, int size) {
-            if (data == null || data.Length < size)
+            if (null  == data || data.Length < size)
                 return false;
 
             var remainBufferSize = _bufferSize - _writePos;
@@ -36,7 +36,7 @@ namespace ChatClient {
             Buffer.BlockCopy(data, pos, _packetData, _writePos, size);
             _writePos += size;
 
-            if (HaveFreeSpace() == false)
+            if (false == HaveFreeSpace())
                 ResetBuffer();
 
             return true;

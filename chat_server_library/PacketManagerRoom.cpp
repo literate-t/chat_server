@@ -29,7 +29,7 @@ namespace chat_server_library
 		}
 
 		auto lobby = lobby_mgr_->GetLobby(user->GetLobbyIndex());
-		if (lobby == nullptr)
+		if (nullptr == lobby)
 		{
 			packet_res.error_code_ = (short)ErrorCode::ROOM_ENTER_INVALID_LOBBY_INDEX;
 			SendPacketFunc(session_index, &packet_res, packet_res.total_size_);
@@ -38,15 +38,16 @@ namespace chat_server_library
 
 		auto data = reinterpret_cast<PacketBasicEnterLeaveReq*>(buf);
 		auto room = lobby->GetRoom(data->index_);
-		if (room == nullptr)
+		if (nullptr == room)
 		{
 			room = lobby->CreateRoom(data->index_);
-			if (room == nullptr)
+			if (nullptr == room)
 			{
 				packet_res.error_code_ = (short)ErrorCode::ROOM_ENTER_INVALID_ROOM_INDEX;
 				SendPacketFunc(session_index, &packet_res, packet_res.total_size_);
 				return;
 			}
+
 			// 방 인덱스 번호를 타이틀로
 			char title[2] = { 0 };
 			sprintf_s(title, 2, "%d", data->index_);
@@ -55,7 +56,7 @@ namespace chat_server_library
 
 		// 방 입장
 		auto result = room->EnterRoom(user);
-		if (result != ErrorCode::NONE)
+		if (ErrorCode::NONE != result)
 		{
 			packet_res.error_code_ = static_cast<short>(result);
 			SendPacketFunc(session_index, &packet_res, packet_res.total_size_);
@@ -79,7 +80,7 @@ namespace chat_server_library
 
 	void PacketManager::RoomLeave(int session_index, char* buf, short copy_size)
 	{
-		if (copy_size != sizeof PacketBasicEnterLeaveReq)
+		if (sizeof PacketBasicEnterLeaveReq != copy_size)
 		{
 			return;
 		}
@@ -88,17 +89,15 @@ namespace chat_server_library
 		packet_res.id_ = static_cast<short>(PacketId::ROOM_LEAVE_RES);
 		packet_res.total_size_ = sizeof PacketBasicRes;
 
-		auto user_result = user_mgr_->GetUser(session_index);
-		auto error_code = get<0>(user_result);
-		if (error_code != ErrorCode::NONE)
+		auto [error_code, user] = user_mgr_->GetUser(session_index);
+		if (ErrorCode::NONE != error_code)
 		{
 			packet_res.error_code_ = static_cast<short>(error_code);
 			SendPacketFunc(session_index, &packet_res, packet_res.total_size_);
 			return;
 		}
 
-		auto user = get<1>(user_result);
-		if (user->IsDomainRoom() == false)
+		if (false == user->IsDomainRoom())
 		{
 			packet_res.error_code_ = static_cast<short>(ErrorCode::ROOM_ENTER_INVALID_DOMAIN);
 			SendPacketFunc(session_index, &packet_res, packet_res.total_size_);
@@ -106,7 +105,7 @@ namespace chat_server_library
 		}
 
 		auto lobby = lobby_mgr_->GetLobby(user->GetLobbyIndex());
-		if (lobby == nullptr)
+		if (nullptr == lobby)
 		{
 			packet_res.error_code_ = (short)ErrorCode::ROOM_ENTER_INVALID_LOBBY_INDEX;
 			SendPacketFunc(session_index, &packet_res, packet_res.total_size_);
@@ -115,7 +114,7 @@ namespace chat_server_library
 
 		auto data = reinterpret_cast<PacketBasicEnterLeaveReq*>(buf);
 		auto room = lobby->GetRoom(data->index_);
-		if (room == nullptr)
+		if (nullptr == room)
 		{
 			packet_res.error_code_ = (short)ErrorCode::ROOM_LEAVE_INVALID_ROOM_INDEX;
 			SendPacketFunc(session_index, &packet_res, packet_res.total_size_);
@@ -125,14 +124,16 @@ namespace chat_server_library
 		// 룸에 남아 있는 세션에게 퇴장하는 세션을 알림
 		room->NotifyToAll(static_cast<short>(PacketId::ROOM_LEAVE_USER_NTF), user->GetIndex());
 
-		// 방 퇴장
+		// 방에서 유저 정보 삭제
 		auto result = room->LeaveRoom(user->GetIndex());
-		if (result != ErrorCode::NONE)
+		if (ErrorCode::NONE != result)
 		{
 			packet_res.error_code_ = static_cast<short>(result);
 			SendPacketFunc(session_index, &packet_res, packet_res.total_size_);
 			return;;
 		}
+
+		// 방 퇴장
 		packet_res.error_code_ = static_cast<short>(ErrorCode::NONE);
 		SendPacketFunc(session_index, &packet_res, packet_res.total_size_);
 

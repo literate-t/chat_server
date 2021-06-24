@@ -182,7 +182,7 @@ namespace ChatClient {
 
         private void PacketProcess_RoomLeaveResponse(byte[] bodyData) {
             var errorCode = BitConverter.ToInt16(bodyData, 0);
-            if (errorCode == (short)ErrorCode.NONE) {
+            if ((short)ErrorCode.NONE == errorCode) {
                 labelStatus.Text = string.Format($"{textBoxRoomNumber.Text}번 방 퇴장");
                 listBoxRoomUser.Items.Clear();
                 buttonEnterLobby.Enabled = false;

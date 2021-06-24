@@ -8,33 +8,33 @@ namespace chat_server_library
 
 	void Room::Init(const short index, const short max_user_count, ILog* log)
 	{
-		log_ = log;
-		index_ = index;
+		log_			= log;
+		index_			= index;
 		max_user_count_ = max_user_count;
 	}
 
 	void Room::Clear()
 	{
-		created_ = false;
+		created_	= false;
 		title_		= nullptr;
 		user_index_dic_.clear();
 	}
 
 	ErrorCode Room::SetRoom(short lobby_index, const char* room_title)
 	{
-		if (created_ == true) {
+		if (true == created_) 
+		{
 			return ErrorCode::ROOM_ALREADY_CREATED;
 		}
-
 		created_		= true;
 		lobby_index_	= lobby_index;
-		title_		= room_title;
+		title_			= room_title;
 		return ErrorCode::NONE;
 	}
 
 	ErrorCode Room::EnterRoom(User* user)
 	{
-		if (created_ == false) {
+		if (false == created_) {
 			return ErrorCode::ROOM_NOT_CREATED;
 		}
 
@@ -56,7 +56,7 @@ namespace chat_server_library
 		short total_size = 4; // UserCount(short) + ErrorCode(short)
 		for (auto user_info : user_index_dic_) 
 		{
-			if (user_info.second == nullptr) 
+			if (nullptr == user_info.second)
 			{
 				continue;
 			}
@@ -127,17 +127,18 @@ namespace chat_server_library
 
 	ErrorCode Room::LeaveRoom(const short user_index)
 	{
-		if (created_ == false) {
+		if (false == created_) {
 			return ErrorCode::ROOM_NOT_CREATED;
 		}
 
 		auto user = FindUser(user_index);
-		if (user == nullptr) {
+		if (nullptr == user) {
 			return ErrorCode::ROOM_LEAVE_NOT_MEMBER;
 		}
 
 		user_index_dic_.erase(user_index);
-		if (user_index_dic_.empty()) {
+		if (user_index_dic_.empty()) 
+		{
 			Clear();
 		}
 
