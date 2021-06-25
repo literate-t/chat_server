@@ -53,8 +53,39 @@ namespace chat_server_library
 
 	bool PacketManager::ProcessLogoff(const int session_index)
 	{
+		auto [error_code, user] = user_mgr_->GetUser(session_index);
+		if (ErrorCode::NONE != error_code)
+		{
+			log_->Write(server_library::LogType::L_INFO, "No user");
+		}
+		
+		if (true == user->IsDomainRoom())
+		{
+			PacketBasicRes packet_res;
+
+			auto lobby = lobby_mgr_->GetLobby(user->GetLobbyIndex());
+			auto room = lobby->GetRoom(user->GetRoomIndex());
+			if (nullptr == room)
+			{
+				packet_res.error_code_ = (short)ErrorCode::ROOM_LEAVE_INVALID_ROOM_INDEX;
+				SendPacketFunc(session_index, &packet_res, packet_res.total_size_);
+				return;
+			}
+
+			room->LeaveRoom(user->GetRoomIndex());
+
+			// Ήζ Επΐε
+			packet_res.id_ = static_cast<short>(PacketId::ROOM_LEAVE_RES);
+			packet_res.total_size_ = sizeof PacketBasicRes;
+			packet_res.error_code_ = static_cast<short>(ErrorCode::NONE);
+			SendPacketFunc(session_index, &packet_res, packet_res.total_size_);
+
+
+		}
+		
+
 		auto result = user_mgr_->RemoveUser(session_index);
-		if (ErrorCode::NONE == result)
+		if (result == ErrorCode::NONE)
 		{
 			return true;
 		}

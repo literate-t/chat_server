@@ -82,7 +82,7 @@ namespace chat_server_library
 	ErrorCode Lobby::LeaveLobby(const int user_index)
 	{
 		auto user = FindUser(user_index);
-		if (user == nullptr) 
+		if (nullptr == user)
 		{
 			ErrorCode::LOBBY_LEAVE_USER_INVALID;
 		}
@@ -99,12 +99,12 @@ namespace chat_server_library
 	void Lobby::RemoveUser(const int user_index)
 	{
 		auto findIter = std::find_if(std::begin(lobby_user_list_), std::end(lobby_user_list_),
-			[&user_index](auto& lobby_user)
+			[&](auto& lobby_user)
 			{
-				return lobby_user.user_ != nullptr && lobby_user.user_->GetIndex() == user_index;
+				return nullptr != lobby_user.user_ && lobby_user.user_->GetIndex() == user_index;
 			});
 
-		if (findIter == std::end(lobby_user_list_))
+		if (std::end(lobby_user_list_) == findIter)
 		{
 			return;
 		}
@@ -115,13 +115,13 @@ namespace chat_server_library
 	ErrorCode Lobby::LeaveLobbyToEnterRoom(const int user_index)
 	{
 		auto user = FindUser(user_index);
-		if (user == nullptr) 
+		if (nullptr == user)
 		{
 			ErrorCode::LOBBY_LEAVE_USER_INVALID;
 		}
 
 		RemoveUser(user_index);
-		user->LeaveLobbyToEnterRoom();
+		user->SetDomainRoom();
 
 		user_index_dic_.erase(user_index);
 		user_id_dic_.erase(user->GetId());
@@ -132,7 +132,7 @@ namespace chat_server_library
 	User* Lobby::FindUser(const int user_index)
 	{
 		auto findIter = user_index_dic_.find(user_index);
-		if (findIter == user_index_dic_.end()) 
+		if (user_index_dic_.end() == findIter)
 		{
 			return nullptr;
 		}
@@ -228,8 +228,7 @@ namespace chat_server_library
 		}
 
 		if (false == room_list_[room_index]->IsCreated())
-		{
-			room_list_[room_index]->Set
+		{			
 			return room_list_[room_index];
 		}
 		
