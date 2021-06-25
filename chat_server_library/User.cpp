@@ -25,22 +25,22 @@ namespace chat_server_library
 		id_ = id;
 	}
 
-	short& User::GetIndex()
+	short User::GetIndex()
 	{
 		return index_;
 	}
 
-	int& User::GetSessionIndex()
+	int User::GetSessionIndex()
 	{ 
 		return session_index_; 
 	}
 
-	const char*& User::GetId()
+	const char* User::GetId()
 	{ 
 		return id_; 
 	}
 
-	bool& User::IsSet()
+	bool User::IsSet()
 	{ 
 		return set_; 
 	}
@@ -59,15 +59,9 @@ namespace chat_server_library
 	void User::LeaveLobby()
 	{
 		lobby_index_ = -1;
-		domain_state_ = DomainState::LOGIN;
 	}
 
-	void User::LeaveLobbyToEnterRoom()
-	{
-		domain_state_ = DomainState::ROOM;
-	}
-
-	short& User::GetRoomIndex()
+	short User::GetRoomIndex()
 	{ 
 		return room_index_;
 	}

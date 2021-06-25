@@ -20,17 +20,16 @@ namespace chat_server_library
 		void			Init(const short index);		
 		void			Clear();
 		void			SetLoginInfo(const int session_index, const char* id);
-		short&			GetIndex();
-		int&			GetSessionIndex();
-		const char*&	GetId();
-		bool&			IsSet();
+		short			GetIndex();
+		int			GetSessionIndex();
+		const char*	GetId();
+		bool			IsSet();
 
 		short& GetLobbyIndex();
 		void EnterLobby(const short lobby_index);
 		void LeaveLobby();
-		void LeaveLobbyToEnterRoom();
 
-		short& GetRoomIndex();
+		short GetRoomIndex();
 		void EnterRoom(const short lobby_index, const short room_index);
 		void SetDomainLogin();
 		void SetDomainLobby();

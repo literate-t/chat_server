@@ -26,7 +26,7 @@ namespace ChatClient {
         }
 
         public bool Write(byte[] data, int pos, int size) {
-            if (null  == data || data.Length < size)
+            if (null == data || data.Length < size)
                 return false;
 
             var remainBufferSize = _bufferSize - _writePos;
