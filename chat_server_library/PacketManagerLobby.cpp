@@ -60,7 +60,7 @@ namespace chat_server_library
 
 	void PacketManager::LobbyLeave(int session_index, char* buf, short copy_size)
 	{
-		if (copy_size != sizeof PacketBasicEnterLeaveReq)
+		if (sizeof PacketBasicEnterLeaveReq != copy_size)
 		{
 			return;
 		}
@@ -71,7 +71,7 @@ namespace chat_server_library
 
 		auto user_result = user_mgr_->GetUser(session_index);
 		auto error_code = get<0>(user_result);
-		if (error_code != ErrorCode::NONE)
+		if (ErrorCode::NONE != error_code)
 		{
 			packet_res.error_code_ = static_cast<short>(error_code);
 			SendPacketFunc(session_index, &packet_res, sizeof PacketBasicRes);
@@ -79,7 +79,7 @@ namespace chat_server_library
 		}
 
 		auto user = get<1>(user_result);
-		if (user->IsDomainLobby() == false)
+		if (false == user->IsDomainLobby())
 		{
 			packet_res.error_code_ = static_cast<short>(ErrorCode::LOBBY_LEAVE_INVALID_DOMAIN);
 			SendPacketFunc(session_index, &packet_res, sizeof PacketBasicRes);
@@ -88,7 +88,7 @@ namespace chat_server_library
 
 		auto data = reinterpret_cast<PacketBasicEnterLeaveReq*>(buf);
 		auto lobby = lobby_mgr_->GetLobby(data->index_);
-		if (lobby == nullptr)
+		if (nullptr == lobby)
 		{
 			packet_res.error_code_ = static_cast<short>(ErrorCode::LOBBY_ENTER_INVALID_LOBBY_INDEX);
 			SendPacketFunc(session_index, &packet_res, sizeof PacketBasicRes);
@@ -103,6 +103,7 @@ namespace chat_server_library
 		lobby->NotifyToAll(static_cast<short>(PacketId::LOBBY_LEAVE_USER_NTF), user->GetIndex());
 
 		auto leave_result = lobby->LeaveLobby(user->GetIndex());
+		
 		if (leave_result != ErrorCode::NONE)
 		{
 			packet_res.error_code_ = static_cast<short>(leave_result);

@@ -36,17 +36,18 @@ namespace chat_server_library
 
 		auto login_req = reinterpret_cast<PacketLoginReq*>(&buf[kPacketHeaderLength]);		
 		log_->Write(server_library::LogType::L_INFO, "id_:%s", login_req->id_);
-		PacketBasicRes packet_res;
-		packet_res.total_size_ = sizeof PacketBasicRes;
-		packet_res.id_ = static_cast<short>(PacketId::LOGIN_RES);
 		auto result = user_mgr_->AddUser(session_index, login_req->id_);
+
 		if (ErrorCode::NONE != result)
 		{
+			PacketBasicRes packet_res;
+			packet_res.id_ = static_cast<short>(PacketId::LOGIN_RES);
 			packet_res.error_code_ = static_cast<short>(result);
 			SendPacketFunc(session_index, &packet_res, sizeof packet_res);
 			return;
 		}
-
+		PacketBasicRes packet_res;
+		packet_res.id_ = static_cast<short>(PacketId::LOGIN_RES);
 		packet_res.error_code_ = static_cast<short>(ErrorCode::NONE);
 		SendPacketFunc(session_index, &packet_res, sizeof PacketBasicRes);
 	}
@@ -69,23 +70,35 @@ namespace chat_server_library
 			{
 				packet_res.error_code_ = (short)ErrorCode::ROOM_LEAVE_INVALID_ROOM_INDEX;
 				SendPacketFunc(session_index, &packet_res, packet_res.total_size_);
-				return;
+				return false;
 			}
 
+			// 방 퇴장 처리
 			room->LeaveRoom(user->GetRoomIndex());
 
-			// 방 퇴장
+			// 방 퇴장 알림
 			packet_res.id_ = static_cast<short>(PacketId::ROOM_LEAVE_RES);
 			packet_res.total_size_ = sizeof PacketBasicRes;
 			packet_res.error_code_ = static_cast<short>(ErrorCode::NONE);
 			SendPacketFunc(session_index, &packet_res, packet_res.total_size_);
-
-
 		}
-		
+		else if (true == user->IsDomainLobby())
+		{
+			PacketBasicRes packet_res;
+			auto lobby = lobby_mgr_->GetLobby(user->GetLobbyIndex());
+
+			// 로비 퇴장 처리
+			lobby->LeaveLobby(user->GetSessionIndex());
+
+			// 로비 퇴장 알림
+			packet_res.id_ = static_cast<short>(PacketId::LOBBY_LEAVE_RES);
+			packet_res.total_size_ = sizeof PacketBasicRes;
+			packet_res.error_code_ = static_cast<short>(ErrorCode::NONE);
+			SendPacketFunc(session_index, &packet_res, packet_res.total_size_);
+		}
 
 		auto result = user_mgr_->RemoveUser(session_index);
-		if (result == ErrorCode::NONE)
+		if (ErrorCode::NONE == result)
 		{
 			return true;
 		}

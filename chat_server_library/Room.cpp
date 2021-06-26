@@ -135,7 +135,7 @@ namespace chat_server_library
 		if (nullptr == user) {
 			return ErrorCode::ROOM_LEAVE_NOT_MEMBER;
 		}
-
+		
 		user_index_dic_.erase(user_index);
 		if (user_index_dic_.empty()) 
 		{

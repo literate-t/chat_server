@@ -59,6 +59,7 @@ namespace chat_server_library
 	void User::LeaveLobby()
 	{
 		lobby_index_ = -1;
+		//domain_state_ = DomainState::LOGIN;
 	}
 
 	short User::GetRoomIndex()
@@ -68,7 +69,7 @@ namespace chat_server_library
 
 	void User::EnterRoom(const short lobby_index, const short room_index)
 	{
-		lobby_index_ = lobby_index;
+		//lobby_index_ = lobby_index;
 		room_index_ = room_index;
 		domain_state_ = DomainState::ROOM;
 	}
@@ -86,6 +87,11 @@ namespace chat_server_library
 	void User::SetDomainRoom()
 	{ 
 		domain_state_ = DomainState::ROOM;
+	}
+
+	void User::SetDomainClear()
+	{
+		domain_state_ = DomainState::NONE;
 	}
 
 	bool User::IsDomainLogin()
