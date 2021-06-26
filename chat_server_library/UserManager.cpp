@@ -66,6 +66,7 @@ namespace chat_server_library
 		auto id = user->GetId();
 		user_session_dic_.erase(session_index);
 		user_id_dic_.erase(id);
+		user->Clear();
 		ReleaseUserToPoolIndex(index);
 
 		return ErrorCode::NONE;

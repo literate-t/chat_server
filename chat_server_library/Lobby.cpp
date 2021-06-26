@@ -98,18 +98,18 @@ namespace chat_server_library
 
 	void Lobby::RemoveUser(const int user_index)
 	{
-		auto findIter = std::find_if(std::begin(lobby_user_list_), std::end(lobby_user_list_),
+		auto find_iter = std::find_if(std::begin(lobby_user_list_), std::end(lobby_user_list_),
 			[&](auto& lobby_user)
 			{
 				return nullptr != lobby_user.user_ && lobby_user.user_->GetIndex() == user_index;
 			});
 
-		if (std::end(lobby_user_list_) == findIter)
+		if (std::end(lobby_user_list_) == find_iter)
 		{
 			return;
 		}
 
-		findIter->user_ = nullptr;
+		find_iter->user_ = nullptr;
 	}
 
 	ErrorCode Lobby::LeaveLobbyToEnterRoom(const int user_index)

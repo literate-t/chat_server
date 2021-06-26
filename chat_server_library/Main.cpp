@@ -13,7 +13,7 @@ namespace chat_server_library
 		server_ = make_unique<server_library::IocpServer>();
 		server_->Init(config_.get(), log_.get());
 		auto result = server_->Start();
-		if (result == false)
+		if (false == result)
 		{
 			log_->Write(server_library::LogType::L_ERROR, "%s | Starting server is failed", __FUNCTION__);
 			return -1;

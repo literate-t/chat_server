@@ -25,6 +25,10 @@ namespace Common
 
 	struct PacketBasicRes : public PacketHeader
 	{
+		PacketBasicRes()
+		{
+			total_size_ = sizeof PacketBasicRes;
+		}
 		short error_code_ = 0;
 	};
 
