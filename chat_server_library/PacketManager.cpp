@@ -40,16 +40,20 @@ namespace chat_server_library
 
 		if (ErrorCode::NONE != result)
 		{
-			PacketBasicRes packet_res;
-			packet_res.id_ = static_cast<short>(PacketId::LOGIN_RES);
-			packet_res.error_code_ = static_cast<short>(result);
-			SendPacketFunc(session_index, &packet_res, sizeof packet_res);
+			PacketBasicRes packet_res = 
+				GetBasicPacketRes(static_cast<short>(PacketId::LOGIN_RES), 
+					static_cast<short>(result));
+			//packet_res.id_ = static_cast<short>(PacketId::LOGIN_RES);
+			//packet_res.error_code_ = static_cast<short>(result);
+			SendPacketFunc(session_index, &packet_res, packet_res.total_size_);
 			return;
 		}
-		PacketBasicRes packet_res;
-		packet_res.id_ = static_cast<short>(PacketId::LOGIN_RES);
-		packet_res.error_code_ = static_cast<short>(ErrorCode::NONE);
-		SendPacketFunc(session_index, &packet_res, sizeof PacketBasicRes);
+		PacketBasicRes packet_res =
+			GetBasicPacketRes(static_cast<short>(PacketId::LOGIN_RES), 
+				static_cast<short>(ErrorCode::NONE));
+		//packet_res.id_ = static_cast<short>(PacketId::LOGIN_RES);
+		//packet_res.error_code_ = static_cast<short>(ErrorCode::NONE);
+		SendPacketFunc(session_index, &packet_res, packet_res.total_size_);
 	}
 
 	bool PacketManager::ProcessLogoff(const int session_index)
@@ -58,6 +62,7 @@ namespace chat_server_library
 		if (ErrorCode::NONE != error_code)
 		{
 			log_->Write(server_library::LogType::L_INFO, "No user");
+			return false;
 		}
 		
 		if (true == user->IsDomainRoom())
@@ -74,7 +79,7 @@ namespace chat_server_library
 			}
 
 			// 방 퇴장 처리
-			room->LeaveRoom(user->GetRoomIndex());
+			room->LeaveRoom(user->GetIndex());
 
 			// 방 퇴장 알림
 			packet_res.id_ = static_cast<short>(PacketId::ROOM_LEAVE_RES);
@@ -88,7 +93,8 @@ namespace chat_server_library
 			auto lobby = lobby_mgr_->GetLobby(user->GetLobbyIndex());
 
 			// 로비 퇴장 처리
-			lobby->LeaveLobby(user->GetSessionIndex());
+			//lobby->LeaveLobby(user->GetSessionIndex());
+			lobby->LeaveLobby(user->GetIndex());
 
 			// 로비 퇴장 알림
 			packet_res.id_ = static_cast<short>(PacketId::LOBBY_LEAVE_RES);
@@ -103,5 +109,9 @@ namespace chat_server_library
 			return true;
 		}
 		return false;
+	}
+	PacketBasicRes PacketManager::GetBasicPacketRes(short id, short error_code)
+	{
+		return PacketBasicRes(id, error_code);
 	}
 }

@@ -256,6 +256,7 @@ namespace server_library
 	{
 		if (!connected_)
 		{
+			log_->Write(LogType::L_ERROR, "%s | !connected", __FUNCTION__);
 			*buf = nullptr;			
 			return Result::RESERVED_BUFFER_NOT_CONNECTED;
 		}

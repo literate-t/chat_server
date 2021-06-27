@@ -244,12 +244,13 @@ namespace server_library
 				reinterpret_cast<OVERLAPPED**>(&overlapped_ex),
 				INFINITE
 			);
-
-			is_worker_thread_running_;
+			
 			if (!result || (0 == bytes && IoMode::ACCEPT != overlapped_ex->mode_))
 			{
+				log_->Write(LogType::L_INFO, "%s | IoMode = %d", __FUNCTION__, overlapped_ex->mode_);
 				log_->Write(LogType::L_INFO, "%s | WSAGetLastError() = %d", __FUNCTION__, WSAGetLastError());
 				log_->Write(LogType::L_INFO, "%s | GQCS result = %d bytes=%d", __FUNCTION__, result, bytes);
+				//log_->Write(LogType::L_INFO, "%s | session index = %d", __FUNCTION__, session->GetIndex());
 				HandleWorkerThreadException(session, overlapped_ex);
 				continue;
 			}
@@ -345,9 +346,9 @@ namespace server_library
 
 	void IocpServer::HandleWorkerThreadException(Session* session, const OverlappedEx* overlapped_ex)
 	{
-		if (nullptr == overlapped_ex)
+		if (nullptr == overlapped_ex || nullptr == session)
 		{
-			log_->Write(LogType::L_ERROR, "%s | overlapped_ex is nullptr", __FUNCTION__);
+			log_->Write(LogType::L_ERROR, "%s | overlapped_ex or session is nullptr", __FUNCTION__);
 			return;
 		}
 
@@ -381,8 +382,9 @@ namespace server_library
 			return;
 		}
 
-		if (PostMessageIOCP(session, session->GetCloseMsg()) != Result::SUCCESS)
+		if (Result::SUCCESS != PostMessageIOCP(session, session->GetCloseMsg()))
 		{
+			log_->Write(LogType::L_ERROR, "%s | PostMessageIOCP(session, session->GetCloseMsg()) failure", __FUNCTION__);
 			session->ResetSession();
 		}
 	}

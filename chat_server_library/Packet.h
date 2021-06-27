@@ -29,6 +29,12 @@ namespace Common
 		{
 			total_size_ = sizeof PacketBasicRes;
 		}
+		PacketBasicRes(short id, short error_code)
+		{
+			id_ = id;
+			error_code_ = error_code;
+			total_size_ = sizeof PacketBasicRes;
+		}
 		short error_code_ = 0;
 	};
 

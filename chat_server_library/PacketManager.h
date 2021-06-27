@@ -25,6 +25,9 @@ namespace chat_server_library
 		function<void(int, void*, short)> SendPacketFunc;
 
 	private:
+		PacketBasicRes GetBasicPacketRes(short id, short error_code);
+
+	private:
 		using PacketFunc = void(PacketManager::*)(int, char*, short);
 		std::unordered_map<short, PacketFunc> packet_func_dictionary_;
 
