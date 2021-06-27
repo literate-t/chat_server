@@ -69,8 +69,7 @@ namespace chat_server_library
 		packet_res.id_ = static_cast<short>(PacketId::LOBBY_LEAVE_RES);
 		packet_res.total_size_ = sizeof PacketBasicRes;
 
-		auto user_result = user_mgr_->GetUser(session_index);
-		auto error_code = get<0>(user_result);
+		auto [error_code, user] = user_mgr_->GetUser(session_index);
 		if (ErrorCode::NONE != error_code)
 		{
 			packet_res.error_code_ = static_cast<short>(error_code);
@@ -78,7 +77,6 @@ namespace chat_server_library
 			return;
 		}
 
-		auto user = get<1>(user_result);
 		if (false == user->IsDomainLobby())
 		{
 			packet_res.error_code_ = static_cast<short>(ErrorCode::LOBBY_LEAVE_INVALID_DOMAIN);

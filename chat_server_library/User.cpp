@@ -59,7 +59,7 @@ namespace chat_server_library
 	void User::LeaveLobby()
 	{
 		lobby_index_ = -1;
-		//domain_state_ = DomainState::LOGIN;
+		domain_state_ = DomainState::NONE;
 	}
 
 	short User::GetRoomIndex()

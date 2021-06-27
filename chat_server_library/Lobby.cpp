@@ -84,7 +84,7 @@ namespace chat_server_library
 		auto user = FindUser(user_index);
 		if (nullptr == user)
 		{
-			ErrorCode::LOBBY_LEAVE_USER_INVALID;
+			return ErrorCode::LOBBY_LEAVE_USER_INVALID;
 		}
 
 		RemoveUser(user_index);
@@ -131,13 +131,13 @@ namespace chat_server_library
 
 	User* Lobby::FindUser(const int user_index)
 	{
-		auto findIter = user_index_dic_.find(user_index);
-		if (user_index_dic_.end() == findIter)
+		auto find_iter = user_index_dic_.find(user_index);
+		if (user_index_dic_.end() == find_iter)
 		{
 			return nullptr;
 		}
 
-		return findIter->second;
+		return find_iter->second;
 	}
 
 	void Lobby::SendAllUsersInfoToSession(short packet_id, const int session_index)
