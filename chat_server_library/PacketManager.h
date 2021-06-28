@@ -25,7 +25,10 @@ namespace chat_server_library
 		function<void(int, void*, short)> SendPacketFunc;
 
 	private:
+		PacketHeader* GetPacketHeader(char* buf);
 		PacketBasicRes GetBasicPacketRes(short id, short error_code);
+		short GetShortId(PacketId id);
+		short GetShortError(ErrorCode error);
 
 	private:
 		using PacketFunc = void(PacketManager::*)(int, char*, short);
