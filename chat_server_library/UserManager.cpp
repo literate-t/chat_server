@@ -29,10 +29,10 @@ namespace chat_server_library
 		return &user_pool_[index];
 	}
 
-	void UserManager::ReleaseUserToPoolIndex(const int index)
+	void UserManager::ReleaseUserToPoolIndex(const int user_index)
 	{
-		user_index_pool_.push(index);
-		user_pool_[index].Clear();
+		user_index_pool_.push(user_index);
+		user_pool_[user_index].Clear();
 	}
 
 	ErrorCode UserManager::AddUser(const int session_index, const char* id)
@@ -43,7 +43,7 @@ namespace chat_server_library
 		}
 
 		auto user = AllocateUserFromPoolIndex();
-		if (user == nullptr) 
+		if (nullptr == user)
 		{
 			return ErrorCode::USER_MGR_MAX_USER_COUNT;
 		}
@@ -62,12 +62,12 @@ namespace chat_server_library
 			return ErrorCode::USER_MGR_REMOVE_INVALID_SESSION;
 		}
 
-		auto index = user->GetIndex();
-		auto id = user->GetId();
+		auto user_index = user->GetIndex();
+		auto user_id = user->GetId();
 		user_session_dic_.erase(session_index);
-		user_id_dic_.erase(id);
-		user->Clear();
-		ReleaseUserToPoolIndex(index);
+		user_id_dic_.erase(user_id);
+		//user->Clear();
+		ReleaseUserToPoolIndex(user_index);
 
 		return ErrorCode::NONE;
 	}

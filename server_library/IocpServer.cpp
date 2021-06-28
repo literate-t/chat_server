@@ -364,9 +364,11 @@ namespace server_library
 			session->DecrementSendIoCount();
 			break;
 		}
+
 		log_->Write(LogType::L_INFO, "%s | AcceptIoCount : %d", __FUNCTION__, session->GetAcceptIoCount());
 		log_->Write(LogType::L_INFO, "%s | RecvIoCount : %d", __FUNCTION__, session->GetRecvIoCount());
 		log_->Write(LogType::L_INFO, "%s | SendtIoCount : %d", __FUNCTION__, session->GetSendIoCount());
+
 		if (session->CloseCompletely())
 		{
 			HandleSessionCloseException(session);
@@ -427,7 +429,7 @@ namespace server_library
 			return;
 		}
 
-		if (PostMessageIOCP(session, session->GetConnectionMsg()) != Result::SUCCESS)
+		if (Result::SUCCESS != PostMessageIOCP(session, session->GetConnectionMsg()))
 		{
 			session->Disconnect();
 			session->ResetSession();

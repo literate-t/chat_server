@@ -42,7 +42,7 @@ namespace chat_server_library
 		auto findIter = std::find_if(std::begin(lobby_user_list_), std::end(lobby_user_list_),
 			[](auto& lobby_user)
 			{
-				return lobby_user.user_ == nullptr; 
+				return nullptr == lobby_user.user_;
 			});
 
 		if (findIter == std::end(lobby_user_list_)) 
@@ -146,18 +146,18 @@ namespace chat_server_library
 		packet.users_count_ = (short)user_index_dic_.size();
 		int index = 0;
 		short total_size = 4; // UserCount(short) + ErroCode(short)
-		for (auto user : user_id_dic_) 
+		for (auto [id, user] : user_id_dic_) 
 		{
-			if (nullptr == user.first)
+			if (nullptr == user)
 			{
 				continue;
 			}
 
-			std::string id_string = user.first;
+			std::string id_string = id;
 			short size = (short)id_string.size();
 			memcpy(&packet.user_id_[index], &size, 2);
 			index += 2;
-			memcpy(&packet.user_id_[index], user.first, size);
+			memcpy(&packet.user_id_[index], id, size);
 			index += size;
 			total_size += size + 2;
 		}

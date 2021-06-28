@@ -18,7 +18,7 @@ namespace chat_server_library
 
 	void PacketManager::ProcessPacket(int session_index, char* buf, short copy_size)
 	{
-		PacketHeader* header = reinterpret_cast<PacketHeader*>(buf);
+		PacketHeader* header = GetPacketHeader(buf);
 		auto iter = packet_func_dictionary_.find(header->id_);
 		if (iter != packet_func_dictionary_.end())
 		{
@@ -41,18 +41,12 @@ namespace chat_server_library
 		if (ErrorCode::NONE != result)
 		{
 			PacketBasicRes packet_res = 
-				GetBasicPacketRes(static_cast<short>(PacketId::LOGIN_RES), 
-					static_cast<short>(result));
-			//packet_res.id_ = static_cast<short>(PacketId::LOGIN_RES);
-			//packet_res.error_code_ = static_cast<short>(result);
+				GetBasicPacketRes(GetShortId(PacketId::LOGIN_RES), GetShortError(result));
 			SendPacketFunc(session_index, &packet_res, packet_res.total_size_);
 			return;
 		}
 		PacketBasicRes packet_res =
-			GetBasicPacketRes(static_cast<short>(PacketId::LOGIN_RES), 
-				static_cast<short>(ErrorCode::NONE));
-		//packet_res.id_ = static_cast<short>(PacketId::LOGIN_RES);
-		//packet_res.error_code_ = static_cast<short>(ErrorCode::NONE);
+			GetBasicPacketRes(GetShortId(PacketId::LOGIN_RES), GetShortError(ErrorCode::NONE));
 		SendPacketFunc(session_index, &packet_res, packet_res.total_size_);
 	}
 
@@ -67,40 +61,29 @@ namespace chat_server_library
 		
 		if (true == user->IsDomainRoom())
 		{
-			PacketBasicRes packet_res;
-
 			auto lobby = lobby_mgr_->GetLobby(user->GetLobbyIndex());
-			auto room = lobby->GetRoom(user->GetRoomIndex());
-			if (nullptr == room)
+			if (nullptr != lobby)
 			{
-				packet_res.error_code_ = (short)ErrorCode::ROOM_LEAVE_INVALID_ROOM_INDEX;
-				SendPacketFunc(session_index, &packet_res, packet_res.total_size_);
-				return false;
+				auto room = lobby->GetRoom(user->GetRoomIndex());
+				if (nullptr != room)
+				{
+					// 룸에 남아 있는 세션에게 퇴장하는 세션을 알림
+					room->NotifyToAll(GetShortId(PacketId::ROOM_LEAVE_USER_NTF), user->GetIndex());
+
+					// 방 퇴장 처리
+					room->LeaveRoom(user->GetIndex());
+				}
 			}
-
-			// 방 퇴장 처리
-			room->LeaveRoom(user->GetIndex());
-
-			// 방 퇴장 알림
-			packet_res.id_ = static_cast<short>(PacketId::ROOM_LEAVE_RES);
-			packet_res.total_size_ = sizeof PacketBasicRes;
-			packet_res.error_code_ = static_cast<short>(ErrorCode::NONE);
-			SendPacketFunc(session_index, &packet_res, packet_res.total_size_);
 		}
 		else if (true == user->IsDomainLobby())
 		{
-			PacketBasicRes packet_res;
 			auto lobby = lobby_mgr_->GetLobby(user->GetLobbyIndex());
-
-			// 로비 퇴장 처리
-			//lobby->LeaveLobby(user->GetSessionIndex());
-			lobby->LeaveLobby(user->GetIndex());
-
-			// 로비 퇴장 알림
-			packet_res.id_ = static_cast<short>(PacketId::LOBBY_LEAVE_RES);
-			packet_res.total_size_ = sizeof PacketBasicRes;
-			packet_res.error_code_ = static_cast<short>(ErrorCode::NONE);
-			SendPacketFunc(session_index, &packet_res, packet_res.total_size_);
+			if (nullptr != lobby)
+			{
+				// 로비 퇴장 처리
+				lobby->NotifyToAll(GetShortId(PacketId::LOBBY_LEAVE_USER_NTF), user->GetIndex());
+				lobby->LeaveLobby(user->GetIndex());
+			}
 		}
 
 		auto result = user_mgr_->RemoveUser(session_index);
@@ -110,8 +93,24 @@ namespace chat_server_library
 		}
 		return false;
 	}
+
+	PacketHeader* PacketManager::GetPacketHeader(char* buf)
+	{
+		return reinterpret_cast<PacketHeader*>(buf);
+	}
+
 	PacketBasicRes PacketManager::GetBasicPacketRes(short id, short error_code)
 	{
 		return PacketBasicRes(id, error_code);
+	}
+
+	short PacketManager::GetShortId(PacketId id)
+	{
+		return static_cast<short>(id);
+	}
+
+	short PacketManager::GetShortError(ErrorCode error)
+	{
+		return static_cast<short>(error);
 	}
 }
