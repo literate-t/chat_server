@@ -10,7 +10,7 @@ namespace chat_server_library
 	void User::Clear()
 	{
 		session_index_	= -1;
-		id_				= nullptr;
+		memset(id_, 0, Common::kMaxUserIdLength);
 		set_				= false;
 		domain_state_ = DomainState::NONE;
 		lobby_index_		= -1;
@@ -22,30 +22,31 @@ namespace chat_server_library
 		set_ = true;
 		domain_state_ = DomainState::LOGIN;
 		session_index_ = session_index;
-		id_ = id;
+		int count = GetCharSize(id);
+		memcpy(id_, id, count);
 	}
 
-	short User::GetIndex()
+	short User::GetIndex() const
 	{
 		return index_;
 	}
 
-	int User::GetSessionIndex()
+	int User::GetSessionIndex() const
 	{ 
 		return session_index_; 
 	}
 
-	const char* User::GetId()
+	const char* User::GetId() const
 	{ 
 		return id_; 
 	}
 
-	bool User::IsSet()
+	bool User::IsSet() const
 	{ 
 		return set_; 
 	}
 
-	short& User::GetLobbyIndex()
+	short User::GetLobbyIndex() const
 	{ 
 		return lobby_index_; 
 	}
@@ -62,7 +63,7 @@ namespace chat_server_library
 		domain_state_ = DomainState::NONE;
 	}
 
-	short User::GetRoomIndex()
+	short User::GetRoomIndex() const
 	{ 
 		return room_index_;
 	}
@@ -94,18 +95,29 @@ namespace chat_server_library
 		domain_state_ = DomainState::NONE;
 	}
 
-	bool User::IsDomainLogin()
+	bool User::IsDomainLogin() const
 	{ 
 		return domain_state_ == DomainState::LOGIN ? true : false;
 	}
 
-	bool User::IsDomainLobby()
+	bool User::IsDomainLobby() const
 	{
 		return domain_state_ == DomainState::LOBBY ? true : false;
 	}
 
-	bool User::IsDomainRoom()
+	bool User::IsDomainRoom() const
 	{ 
 		return domain_state_ == DomainState::ROOM ? true : false;
+	}
+
+	int User::GetCharSize(const char* str) const
+	{
+		int count = 0;
+		for (int i = 0; i < Common::kMaxUserIdLength; ++i)
+		{
+			++count;
+			if ('\0' == str[i]) return count;
+		}
+		return 0;
 	}
 }

@@ -4,19 +4,19 @@ namespace chat_server_library
 {
 	void PacketManager::Init(UserManager* user_manager, LobbyManager* lobby_manager, server_library::ILog* log)
 	{
-		packet_func_dictionary_[static_cast<short>(PacketId::LOGIN_REQ)] = &PacketManager::Login;
-		packet_func_dictionary_[static_cast<short>(PacketId::LOBBY_ENTER_REQ)] = &PacketManager::LobbyEnter;
-		packet_func_dictionary_[static_cast<short>(PacketId::LOBBY_LEAVE_REQ)] = &PacketManager::LobbyLeave;
-		packet_func_dictionary_[static_cast<short>(PacketId::ROOM_ENTER_REQ)]	 = &PacketManager::RoomEnter;
-		packet_func_dictionary_[static_cast<short>(PacketId::ROOM_LEAVE_REQ)] = &PacketManager::RoomLeave;
-		packet_func_dictionary_[static_cast<short>(PacketId::ROOM_CHAT_REQ)] = &PacketManager::RoomChat;
+		packet_func_dictionary_[PacketId::LOGIN_REQ] = &PacketManager::Login;
+		packet_func_dictionary_[PacketId::LOBBY_ENTER_REQ]	= &PacketManager::LobbyEnter;
+		packet_func_dictionary_[PacketId::LOBBY_LEAVE_REQ]	= &PacketManager::LobbyLeave;
+		packet_func_dictionary_[PacketId::ROOM_ENTER_REQ]	= &PacketManager::RoomEnter;
+		packet_func_dictionary_[PacketId::ROOM_LEAVE_REQ]	= &PacketManager::RoomLeave;
+		packet_func_dictionary_[PacketId::ROOM_CHAT_REQ]	= &PacketManager::RoomChat;
 
 		user_mgr_ = user_manager;
 		lobby_mgr_ = lobby_manager;
 		log_ = log;
 	}
 
-	void PacketManager::ProcessPacket(int session_index, char* buf, short copy_size)
+	void PacketManager::ProcessPacket(int session_index, char* buf, const short copy_size)
 	{
 		PacketHeader* header = GetPacketHeader(buf);
 		auto iter = packet_func_dictionary_.find(header->id_);
@@ -26,7 +26,7 @@ namespace chat_server_library
 		}
 	}
 
-	void PacketManager::Login(const int session_index, char* buf, short copy_size)
+	void PacketManager::Login(const int session_index, char* buf, const short copy_size)
 	{
 		if (copy_size - static_cast<short>(kPacketHeaderLength) != static_cast<short>(kLoginReqPacketSize))
 		{
@@ -41,12 +41,12 @@ namespace chat_server_library
 		if (ErrorCode::NONE != result)
 		{
 			PacketBasicRes packet_res = 
-				GetBasicPacketRes(GetShortId(PacketId::LOGIN_RES), GetShortError(result));
+				GetPacketBasicRes(PacketId::LOGIN_RES, result);
 			SendPacketFunc(session_index, &packet_res, packet_res.total_size_);
 			return;
 		}
 		PacketBasicRes packet_res =
-			GetBasicPacketRes(GetShortId(PacketId::LOGIN_RES), GetShortError(ErrorCode::NONE));
+			GetPacketBasicRes(PacketId::LOGIN_RES, ErrorCode::NONE);
 		SendPacketFunc(session_index, &packet_res, packet_res.total_size_);
 	}
 
@@ -68,7 +68,7 @@ namespace chat_server_library
 				if (nullptr != room)
 				{
 					// 룸에 남아 있는 세션에게 퇴장하는 세션을 알림
-					room->NotifyToAll(GetShortId(PacketId::ROOM_LEAVE_USER_NTF), user->GetIndex());
+					room->NotifyToAll(PacketId::ROOM_LEAVE_USER_NTF, user->GetIndex());
 
 					// 방 퇴장 처리
 					room->LeaveRoom(user->GetIndex());
@@ -81,7 +81,7 @@ namespace chat_server_library
 			if (nullptr != lobby)
 			{
 				// 로비 퇴장 처리
-				lobby->NotifyToAll(GetShortId(PacketId::LOBBY_LEAVE_USER_NTF), user->GetIndex());
+				lobby->NotifyToAll(PacketId::LOBBY_LEAVE_USER_NTF, user->GetIndex());
 				lobby->LeaveLobby(user->GetIndex());
 			}
 		}
@@ -99,18 +99,8 @@ namespace chat_server_library
 		return reinterpret_cast<PacketHeader*>(buf);
 	}
 
-	PacketBasicRes PacketManager::GetBasicPacketRes(short id, short error_code)
+	PacketBasicRes PacketManager::GetPacketBasicRes(PacketId id, ErrorCode error_code)
 	{
 		return PacketBasicRes(id, error_code);
-	}
-
-	short PacketManager::GetShortId(PacketId id)
-	{
-		return static_cast<short>(id);
-	}
-
-	short PacketManager::GetShortError(ErrorCode error)
-	{
-		return static_cast<short>(error);
 	}
 }

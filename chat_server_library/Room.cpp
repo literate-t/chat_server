@@ -1,11 +1,7 @@
 #include "stdafx.h"
 
-using PacketId = Common::PacketId;
 namespace chat_server_library
 {
-	Room::Room() {}
-	Room::~Room() {}
-
 	void Room::Init(const short index, const short max_user_count, ILog* log)
 	{
 		log_			= log;
@@ -48,7 +44,7 @@ namespace chat_server_library
 		return ErrorCode::NONE;
 	}
 
-	void Room::SendAllUsersInfoToSession(short packet_id, const int session_index)
+	void Room::SendAllUsersInfoToSession(const PacketId packet_id, const int session_index)
 	{
 		PacketNotifyEntrance packet;
 		packet.users_count_ = (short)user_index_dic_.size();
@@ -71,11 +67,11 @@ namespace chat_server_library
 		}
 		packet.total_size_ = total_size + kPacketHeaderLength;
 		packet.id_ = packet_id;
-		packet.error_code_ = (short)ErrorCode::NONE;
+		packet.error_code_ = ErrorCode::NONE;
 		SendPacketFunc(session_index, &packet, packet.total_size_);
 	}
 
-	void Room::NotifyToAll(short packet_id, const int user_index)
+	void Room::NotifyToAll(PacketId packet_id, const int user_index)
 	{
 		if (user_index_dic_.size() <= 1) 
 		{
@@ -94,11 +90,11 @@ namespace chat_server_library
 
 		packet.total_size_ = total_size + kPacketHeaderLength;
 		packet.id_ = packet_id;
-		packet.error_code_ = static_cast<short>(ErrorCode::NONE);
+		packet.error_code_ = ErrorCode::NONE;
 		SendToAllUsers(&packet, packet.total_size_, user->GetSessionIndex());
 	}
 
-	void Room::SendToAllUsers(void* packet, const short packet_size, const int exception_index)
+	void Room::SendToAllUsers(const void* packet, const short packet_size, const int exception_index)
 	{
 		for (auto& user : user_index_dic_)
 		{
@@ -110,7 +106,7 @@ namespace chat_server_library
 		}
 	}
 
-	User* Room::FindUser(const int user_index)
+	User* Room::FindUser(const int user_index) const
 	{
 		auto findIter = user_index_dic_.find(user_index);
 		if (findIter == user_index_dic_.end()) {
@@ -123,6 +119,7 @@ namespace chat_server_library
 	bool Room::IsMaster(const short user_index)
 	{
 		return user_index_dic_[0]->GetIndex() == user_index ? true : false;
+		//return user_index_dic_.find(0)->first == user_index ? true : false;
 	}
 
 	ErrorCode Room::LeaveRoom(const short user_index)
@@ -145,29 +142,29 @@ namespace chat_server_library
 		return ErrorCode::NONE;
 	}
 
-	short& Room::GetIndex()
+	short Room::GetIndex() const
 	{ 
 		return index_; 	
 	}
 
-	bool Room::IsCreated()
+	bool Room::IsCreated() const
 	{ 
 		return created_; 
 	}
 
-	const char* Room::GetTitle() 
+	const char* Room::GetTitle() const
 	{ 
 		return title_; 
 	}
 
-	short Room::GetMaxUserCount()
+	short Room::GetMaxUserCount() const
 	{ 
 		return max_user_count_; 
 	}
 
-	short Room::GetUserCount() 
+	size_t Room::GetUserCount() const
 	{ 
-		return (short)user_index_dic_.size(); 
+		return user_index_dic_.size(); 
 	}
 
 	void Room::SendChat(const char* user_id, const short room_index, const char* msg)
@@ -181,14 +178,14 @@ namespace chat_server_library
 		packet_chat.msg_size_ = (short)temp.size();
 		memcpy(packet_chat.msg_, msg, packet_chat.msg_size_);
 
-		packet_chat.id_ = static_cast<short>(PacketId::ROOM_CHAT_RES);
+		packet_chat.id_ = PacketId::ROOM_CHAT_RES;
 		packet_chat.total_size_ = sizeof PacketRoomChat;
-		packet_chat.error_code_ = static_cast<short>(ErrorCode::NONE);
+		packet_chat.error_code_ = ErrorCode::NONE;
 
 		ChatToAllUsers(&packet_chat, packet_chat.total_size_, room_index);
 	}
 
-	void Room::ChatToAllUsers(void* packet, const short packet_size, const int room_index)
+	void Room::ChatToAllUsers(const void* packet, const short packet_size, const int room_index)
 	{
 		for (auto user : user_index_dic_)
 		{

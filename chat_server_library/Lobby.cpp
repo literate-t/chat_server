@@ -1,6 +1,5 @@
 #include "stdafx.h"
 
-using PacketId = Common::PacketId;
 namespace chat_server_library
 {
 	Lobby::Lobby() {}
@@ -117,7 +116,7 @@ namespace chat_server_library
 		auto user = FindUser(user_index);
 		if (nullptr == user)
 		{
-			ErrorCode::LOBBY_LEAVE_USER_INVALID;
+			return ErrorCode::LOBBY_LEAVE_USER_INVALID;
 		}
 
 		RemoveUser(user_index);
@@ -140,10 +139,11 @@ namespace chat_server_library
 		return find_iter->second;
 	}
 
-	void Lobby::SendAllUsersInfoToSession(short packet_id, const int session_index)
+	void Lobby::SendAllUsersInfoToSession(const PacketId packet_id, const int session_index)
 	{
 		PacketNotifyEntrance packet;
 		packet.users_count_ = (short)user_index_dic_.size();
+
 		int index = 0;
 		short total_size = 4; // UserCount(short) + ErroCode(short)
 		for (auto [id, user] : user_id_dic_) 
@@ -163,11 +163,11 @@ namespace chat_server_library
 		}
 		packet.total_size_ = total_size + kPacketHeaderLength;
 		packet.id_ = packet_id;
-		packet.error_code_ = static_cast<short>(ErrorCode::NONE);
+		packet.error_code_ = ErrorCode::NONE;
 		SendPacketFunc(session_index, &packet, packet.total_size_);
 	}
 
-	void Lobby::NotifyToAll(short packet_id, const int user_index)
+	void Lobby::NotifyToAll(const PacketId packet_id, const int user_index)
 	{
 		if (user_index_dic_.size() == 1) 
 		{
@@ -185,42 +185,42 @@ namespace chat_server_library
 
 		packet.id_			= packet_id;
 		packet.total_size_	= total_size + kPacketHeaderLength;
-		packet.error_code_ = static_cast<short>(ErrorCode::NONE);
+		packet.error_code_	= ErrorCode::NONE;
 		SendToAllUsers(&packet, packet.total_size_, user->GetSessionIndex());
 	}
 
-	void Lobby::SendToAllUsers(void* packet, const short packet_size, const int exception_index)
+	void Lobby::SendToAllUsers(const void* packet, const short packet_size, const int exception_index)
 	{
-		for (auto& user : user_index_dic_) {
-			if (user.second->GetSessionIndex() == exception_index) 
+		for (auto& [index, user] : user_index_dic_) {
+			if (user->GetSessionIndex() == exception_index) 
 			{
 				continue;
 			}
-			SendPacketFunc(user.second->GetSessionIndex(), packet, packet_size);
+			SendPacketFunc(user->GetSessionIndex(), packet, packet_size);
 		}
 	}
 
-	short& Lobby::GetIndex()
+	short Lobby::GetIndex() const
 	{ 
 		return lobby_index_; 
 	}
 
-	size_t Lobby::GetUserCount()
+	size_t Lobby::GetUserCount() const
 	{
 		return user_index_dic_.size();
 	}
 
-	short& Lobby::GetMaxUserCount()
+	short Lobby::GetMaxUserCount() const
 	{ 
 		return max_user_count_; 
 	}
 
-	size_t Lobby::GetMaxRoomCount()
+	size_t Lobby::GetMaxRoomCount() const
 	{ 
 		return room_list_.size(); 
 	}
 
-	Room* Lobby::CreateRoom(short room_index)
+	Room* Lobby::CreateRoom(const short room_index)
 	{
 		if (room_index > room_list_.size() - 1) 
 		{
@@ -235,7 +235,7 @@ namespace chat_server_library
 		return GetRoom(room_index);
 	}
 
-	Room* Lobby::GetRoom(const short room_index)
+	Room* Lobby::GetRoom(const short room_index) const
 	{
 		if (room_index < 0 || room_index >= room_list_.size() - 1) 
 		{

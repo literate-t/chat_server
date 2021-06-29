@@ -1,9 +1,7 @@
 #include "stdafx.h"
 
-using PacketId = Common::PacketId;
 namespace chat_server_library
 {
-	LobbyManager::LobbyManager()  {}
 	LobbyManager::~LobbyManager() {}
 
 	void LobbyManager::Init(LobbyManagerConfig* config, IocpServer* server, ILog* log)
@@ -24,7 +22,6 @@ namespace chat_server_library
 		if (lobby_index < 0 || lobby_index >= (short)lobby_list_.size() - 1) {
 			return nullptr;
 		}
-
 		return &lobby_list_[lobby_index];
 	}
 }

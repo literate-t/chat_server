@@ -33,6 +33,7 @@ using namespace std;
 #include "Definitions.h"
 #include "ErrorCode.h"
 #include "Packet.h"
+#include "PacketId.h"
 #include "User.h"
 #include "UserManager.h"
 #include "Lobby.h"
