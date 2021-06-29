@@ -1,5 +1,6 @@
 #pragma once
 #include "stdafx.h"
+#include <array>
 
 namespace Common
 {	
@@ -29,6 +30,8 @@ namespace chat_server_library
 
 		User* FindUser(const int session_index);
 		User* FindUser(const char* id);
+
+		int GetCharSize(const char* str) const;
 
 	private:
 		std::vector<User>	user_pool_;

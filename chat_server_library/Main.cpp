@@ -19,9 +19,9 @@ namespace chat_server_library
 			return -1;
 		}
 
-		auto SendPacketFunc = [&](int connectionIndex, void* packet, short packet_size)
+		auto SendPacketFunc = [&](const int connection_index, const void* packet, const short packet_size)
 		{
-			server_->SendPacket(connectionIndex, packet, packet_size);
+			server_->SendPacket(connection_index, packet, packet_size);
 		};
 
 		user_mgr_ = make_unique<UserManager>();

@@ -50,7 +50,10 @@ namespace chat_server_library
 
 		user->SetLoginInfo(session_index, id);
 		user_session_dic_.insert({ session_index, user});
-		user_id_dic_.insert({id, user});
+		int count = GetCharSize(id);
+		char copy_id[Common::kMaxUserIdLength] = {};
+		memcpy(copy_id, id, count);
+		user_id_dic_.insert({ copy_id, user});
 
 		return ErrorCode::NONE;
 	}
@@ -66,7 +69,6 @@ namespace chat_server_library
 		auto user_id = user->GetId();
 		user_session_dic_.erase(session_index);
 		user_id_dic_.erase(user_id);
-		//user->Clear();
 		ReleaseUserToPoolIndex(user_index);
 
 		return ErrorCode::NONE;
@@ -107,5 +109,16 @@ namespace chat_server_library
 			return nullptr;
 		}
 		return find_iter->second;
+	}
+
+	int UserManager::GetCharSize(const char* str) const
+	{
+		int count = 0;
+		for (int i = 0; i < Common::kMaxUserIdLength; ++i)
+		{
+			++count;
+			if ('\0' == str[i]) return count;
+		}
+		return 0;
 	}
 }

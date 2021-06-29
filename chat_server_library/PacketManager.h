@@ -13,26 +13,25 @@ namespace chat_server_library
 		~PacketManager() = default;
 
 		void Init(UserManager* user_manager, LobbyManager* lobby_manager, server_library::ILog* log);
-		void ProcessPacket(int session_index, char* buf, short copy_size);
-		void Login(int session_index, char* buf, short copy_size);
-		void LobbyEnter(int session_index, char* buf, short copy_size);
-		void LobbyLeave(int session_index, char* buf, short copy_size);
-		void RoomEnter(int session_index, char* buf, short copy_size);
-		void RoomLeave(int session_index, char* buf, short copy_size);
-		void RoomChat(int session_index, char* buf, short copy_size);
-		bool ProcessLogoff(int session_index);
+		void ProcessPacket(const int session_index, char* buf, const short copy_size);
+		void Login(const int session_index, char* buf, const short copy_size);
+		void LobbyEnter(const int session_index, char* buf, const short copy_size);
+		void LobbyLeave(const int session_index, char* buf, const short copy_size);
+		void RoomEnter(const int session_index, char* buf, const short copy_size);
+		void RoomLeave(const int session_index, char* buf, const short copy_size);
+		void RoomChat(const int session_index, char* buf, const short copy_size);
+		bool ProcessLogoff(const int session_index);
 
-		function<void(int, void*, short)> SendPacketFunc;
+		function<void(const int, const void*, const short)> SendPacketFunc;
 
 	private:
 		PacketHeader* GetPacketHeader(char* buf);
-		PacketBasicRes GetBasicPacketRes(short id, short error_code);
-		short GetShortId(PacketId id);
-		short GetShortError(ErrorCode error);
+		PacketBasicRes GetPacketBasicRes(const PacketId id, const ErrorCode error_code);
+
 
 	private:
-		using PacketFunc = void(PacketManager::*)(int, char*, short);
-		std::unordered_map<short, PacketFunc> packet_func_dictionary_;
+		using PacketFunc = void(PacketManager::*)(const int, char*, const short);
+		std::unordered_map<PacketId, PacketFunc> packet_func_dictionary_;
 
 		UserManager* user_mgr_		= nullptr;
 		LobbyManager* lobby_mgr_	= nullptr;

@@ -218,7 +218,6 @@ namespace ChatClient {
             if (errorCode == (short)ErrorCode.NONE) {
                 var userIdSize = BitConverter.ToInt16(bodyData, 2);
                 var userId = Encoding.UTF8.GetString(bodyData, 4, userIdSize);
-                //if (userId == textBoxId.Text) {
                 if (userId == _id) { 
                     userId = "나";
                 }

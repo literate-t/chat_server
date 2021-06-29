@@ -17,36 +17,37 @@ namespace chat_server_library
 	using IocpServer = server_library::IocpServer;
 	using ILog		 = server_library::ILog;
 	using ErrorCode  = Common::ErrorCode;
+	using PacketId = Common::PacketId;
 	class User;
 
 	class Room
 	{
 	public:
-		Room();
-		~Room();
+		Room() = default;
+		~Room() = default;
 
 		void Init(const short index, const short max_user_count, ILog* log);
 		void Clear();
-		short& GetIndex();
-		bool IsCreated();
-		const char* GetTitle();
-		short GetMaxUserCount();
-		short GetUserCount();
-		User* FindUser(const int user_index);
+		short GetIndex() const;
+		bool IsCreated() const;
+		const char* GetTitle() const;
+		short GetMaxUserCount() const;
+		size_t GetUserCount() const;
+		User* FindUser(const int user_index) const;
 
-		ErrorCode SetRoom(short lobby_index, const char* room_title);
+		ErrorCode SetRoom(const short lobby_index, const char* room_title);
 		ErrorCode EnterRoom(User* user);
-		void SendAllUsersInfoToSession(short packet_id, const int session_index);
-		void NotifyToAll(short packet_id, const int user_index);
+		void SendAllUsersInfoToSession(const PacketId packet_id, const int session_index);
+		void NotifyToAll(PacketId packet_id, const int user_index);
 		ErrorCode LeaveRoom(const short user_index);
 
 		bool IsMaster(const short user_index);
 
-		void SendToAllUsers(void* packet, const short packet_size, const int exception_index = -1);
+		void SendToAllUsers(const void* packet, const short packet_size, const int exception_index = -1);
 		void SendChat(const char* user_id, const short room_index, const char* msg);
-		void ChatToAllUsers(void* packet, const short packet_size, const int room_index);
+		void ChatToAllUsers(const void* packet, const short packet_size, const int room_index);
 
-		function<void(int, void*, short)> SendPacketFunc;
+		function<void(const int, const void*, const short)> SendPacketFunc;
 
 	private:
 		ILog* log_ = nullptr;

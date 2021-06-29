@@ -7,7 +7,7 @@ namespace Common
 	struct PacketHeader
 	{
 		short total_size_;
-		short id_;
+		PacketId id_;
 	};
 
 	// 로그인 요청
@@ -25,17 +25,14 @@ namespace Common
 
 	struct PacketBasicRes : public PacketHeader
 	{
-		PacketBasicRes()
-		{
-			total_size_ = sizeof PacketBasicRes;
-		}
-		PacketBasicRes(short id, short error_code)
+		PacketBasicRes() = default;
+		PacketBasicRes(PacketId id, ErrorCode error_code)
 		{
 			id_ = id;
 			error_code_ = error_code;
 			total_size_ = sizeof PacketBasicRes;
 		}
-		short error_code_ = 0;
+		ErrorCode error_code_ = ErrorCode::NONE;
 	};
 
 	// 입장 알림
