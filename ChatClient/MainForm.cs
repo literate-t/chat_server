@@ -222,6 +222,16 @@ namespace ChatClient {
             labelStatus.Text = string.Format($"채팅 중");
         }
 
+        private void textBoxChat_KeyUp(object sender, KeyEventArgs e) {
+            if (e.KeyCode == Keys.Enter)
+            {
+                var msg = textBoxChat.Text + '\0';
+                PostSend(PacketId.ROOM_CHAT_REQ, Encoding.UTF8.GetBytes(textBoxChat.Text));
+                textBoxChat.Clear();
+                labelStatus.Text = string.Format($"채팅 중");
+            }
+        }
+
         private void textBoxChat_TextChanged(object sender, EventArgs e) {
             var length = textBoxChat.Text.Length;
             if (_isRoom == true && length > 0) {
@@ -229,16 +239,6 @@ namespace ChatClient {
             } else {
                 buttonSendMsg.Enabled = false;
             }
-        }
-
-        private new void KeyUp(object sender, KeyEventArgs e)
-        {
-            if(e.KeyCode == Keys.Enter) {
-                var msg = textBoxChat.Text + '\0';
-                PostSend(PacketId.ROOM_CHAT_REQ, Encoding.UTF8.GetBytes(textBoxChat.Text));
-                textBoxChat.Clear();
-                labelStatus.Text = string.Format($"채팅 중");
-            }            
         }
     }
 }

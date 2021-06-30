@@ -4,7 +4,7 @@ namespace chat_server_library
 {
 	void PacketManager::LobbyEnter(const int session_index, char* buf, const short copy_size)
 	{
-		if (copy_size != sizeof PacketBasicEnterLeaveReq)
+		if (sizeof PacketBasicEnterLeaveReq != copy_size)
 		{
 			return;
 		}
@@ -89,7 +89,7 @@ namespace chat_server_library
 
 		auto leave_result = lobby->LeaveLobby(user->GetIndex());
 		
-		if (leave_result != ErrorCode::NONE)
+		if (ErrorCode::NONE != leave_result)
 		{
 			PacketBasicRes packet_res = GetPacketBasicRes(packet_id, leave_result);
 			SendPacketFunc(session_index, &packet_res, packet_res.total_size_);
