@@ -37,12 +37,12 @@ namespace chat_server_library
 
 	public:
 		LobbyManager() = default;
-		~LobbyManager();
+		~LobbyManager() = default;
 
 		void Init(LobbyManagerConfig* config, IocpServer* server, ILog* log);
-		Lobby* GetLobby(short lobbyId);
+		Lobby* GetLobby(const short lobbyId);
 
-		function<void(int, const void*, short)> SendPacketFunc;
+		function<void(const int, const void*, const short)> SendPacketFunc;
 
 	private:
 		ILog*		log_		= nullptr;

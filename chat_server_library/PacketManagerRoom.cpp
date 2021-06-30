@@ -12,7 +12,7 @@ namespace chat_server_library
 		PacketId packet_id = PacketId::ROOM_ENTER_RES;
 
 		auto [error_code, user] = user_mgr_->GetUser(session_index);
-		if (error_code != ErrorCode::NONE)
+		if (ErrorCode::NONE != error_code)
 		{
 			PacketBasicRes packet_res = GetPacketBasicRes(packet_id, error_code);
 			SendPacketFunc(session_index, &packet_res, packet_res.total_size_);
@@ -160,7 +160,7 @@ namespace chat_server_library
 		}
 
 		auto lobby = lobby_mgr_->GetLobby(user->GetLobbyIndex());
-		if (lobby == nullptr)
+		if (nullptr == lobby)
 		{
 			PacketBasicRes packet_res = 
 				GetPacketBasicRes(packet_id, ErrorCode::LOBBY_ENTER_INVALID_LOBBY_INDEX);
@@ -169,7 +169,7 @@ namespace chat_server_library
 		}
 
 		auto room = lobby->GetRoom(user->GetRoomIndex());
-		if (room == nullptr)
+		if (nullptr == room)
 		{
 			PacketBasicRes packet_res =
 				GetPacketBasicRes(packet_id, ErrorCode::ROOM_ENTER_INVALID_ROOM_INDEX);
