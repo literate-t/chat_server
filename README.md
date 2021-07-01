@@ -10,7 +10,7 @@ Chat Server
 * 변수, 함수, 클래스 등의 이름을 지을 때 의미가 최대한 드러나도록 신경 썼습니다
 
 ## 변수 명명법  
-* 기본적인 규칙은 <a href="https://google.github.io/styleguide/cppguide.html" target="_blank">구글의 네이밍 룰</a>을 참고했습니다
+* 기본적인 규칙은 [구글의 네이밍 룰](https://google.github.io/styleguide/cppguide.html)을 참고했습니다
 
 * 언더바
   * 프로젝트
@@ -67,7 +67,7 @@ Chat Server
 * 패킷 매니저 클래스에 패킷을 처리하는 함수를 정의
   * 패킷 아이디로 함수를 호출하기 위해 아이디를 `key`로, 함수 포인터를 `value `로 설정했습니다
 
-* `Main` 클래스에서 클래스들의 인스턴스를 만드는데, 안전하게 포인터 변수를 사용하기 위해 `unique_ptr`을 사용
+* `Main` 클래스에서 인스턴스를 만들 때, 안전하게 포인터 변수 관리하기 위해 `unique_ptr`을 사용
 
 * `Message` 구조체
   *  `worker thread`로 수신한 데이터는 `message completion port`로 보내는데, 타입과 데이터를 `Message` 구조체에 담습니다 
@@ -80,11 +80,11 @@ Chat Server
   * 이런 실수는 찾기 어렵기 때문에 예방이 중요하다 생각합니다
 
 * `C++17` Structured binding
-  * `std::tuple`를 통해 값을 반환하거나, `foreach` 반복문을 돌릴 때 가독성을 위해을 사용했습니다
+  * `std::tuple`를 통해 값을 반환하거나, `foreach` 반복문을 돌릴 때 가독성에 도움되며 코드 길이를 줄일 수 있습니다
 
 * `const`
   * 함수의 파라미터와 `get`함수에는 될 수 있으면 `const`를 붙였습니다
-  * `stl`에서 연산자가 `const` 지원하지 않는 등의 부득이한 사유가 있을 땐 붙이지 못했습니다
+  * `stl`에서 연산자가 `const` 지원하지 않는 등의 부득이한 사유가 있을 땐 사용하지 못했습니다
 
 * `copy elison`
   * 클라이언트 요청에 대한 응답 패킷을 만들 때 함수를 이용하며 `RVO`를 위해 임시 객체를 만들어 반환합니다
