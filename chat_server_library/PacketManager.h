@@ -27,6 +27,7 @@ namespace chat_server_library
 	private:
 		PacketHeader* GetPacketHeader(char* buf);
 		PacketBasicRes GetPacketBasicRes(const PacketId id, const ErrorCode error_code);
+		PacketBasicEnterLeaveReq* GetPacketBasicEnterLeaveReq(char* buf);
 
 
 	private:

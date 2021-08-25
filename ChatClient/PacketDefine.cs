@@ -42,7 +42,8 @@ namespace ChatClient {
         ROOM_CHAT_NOTIFY = 78
     }
 
-    public enum ErrorCode : Int16 {
+    public enum ErrorCode : short
+    {
         NONE = 0,
 
         UNASSIGNED_ERROR = 201,

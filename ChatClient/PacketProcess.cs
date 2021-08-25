@@ -146,7 +146,7 @@ namespace ChatClient {
 
         private void PacketProcess_RoomEnterResponse(byte[] bodyData) {
             var errorCode = BitConverter.ToInt16(bodyData, 0);
-            if (errorCode == (short)ErrorCode.NONE) {
+            if ((short)ErrorCode.NONE == errorCode) {
                 var usersCount = BitConverter.ToInt16(bodyData, 2);
                 int offset = 4;
                 for (int i = 0; i < usersCount; ++i) {
@@ -163,8 +163,8 @@ namespace ChatClient {
                 buttonLeaveRoom.Enabled = true;
                 buttonLogoff.Enabled = false;
                 _isRoom = true;
-            } else {
-                labelStatus.Text = string.Format($"{textBoxRoomNumber.Text}번 방 입장 실패");
+            } else if((short)ErrorCode.ROOM_CHAT_INVALID_ROOM_INDEX == errorCode){
+                labelStatus.Text = string.Format($"방 번호는 0 ~ 4 범위에서 가능합니다");
             }
         }
 

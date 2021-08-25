@@ -103,4 +103,9 @@ namespace chat_server_library
 	{
 		return PacketBasicRes(id, error_code);
 	}
+
+	PacketBasicEnterLeaveReq* PacketManager::GetPacketBasicEnterLeaveReq(char* buf)
+	{
+		return reinterpret_cast<PacketBasicEnterLeaveReq*>(buf);
+	}
 }

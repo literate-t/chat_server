@@ -351,7 +351,11 @@ namespace server_library
 			log_->Write(LogType::L_ERROR, "%s | overlapped_ex or session is nullptr", __FUNCTION__);
 			return;
 		}
-
+		printf("before \n");
+		log_->Write(LogType::L_INFO, "%s | AcceptIoCount : %d", __FUNCTION__, session->GetAcceptIoCount());
+		log_->Write(LogType::L_INFO, "%s | RecvIoCount : %d", __FUNCTION__, session->GetRecvIoCount());
+		log_->Write(LogType::L_INFO, "%s | SendtIoCount : %d", __FUNCTION__, session->GetSendIoCount());
+		
 		switch (overlapped_ex->mode_)
 		{
 		case IoMode::ACCEPT:
@@ -364,7 +368,7 @@ namespace server_library
 			session->DecrementSendIoCount();
 			break;
 		}
-
+		printf("after \n");
 		log_->Write(LogType::L_INFO, "%s | AcceptIoCount : %d", __FUNCTION__, session->GetAcceptIoCount());
 		log_->Write(LogType::L_INFO, "%s | RecvIoCount : %d", __FUNCTION__, session->GetRecvIoCount());
 		log_->Write(LogType::L_INFO, "%s | SendtIoCount : %d", __FUNCTION__, session->GetSendIoCount());

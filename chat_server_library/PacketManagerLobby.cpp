@@ -19,7 +19,7 @@ namespace chat_server_library
 			return;
 		}
 
-		auto data = reinterpret_cast<PacketBasicEnterLeaveReq*>(buf);
+		auto data = GetPacketBasicEnterLeaveReq(buf);
 		auto lobby = lobby_mgr_->GetLobby(data->index_);
 		if (nullptr == lobby)
 		{
@@ -71,7 +71,7 @@ namespace chat_server_library
 			return;
 		}
 
-		auto data = reinterpret_cast<PacketBasicEnterLeaveReq*>(buf);
+		auto data = GetPacketBasicEnterLeaveReq(buf);
 		auto lobby = lobby_mgr_->GetLobby(data->index_);
 		if (nullptr == lobby)
 		{
